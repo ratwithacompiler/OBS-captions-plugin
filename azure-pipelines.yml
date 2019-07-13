@@ -1,0 +1,53 @@
+# https://aka.ms/yaml
+
+
+jobs:
+  - job: 'Build_Windows'
+    pool:
+      vmImage: 'vs2017-win2016'
+
+    variables:
+      - group: Build_Vars
+
+    steps:
+      - script: git submodule update --init --recursive
+        displayName: 'Checkout Submodules'
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          path: './archive.7z'
+          source: 'specific'
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          runVersion: 'latest'
+
+      - script: .\CI\install-script-win.cmd
+        displayName: 'Setup, CMake'
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - task: MSBuild@1
+        displayName: 'Build 64-bit'
+        inputs:
+          msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
+          solution: .\build_64\obs_google_caption_plugin.sln
+
+      - task: MSBuild@1
+        displayName: 'Build 32-bit'
+        inputs:
+          msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
+          solution: .\build_32\obs_google_caption_plugin.sln
+
+      - script: .\CI\post-install-script-win.cmd
+        displayName: 'Post install'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: './build_64/RelWithDebInfo/'
+          artifact: plugin_win64
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: './build_32/RelWithDebInfo/'
+          artifact: plugin_win32
+

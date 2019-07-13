@@ -1,0 +1,3 @@
+[submodule "lib/caption_stream/thirdparty/plibsys"]
+	path = lib/caption_stream/thirdparty/plibsys
+	url = https://github.com/saprykin/plibsys
