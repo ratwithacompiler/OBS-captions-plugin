@@ -51,3 +51,9 @@ jobs:
           path: './build_32/RelWithDebInfo/'
           artifact: plugin_win32
 
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: './release_dir/'
+          artifact: release
+
