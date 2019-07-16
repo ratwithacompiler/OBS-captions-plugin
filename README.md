@@ -23,7 +23,7 @@ The results are usually be pretty good in normal conversational settings like ta
 ### Installation:
 
 * Close OBS if running
-* Download latest release from: https://github.com/ratwithacompiler/OBS-captions-plugin/releases
+* Download latest Closed_Captions_Plugin.zip version [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
 * Extract the release archive, it contains two folders named 32bit and 64bit
 * Copy-Paste those two folders into the `obs-plugins` directory in your OBS install directory
   * The default OBS install path is usually `C:\Program Files\obs-studio\`
