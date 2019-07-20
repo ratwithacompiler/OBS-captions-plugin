@@ -11,7 +11,7 @@ Twitch's built in player and works on livestreams and in VODs on PC and iOS, no 
   * Requires no extra tools or website open
 
 ##### Notes:
-* The delay is usually less than half a second and should not be noticeable to viewers.
+* The caption delay is usually less than half a second and should not be noticeable to viewers.
 * The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the audio is muted for stream.
 * Video players with caption support like VLC can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
