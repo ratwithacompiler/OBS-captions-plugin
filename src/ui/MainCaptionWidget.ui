@@ -83,7 +83,7 @@ asdfa sdf 123 asdf </string>
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Stream Output:</string>
+      <string>Stream Output Preview:</string>
      </property>
     </widget>
    </item>
