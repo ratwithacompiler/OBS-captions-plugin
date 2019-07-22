@@ -48,14 +48,29 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * There should now be a `Cloud Closed Captions` option on the bottom of `Tools` menu
   * NOT `Captions (Experimental)` that's the built in captions using Windows speech recognition
 * Click on `Settings` in the new `Captions Preview` window and select your audio source for captioning under `Caption Source`
-  * just select whatever OBS source is only your microphone for best results
+  * Select whatever OBS source is only your microphone for best captioning results
+  * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
 * Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
 
 [1] If you're not sure what OBS version you have: the `obs-plugins` folder should only contain either a `32bit` or `64bit` folder
 
 ##### [Example VOD here](https://www.twitch.tv/videos/441407980?t=20s)
 
-##### Screenshot:
+##### Example Screenshot:
 ![Example Image](https://i.imgur.com/BjeMg0W.png)
 
+
+#### Settings for more unusual audio setups that don't use a mic only source in OBS (like 2 PC + audio mixer setups):
+
+If your OBS setup does not use a audio source that contains only the microphone but gets a already mixed audio source instead (that has the microphone mixed with other sounds/game/voices already) you can still make it work as long as your streaming PC has access to the microphone by itself as well. Steps:
+
+* If you don't already have a OBS source that's only your mic:
+	* Create a new Audio Input Capture source in OBS somewhere using the device that's only the microphone, calling it `Microphone only` for example, and mute it (so stream doesn't hear the mic twice)
+* In caption settings set `Caption Source` to the mic only OBS source that's muted
+* Set `Caption When` to `When Other Source is Streamed`
+* Set `Other Source` to your mixed audio OBS source that stream hears
+
+![Mixed Source Setup Instructions](https://i.imgur.com/CeWn5xw.png)
+
+This way it will use the `Microphone only` source to get clean mic audio for captioning but it will still only caption it when the other selected source is unmuted and active so it's still safe for the streamer, when the mixed source for stream is muted in OBS the captions also get muted.
 
