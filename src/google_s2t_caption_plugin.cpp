@@ -56,8 +56,8 @@ void closed_caption_tool_menu_clicked();
 void obs_frontent_exiting();
 
 static void obs_event(enum obs_frontend_event event, void *) {
-    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    info_log("obs event %d", tid);
+//    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
+//    info_log("obs event %d", tid);
     if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
         finished_loading_event();
     } else if (event == OBS_FRONTEND_EVENT_STREAMING_STARTED) {
@@ -75,8 +75,8 @@ static void obs_event(enum obs_frontend_event event, void *) {
 
 void closed_caption_tool_menu_clicked() {
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    info_log("test clicked %d", tid);
-    info_log("test clicked ");
+//    info_log("test clicked %d", tid);
+    info_log("caption menu button clicked ");
     if (main_caption_widget) {
         main_caption_widget->menu_button_clicked();
     }
@@ -123,8 +123,6 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
 
     if (saving && main_caption_widget) {
         main_caption_widget->save_event_cb(save_data);
-
-
     }
 
     if (!saving) {
