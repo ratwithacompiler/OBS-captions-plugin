@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../log.c"
 #include <utils.h>
 #include "../storage_utils.h"
+#include "../caption_stream_helper.cpp"
 
 static void update_combobox_with_current_sources(QComboBox &comboBox) {
     while (comboBox.count())
@@ -59,6 +60,8 @@ CaptionSettingsWidget::CaptionSettingsWidget(CaptionerSettings latest_settings)
     captionWhenComboBox->addItem("When Caption Source is streamed", "own_source");
     captionWhenComboBox->addItem("When Other Source is streamed", "other_mute_source");
 
+    setup_combobox_languages(*languageComboBox);
+
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
 
@@ -79,10 +82,15 @@ void CaptionSettingsWidget::accept_current_settings() {
 
     new_settings.caption_source_settings.caption_source_name = sourcesComboBox->currentText().toStdString();
     new_settings.caption_source_settings.mute_source_name = muteSourceComboBox->currentText().toStdString();
+
+    string lang_str = languageComboBox->currentData().toString().toStdString();
+    new_settings.stream_settings.stream_settings.language = lang_str;
+    info_log("lang: %s", lang_str.c_str());
+
     string when_str = captionWhenComboBox->currentData().toString().toStdString();
-    info_log("accepting when: %s", when_str.c_str());
+//    info_log("accepting when: %s", when_str.c_str());
     new_settings.caption_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
-    info_log("accepting when: %d", latest_settings.caption_source_settings.mute_when);
+//    info_log("accepting when: %d", latest_settings.caption_source_settings.mute_when);
 
     new_settings.format_settings.caption_line_count = lineCountSpinBox->value();
 
@@ -99,19 +107,28 @@ void CaptionSettingsWidget::accept_current_settings() {
     emit settings_accepted(new_settings);
 }
 
+static int combobox_set_data(QComboBox &combo_box, const char *data, int default_index) {
+    int index = combo_box.findData(data);
+    if (index == -1)
+        index = default_index;
+
+    combo_box.setCurrentIndex(index);
+    return index;
+}
+
 void CaptionSettingsWidget::updateUi() {
     update_combobox_with_current_sources(*sourcesComboBox);
     update_combobox_with_current_sources(*muteSourceComboBox);
     sourcesComboBox->setCurrentText(QString(latest_settings.caption_source_settings.caption_source_name.c_str()));
     muteSourceComboBox->setCurrentText(QString(latest_settings.caption_source_settings.mute_source_name.c_str()));
 
+    combobox_set_data(*languageComboBox, latest_settings.stream_settings.stream_settings.language.c_str(), 0);
+
     info_log("latest_settings.caption_source_settings.mute_when %d", latest_settings.caption_source_settings.mute_when);
     string mute_when_str = mute_setting_to_string(latest_settings.caption_source_settings.mute_when, "own_source");
-    int when_index = captionWhenComboBox->findData(mute_when_str.c_str());
+
+    int when_index = combobox_set_data(*captionWhenComboBox, mute_when_str.c_str(), 0);
     info_log("setting mute_when_str '%s', index %d", mute_when_str.c_str(), when_index);
-    if (when_index == -1)
-        when_index = 0;
-    captionWhenComboBox->setCurrentIndex(when_index);
 
     lineCountSpinBox->setValue(latest_settings.format_settings.caption_line_count);
     insertLinebreaksCheckBox->setChecked(latest_settings.format_settings.caption_insert_newlines);

@@ -44,27 +44,32 @@ struct CaptionStreamSettings {
     uint max_queue_depth;
     uint download_thread_start_delay_ms;
 
+    string language;
+
     CaptionStreamSettings(
             uint connect_timeout_ms,
             uint send_timeout_ms,
             uint recv_timeout_ms,
 
             uint max_queue_depth,
-            uint download_thread_start_delay_ms
+            uint download_thread_start_delay_ms,
+            const string &language
     ) :
             connect_timeout_ms(connect_timeout_ms),
             send_timeout_ms(send_timeout_ms),
             recv_timeout_ms(recv_timeout_ms),
 
             max_queue_depth(max_queue_depth),
-            download_thread_start_delay_ms(download_thread_start_delay_ms) {}
+            download_thread_start_delay_ms(download_thread_start_delay_ms),
+            language(language) {}
 
     bool operator==(const CaptionStreamSettings &rhs) const {
         return connect_timeout_ms == rhs.connect_timeout_ms &&
                send_timeout_ms == rhs.send_timeout_ms &&
                recv_timeout_ms == rhs.recv_timeout_ms &&
                max_queue_depth == rhs.max_queue_depth &&
-               download_thread_start_delay_ms == rhs.download_thread_start_delay_ms;
+               download_thread_start_delay_ms == rhs.download_thread_start_delay_ms &&
+               language == rhs.language;
     }
 
     bool operator!=(const CaptionStreamSettings &rhs) const {

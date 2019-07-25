@@ -105,9 +105,14 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
 
     string post_req("POST /speech-api/full-duplex/v1/up?key=");
     post_req.append(GOOGLE_API_KEY_STR);
+
     post_req.append("&pair=");
     post_req.append(session_pair);
-    post_req.append("&lang=en-US&client=chromium&continuous&interim&pFilter=0 HTTP/1.1\r\n"
+
+    post_req.append("&lang=");
+    post_req.append(settings.language);
+
+    post_req.append("&client=chromium&continuous&interim&pFilter=0 HTTP/1.1\r\n"
                     "Host: www.google.com\r\n"
                     "content-type: audio/l16; rate=16000\r\n"
                     "Accept: */\r\n"
@@ -125,7 +130,7 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     if (is_stopped())
         return;
 
-    debug_log("sent head bytes %lu", post_req.size());
+    debug_log("sent head bytes %lu, language: %s", post_req.size(), settings.language.c_str());
 
     if (downstream_thread) {
         error_log("already has downstream thread, wtf");
