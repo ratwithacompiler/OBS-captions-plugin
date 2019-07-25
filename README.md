@@ -9,6 +9,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
   * Completely optional for viewers
   * Supports OBS delay
   * Requires no extra tools or website open
+  * Supports many common languages with western character sets
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
@@ -16,7 +17,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 * Video players with caption support like VLC can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. 
-The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking.  
+The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
 
 ##### Known Issues/Downsides:
 
