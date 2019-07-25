@@ -1,7 +1,7 @@
-## OBS Closed Captioning Plugin using Google Speech Recognition API
+## Closed Captioning OBS Plugin using Google Speech Recognition API
 
-Provides optional closed captioning via Google Cloud Speech Recognition API and OBS native caption output which is supported by
-Twitch's built in player and works on livestreams and in VODs on PC and iOS, no Twitch extension required. 
+Provides closed captioning via Google Cloud Speech Recognition API as a standalone OBS plugin, no other tools required. 
+It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC and iOS, no Twitch extension needed.  
 
 #### Features:
   * Captions only when the microphone source is unmuted and active to ensure safety
@@ -12,15 +12,15 @@ Twitch's built in player and works on livestreams and in VODs on PC and iOS, no 
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
-* The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the audio is muted for stream.
+* The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the mic is muted for the stream.
 * Video players with caption support like VLC can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. 
 The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking.  
 
-
 ##### Known Issues/Downsides:
-Captions should be off by default for most viewers but Twitch does sometimes have them enabled for some users for unknown reasons and some will occasionally be confused on how to turn them off.
+
+Captions should be off by default for most viewers but Twitch does sometimes have them enabled for some viewers for unknown reasons so occasionally some will be confused on how to turn them off and might need it explained.
 
 * **On PC** viewers can turn captions on and off using the CC button on the bottom right of the player.
 
@@ -29,6 +29,8 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
     
 * **On iOS** it's a system wide setting: `Settings -> General -> Accessibility -> Subtitles & Captioning -> Closed Captions + SHD` 
   * If it's already off but viewers still see captions they have to turn it on and off again (appears to be a bug on some iOS versions)
+  
+Does NOT work with SLOBS (Streamlabs OBS).
     
 
 ### Installation:
