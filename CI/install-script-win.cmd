@@ -1,4 +1,4 @@
-7z x archive.7z -oobs_deps
+7z x obs_deps_windows\archive.7z -oobs_deps
 
 cd
 dir

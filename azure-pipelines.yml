@@ -15,11 +15,12 @@ jobs:
 
       - task: DownloadPipelineArtifact@2
         inputs:
-          path: './archive.7z'
+          path: './'
           source: 'specific'
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
           runVersion: 'latest'
+          itemPattern: "obs_deps_windows/archive.7z"
 
       - script: .\CI\install-script-win.cmd
         displayName: 'Setup, CMake'
@@ -51,9 +52,7 @@ jobs:
           path: './build_32/RelWithDebInfo/'
           artifact: plugin_win32
 
-
       - task: PublishPipelineArtifact@1
         inputs:
           path: './release_dir/'
-          artifact: release
-
+          artifact: Closed_Captions_Plugin__Windows
