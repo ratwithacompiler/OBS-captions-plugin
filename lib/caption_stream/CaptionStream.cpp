@@ -112,7 +112,12 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     post_req.append("&lang=");
     post_req.append(settings.language);
 
-    post_req.append("&client=chromium&continuous&interim&pFilter=0 HTTP/1.1\r\n"
+    stringstream profStr;
+    profStr << settings.profanity_filter;
+    post_req.append("&pFilter=");
+    post_req.append(profStr.str());
+
+    post_req.append("&client=chromium&continuous&interim HTTP/1.1\r\n"
                     "Host: www.google.com\r\n"
                     "content-type: audio/l16; rate=16000\r\n"
                     "Accept: */\r\n"
@@ -130,7 +135,8 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     if (is_stopped())
         return;
 
-    debug_log("sent head bytes %lu, language: %s", post_req.size(), settings.language.c_str());
+    debug_log("sent head bytes %lu, language: %s, profanity filter: %d",
+              post_req.size(), settings.language.c_str(), settings.profanity_filter);
 
     if (downstream_thread) {
         error_log("already has downstream thread, wtf");

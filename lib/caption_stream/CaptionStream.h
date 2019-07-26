@@ -45,6 +45,7 @@ struct CaptionStreamSettings {
     uint download_thread_start_delay_ms;
 
     string language;
+    int profanity_filter;
 
     CaptionStreamSettings(
             uint connect_timeout_ms,
@@ -53,7 +54,8 @@ struct CaptionStreamSettings {
 
             uint max_queue_depth,
             uint download_thread_start_delay_ms,
-            const string &language
+            const string &language,
+            int profanity_filter
     ) :
             connect_timeout_ms(connect_timeout_ms),
             send_timeout_ms(send_timeout_ms),
@@ -61,7 +63,8 @@ struct CaptionStreamSettings {
 
             max_queue_depth(max_queue_depth),
             download_thread_start_delay_ms(download_thread_start_delay_ms),
-            language(language) {}
+            language(language),
+            profanity_filter(profanity_filter){}
 
     bool operator==(const CaptionStreamSettings &rhs) const {
         return connect_timeout_ms == rhs.connect_timeout_ms &&
@@ -69,7 +72,8 @@ struct CaptionStreamSettings {
                recv_timeout_ms == rhs.recv_timeout_ms &&
                max_queue_depth == rhs.max_queue_depth &&
                download_thread_start_delay_ms == rhs.download_thread_start_delay_ms &&
-               language == rhs.language;
+               language == rhs.language &&
+               profanity_filter == rhs.profanity_filter;
     }
 
     bool operator!=(const CaptionStreamSettings &rhs) const {

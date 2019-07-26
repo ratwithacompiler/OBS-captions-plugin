@@ -31,7 +31,8 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
             180'000,
             50,
             download_start_delay_ms,
-            "en-US"
+            "en-US",
+            0
     };
 };
 
@@ -99,6 +100,8 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
         obs_data_set_default_string(obj, "mute_source_name", "");
         obs_data_set_default_string(obj, "source_caption_when", "");
         obs_data_set_default_string(obj, "source_language", settings.stream_settings.stream_settings.language.c_str());
+        obs_data_set_default_int(obj, "profanity_filter", settings.stream_settings.stream_settings.profanity_filter);
+
         obs_data_set_default_double(obj, "caption_timeout_secs", settings.format_settings.caption_timeout_seconds);
         obs_data_set_default_bool(obj, "caption_timeout_enabled", settings.format_settings.caption_timeout_enabled);
 
@@ -110,6 +113,7 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
         settings.caption_source_settings.caption_source_name = obs_data_get_string(obj, "source_name");
         settings.caption_source_settings.mute_source_name = obs_data_get_string(obj, "mute_source_name");
         settings.stream_settings.stream_settings.language = obs_data_get_string(obj, "source_language");
+        settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(obj, "profanity_filter");
 
         settings.format_settings.caption_timeout_enabled = obs_data_get_bool(obj, "caption_timeout_enabled");
         settings.format_settings.caption_timeout_seconds = obs_data_get_double(obj, "caption_timeout_secs");
@@ -145,6 +149,7 @@ static void save_obs_CaptionerSettings(obs_data_t *save_data, CaptionerSettings 
     obs_data_set_string(obj, "source_name", settings.caption_source_settings.caption_source_name.c_str());
     obs_data_set_string(obj, "mute_source_name", settings.caption_source_settings.mute_source_name.c_str());
     obs_data_set_string(obj, "source_language", settings.stream_settings.stream_settings.language.c_str());
+    obs_data_set_int(obj, "profanity_filter", settings.stream_settings.stream_settings.profanity_filter);
 
     obs_data_set_bool(obj, "caption_timeout_enabled", settings.format_settings.caption_timeout_enabled);
     obs_data_set_double(obj, "caption_timeout_secs", settings.format_settings.caption_timeout_seconds);
@@ -167,6 +172,15 @@ static bool is_stream_live() {
     return live;
 }
 
+
+static void setup_combobox_profanity(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("None", 0);
+    comboBox.addItem("Some (Very Unreliable!)", 1);
+    comboBox.addItem("Strict (Very Unreliable!)", 2);
+}
 
 static void setup_combobox_languages(QComboBox &comboBox) {
     while (comboBox.count())

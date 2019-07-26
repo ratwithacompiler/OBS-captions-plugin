@@ -61,6 +61,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(CaptionerSettings latest_settings)
     captionWhenComboBox->addItem("When Other Source is streamed", "other_mute_source");
 
     setup_combobox_languages(*languageComboBox);
+    setup_combobox_profanity(*profanityFilterComboBox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -87,6 +88,10 @@ void CaptionSettingsWidget::accept_current_settings() {
     new_settings.stream_settings.stream_settings.language = lang_str;
     info_log("lang: %s", lang_str.c_str());
 
+    const int profanity_filter = profanityFilterComboBox->currentData().toInt();
+    new_settings.stream_settings.stream_settings.profanity_filter = profanity_filter;
+    info_log("profanity_filter: %d", profanity_filter);
+
     string when_str = captionWhenComboBox->currentData().toString().toStdString();
 //    info_log("accepting when: %s", when_str.c_str());
     new_settings.caption_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
@@ -107,7 +112,17 @@ void CaptionSettingsWidget::accept_current_settings() {
     emit settings_accepted(new_settings);
 }
 
-static int combobox_set_data(QComboBox &combo_box, const char *data, int default_index) {
+static int combobox_set_data_str(QComboBox &combo_box, const char *data, int default_index) {
+    int index = combo_box.findData(data);
+    if (index == -1)
+        index = default_index;
+
+    combo_box.setCurrentIndex(index);
+    return index;
+
+}
+
+static int combobox_set_data_int(QComboBox &combo_box, const int data, int default_index) {
     int index = combo_box.findData(data);
     if (index == -1)
         index = default_index;
@@ -122,12 +137,13 @@ void CaptionSettingsWidget::updateUi() {
     sourcesComboBox->setCurrentText(QString(latest_settings.caption_source_settings.caption_source_name.c_str()));
     muteSourceComboBox->setCurrentText(QString(latest_settings.caption_source_settings.mute_source_name.c_str()));
 
-    combobox_set_data(*languageComboBox, latest_settings.stream_settings.stream_settings.language.c_str(), 0);
+    combobox_set_data_str(*languageComboBox, latest_settings.stream_settings.stream_settings.language.c_str(), 0);
+    combobox_set_data_int(*profanityFilterComboBox, latest_settings.stream_settings.stream_settings.profanity_filter, 0);
 
     info_log("latest_settings.caption_source_settings.mute_when %d", latest_settings.caption_source_settings.mute_when);
     string mute_when_str = mute_setting_to_string(latest_settings.caption_source_settings.mute_when, "own_source");
 
-    int when_index = combobox_set_data(*captionWhenComboBox, mute_when_str.c_str(), 0);
+    int when_index = combobox_set_data_str(*captionWhenComboBox, mute_when_str.c_str(), 0);
     info_log("setting mute_when_str '%s', index %d", mute_when_str.c_str(), when_index);
 
     lineCountSpinBox->setValue(latest_settings.format_settings.caption_line_count);
