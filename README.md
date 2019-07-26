@@ -32,7 +32,8 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
   * If it's already off but viewers still see captions they have to turn it on and off again (appears to be a bug on some iOS versions)
   
 Does NOT work with SLOBS (Streamlabs OBS).
-    
+
+This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled. 
 
 ### Installation:
 #### Requires OBS 23.2.1 (released June 15th 2019) or newer!
