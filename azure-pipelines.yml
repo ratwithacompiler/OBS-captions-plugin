@@ -2,6 +2,46 @@
 
 
 jobs:
+  - job: 'Build_macOS'
+    pool:
+      vmImage: 'macos-10.13'
+
+    variables:
+      - group: Build_Vars
+
+    steps:
+      - script: git submodule update --init --recursive
+        displayName: 'Checkout Submodules'
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          path: './'
+          source: 'specific'
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          runVersion: 'latest'
+          itemPattern: "obs_deps_macos/archive_osx.zip"
+
+      - script: ./CI/install-script-osx.sh
+        displayName: 'Setup build'
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - bash: |
+          pwd
+          cd ./build
+          make -j4
+          cd -
+        displayName: 'Build'
+
+      - script: ./CI/post-install-script-osx.sh
+        displayName: 'Post install'
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: './build/libobs_google_caption_plugin.so'
+          artifact: Closed_Captions_Plugin__MacOs
+
   - job: 'Build_Windows'
     pool:
       vmImage: 'vs2017-win2016'
@@ -45,12 +85,12 @@ jobs:
       - task: PublishPipelineArtifact@1
         inputs:
           path: './build_64/RelWithDebInfo/'
-          artifact: plugin_win64
+          artifact: buildresult_plugin_win64
 
       - task: PublishPipelineArtifact@1
         inputs:
           path: './build_32/RelWithDebInfo/'
-          artifact: plugin_win32
+          artifact: buildresult_plugin_win32
 
       - task: PublishPipelineArtifact@1
         inputs:
