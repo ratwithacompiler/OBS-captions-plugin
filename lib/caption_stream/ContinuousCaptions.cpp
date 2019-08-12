@@ -128,7 +128,7 @@ void ContinuousCaptions::cycle_streams() {
         current_stream = std::make_shared<CaptionStream>(settings.stream_settings);
         current_stream->on_caption_cb_handle.set(cb);
         if (!current_stream->start(current_stream))
-            error_log("FAILED starting prepared connection");
+            error_log("FAILED starting new connection");
         current_started_at = std::chrono::steady_clock::now();
     }
     prepared_stream = nullptr;

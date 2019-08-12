@@ -177,7 +177,7 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
     while (comboBox.count())
         comboBox.removeItem(0);
 
-    comboBox.addItem("None", 0);
+    comboBox.addItem("Off", 0);
     comboBox.addItem("Some (Very Unreliable!)", 1);
     comboBox.addItem("Strict (Very Unreliable!)", 2);
 }
