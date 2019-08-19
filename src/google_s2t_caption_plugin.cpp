@@ -150,7 +150,7 @@ bool obs_module_load(void) {
     info_log("hiiiiiiiiiiiiiiiiiiiii obs_module_load");
     p_libsys_init();
     qRegisterMetaType<std::string>();
-    qRegisterMetaType<shared_ptr<CaptionResult>>();
+    qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
 
     obs_frontend_add_event_callback(obs_event, nullptr);
     obs_frontend_add_save_callback(save_or_load_event_callback, nullptr);

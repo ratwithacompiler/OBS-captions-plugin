@@ -142,14 +142,7 @@ void MainCaptionWidget::update_caption_text_ui() {
     if (!latest_caption_result)
         return;
 
-    string full_text;
-    if (latest_caption_result->last_final_result) {
-        full_text.append(latest_caption_result->last_final_result->caption_text.c_str());
-        full_text.push_back(' ');
-    }
-    full_text.append(latest_caption_result->caption_text.c_str());
-
-    this->captionHistoryPlainTextEdit->setPlainText(full_text.c_str());
+    this->captionHistoryPlainTextEdit->setPlainText(latest_caption_text_history.c_str());
     QTextCursor cursor1 = this->captionHistoryPlainTextEdit->textCursor();
     cursor1.atEnd();
     this->captionHistoryPlainTextEdit->setTextCursor(cursor1);
@@ -172,12 +165,13 @@ void MainCaptionWidget::update_caption_text_ui() {
 
 void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
     auto caption_result = std::get<0>(tup);
-    bool interrupted = std::get<1>(tup);
-    bool cleared = std::get<2>(tup);
+//    bool interrupted = std::get<1>(tup);
+    bool was_cleared = std::get<2>(tup);
     bool active_delay_sec = std::get<3>(tup);
-//    info_log("handle_caption_result_tup, %d %d %d", interrupted, cleared, active_delay_sec);
+    string recent_caption_text = std::get<4>(tup);
+//    info_log("handle_caption_result_tup, %d %d %d", interrupted, was_cleared, active_delay_sec);
 
-    if (cleared) {
+    if (was_cleared) {
         if (!active_delay_sec) {
             this->captionLinesPlainTextEdit->clear();
             this->cleared = true;
@@ -190,19 +184,21 @@ void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
         return;
 
     latest_caption_result = caption_result;
+    latest_caption_text_history = recent_caption_text;
     this->cleared = false;
 }
 
 
 void MainCaptionWidget::handle_caption_data_cb(
-        shared_ptr<CaptionResult> caption_result,
+        shared_ptr<OutputCaptionResult> caption_result,
         bool interrupted,
         bool cleared,
-        int active_delay_sec) {
+        int active_delay_sec,
+        string recent_caption_text) {
     //called from different thread
 
 //    info_log("emitttttttttttttttttttt");
-    result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, active_delay_sec));
+    result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, active_delay_sec, recent_caption_text));
     emit process_item_queue();
 }
 

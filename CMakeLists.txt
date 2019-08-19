@@ -64,12 +64,15 @@ set(obs_google_caption_plugin_SOURCES
 
         src/AudioCaptureSession.cpp
         src/SourceCaptioner.cpp
+        src/CaptionResultHandler.cpp
+
         src/google_s2t_caption_plugin.cpp
         )
 
 set(obs_google_caption_plugin_HEADERS
-        src/SourceCaptioner.h
         src/AudioCaptureSession.h
+        src/SourceCaptioner.h
+        src/CaptionResultHandler.cpp
 
         src/ui/MainCaptionWidget.h
         src/ui/CaptionSettingsWidget.h

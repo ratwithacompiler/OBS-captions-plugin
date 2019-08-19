@@ -301,12 +301,26 @@ void CaptionStream::_downstream_run() {
                 error_log("downstream read chunk data error, too few bytes, wtf, %lu %lu", chunk_data.size(), chunk_length);
                 return;
             }
-            {
-                std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
-                if (on_caption_cb_handle.callback_fn) {
+
+
+            try {
+                CaptionResult *result = parse_caption_obj(chunk_data);
+
+                {
+                    std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
+                    if (on_caption_cb_handle.callback_fn) {
 ////                    debug_log("calling caption cb");
-                    on_caption_cb_handle.callback_fn(chunk_data);
+                        on_caption_cb_handle.callback_fn(*result);
+                    }
                 }
+
+                delete result;
+
+            } catch (string &ex) {
+                info_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
+            }
+            catch (...) {
+                info_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
             }
 
             if (is_stopped())

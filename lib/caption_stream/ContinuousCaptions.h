@@ -64,7 +64,7 @@ struct ContinuousCaptionStreamSettings {
 
 };
 
-typedef std::function<void(const string &data, bool interrupted)> continuous_caption_text_callback;
+typedef std::function<void(const CaptionResult &caption_result, bool interrupted)> continuous_caption_text_callback;
 
 class ContinuousCaptions {
     std::shared_ptr<CaptionStream> current_stream;
@@ -77,7 +77,7 @@ class ContinuousCaptions {
 
     bool interrupted;
 
-    void on_caption_text_cb(const string &data);
+    void on_caption_text_cb(const CaptionResult &caption_result);
 
     void start_prepared();
 

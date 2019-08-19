@@ -41,7 +41,7 @@ void SourceCaptioner::clear_settings(bool send_signal) {
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         audio_capture_session = nullptr;
-        caption_parser = nullptr;
+        caption_result_handler = nullptr;
         captioner = nullptr;
     }
     if (send_signal)
@@ -90,7 +90,7 @@ bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
         auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
         captioner = std::make_unique<ContinuousCaptions>(new_settings.stream_settings);
         captioner->on_caption_cb_handle.set(caption_cb, true);
-        caption_parser = std::make_unique<CaptionResultHandler>(new_settings.format_settings);
+        caption_result_handler = std::make_unique<CaptionResultHandler>(new_settings.format_settings);
 
         try {
             resample_info resample_to = {16000, AUDIO_FORMAT_16BIT, SPEAKERS_MONO};
@@ -163,7 +163,7 @@ void SourceCaptioner::clear_output_timer_cb() {
         obs_output_release(output);
     }
 
-    emit caption_result_received(nullptr, false, true, active_delay);
+    emit caption_result_received(nullptr, false, true, active_delay, "");
 }
 
 void SourceCaptioner::send_caption_text(const string text, int send_in_secs) {
@@ -192,37 +192,86 @@ void SourceCaptioner::send_caption_text(const string text, int send_in_secs) {
     }
 }
 
-void SourceCaptioner::on_caption_text_callback(const string &caption_obj, bool interrupted) {
-    shared_ptr<CaptionResult> result;
+void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_result, bool interrupted) {
+    shared_ptr<OutputCaptionResult> output_result;
     string output_caption_line;
+    string recent_captions;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
-//        info_log("got caption %s", caption_obj.c_str());
-        if (caption_parser) {
-            result = caption_parser->parse_caption_object(caption_obj, true);
-            if (interrupted)
-                caption_parser->clear_history();
+        output_result = caption_result_handler->prepare_caption_output(caption_result, true, results_history);
+        if (!output_result)
+            return;
 
-//        info_log("hmm %p", result.get());
-            if (!result)
-                return;
-
-            if (!result->output_lines.empty()) {
-//                info_log("got lines %lu", result->output_lines.size());
-
-                // "\n".join(lines) or " ".join() depending on setting
-                for (string &a_line: result->output_lines) {
-//                info_log("a line: %s", a_line.c_str());
-                    if (!output_caption_line.empty())
-                        if (settings.format_settings.caption_insert_newlines)
-                            output_caption_line.push_back('\n');
-                        else
-                            output_caption_line.push_back(' ');
-
-                    output_caption_line.append(a_line);
-                }
+        if (interrupted) {
+            if (held_nonfinal_caption_result) {
+                results_history.push_back(held_nonfinal_caption_result);
+                debug_log("interrupt, saving latest nonfinal result to history, %s",
+                         held_nonfinal_caption_result->clean_caption_text.c_str());
             }
+        }
+
+        held_nonfinal_caption_result = nullptr;
+        if (caption_result.final) {
+            results_history.push_back(output_result);
+            debug_log("final, adding to history: %s", output_result->clean_caption_text.c_str());
+        } else {
+            held_nonfinal_caption_result = output_result;
+        }
+
+        if (!output_result->output_lines.empty()) {
+//            info_log("got lines %lu", output_result->output_lines.size());
+//
+//             "\n".join(lines) or " ".join() depending on setting
+            for (string &a_line: output_result->output_lines) {
+//                info_log("a line: %s", a_line.c_str());
+                if (!output_caption_line.empty())
+                    if (settings.format_settings.caption_insert_newlines)
+                        output_caption_line.push_back('\n');
+                    else
+                        output_caption_line.push_back(' ');
+
+                output_caption_line.append(a_line);
+            }
+        }
+
+        if (output_caption_line == last_output_line) {
+//            debug_log("ignoring duplicate: '%s'", output_caption_line.c_str());
+            return;
+        }
+        last_output_line = output_caption_line;
+
+//        info_log("got caption '%s'", output_result->clean_caption_text.c_str());
+//        info_log("got caption obj '%s'", output_result->caption_result.raw_message.c_str());
+//        info_log("output line '%s'", output_caption_line.c_str());
+
+        for (auto i = results_history.rbegin(); i != results_history.rend(); ++i) {
+            if (!(*i))
+                break;
+
+            if (!(*i)->caption_result.final)
+                break;
+
+            if (recent_captions.size() + (*i)->clean_caption_text.size() >= MAX_HISTORY_VIEW_LENGTH)
+                break;
+
+            if ((*i)->clean_caption_text.empty())
+                continue;
+
+            if (recent_captions.empty()) {
+                recent_captions.insert(0, 1, '.');
+            } else {
+                recent_captions.insert(0, ". ");
+            }
+
+            recent_captions.insert(0, (*i)->clean_caption_text);
+        }
+
+        if (held_nonfinal_caption_result) {
+            if (!recent_captions.empty())
+                recent_captions.push_back(' ');
+            recent_captions.append("    >> ");
+            recent_captions.append(held_nonfinal_caption_result->clean_caption_text);
         }
     }
 
@@ -231,9 +280,7 @@ void SourceCaptioner::on_caption_text_callback(const string &caption_obj, bool i
         active_delay_sec = this->output_caption_text(output_caption_line);
     }
 
-    if (result) {
-        emit caption_result_received(result, interrupted, false, active_delay_sec);
-    }
+    emit caption_result_received(output_result, interrupted, false, active_delay_sec, recent_captions);
 }
 
 int SourceCaptioner::output_caption_text(const string &line) {

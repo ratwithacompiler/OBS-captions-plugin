@@ -33,7 +33,9 @@ using namespace std;
 
 Q_DECLARE_METATYPE(std::string)
 
-Q_DECLARE_METATYPE(shared_ptr<CaptionResult>)
+Q_DECLARE_METATYPE(shared_ptr<OutputCaptionResult>)
+
+#define MAX_HISTORY_VIEW_LENGTH 2000
 
 enum CaptionSourceMuteType {
     CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE,
@@ -105,12 +107,18 @@ Q_OBJECT
     uint audio_chunk_count = 0;
 
     CaptionerSettings settings;
-    std::unique_ptr<CaptionResultHandler> caption_parser;
+    std::unique_ptr<CaptionResultHandler> caption_result_handler;
     std::recursive_mutex settings_change_mutex;
+
 
     std::chrono::steady_clock::time_point last_caption_at;
     bool last_caption_cleared;
     QTimer timer;
+
+    std::vector<std::shared_ptr<OutputCaptionResult>> results_history; // final ones + last ones before interruptions
+    std::shared_ptr<OutputCaptionResult> held_nonfinal_caption_result;
+
+    string last_output_line;
 
     void caption_was_output();
 
@@ -126,7 +134,12 @@ signals:
 
     void caption_text_line_received(string caption_text, int delay_sec);
 
-    void caption_result_received(shared_ptr<CaptionResult> caption, bool interrupted, bool cleared, int active_delay_sec);
+    void caption_result_received(
+            shared_ptr<OutputCaptionResult> caption,
+            bool interrupted,
+            bool cleared,
+            int active_delay_sec,
+            string recent_caption_text);
 
     void audio_capture_status_changed(const int new_status);
 
@@ -146,7 +159,7 @@ public:
 
     void on_audio_capture_status_change_callback(const audio_source_capture_status status);
 
-    void on_caption_text_callback(const string &caption_obj, bool interrupted);
+    void on_caption_text_callback(const CaptionResult &caption_result, bool interrupted);
 
     void not_not_captioning_status();
 

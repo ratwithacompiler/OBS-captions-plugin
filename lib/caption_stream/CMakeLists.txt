@@ -4,7 +4,6 @@ set(caption_stream_SOURCES
         utils.h
         CaptionStream.cpp
         TcpConnection.cpp
-        CaptionResultHandler.cpp
         ContinuousCaptions.cpp
         thirdparty/json11/json11.cpp
         )
@@ -15,7 +14,7 @@ set(caption_stream_HEADERS
         utils.h
         CaptionStream.h
         TcpConnection.h
-        CaptionResultHandler.cpp
+        CaptionResult.h
         ContinuousCaptions.h
         thirdparty/json11/json11.hpp
         )

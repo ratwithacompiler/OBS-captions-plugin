@@ -30,11 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log.h"
 
 #include "ThreadsaferCallback.h"
+#include "CaptionResult.h"
 
 typedef unsigned int uint;
 using namespace std;
 
-typedef std::function<void(const string &data)> caption_text_callback;
+typedef std::function<void(const CaptionResult &caption_result)> caption_text_callback;
 
 struct CaptionStreamSettings {
     uint connect_timeout_ms;

@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <concurrentqueue.h>
 
-typedef std::tuple<std::shared_ptr<CaptionResult>, bool, bool, int> ResultTup;
+typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, bool, int, string> ResultTup;
 
 class MainCaptionWidget : public QWidget, Ui_MainCaptionWidget {
 Q_OBJECT
@@ -37,7 +37,8 @@ Q_OBJECT
     bool is_captioning = false;
     moodycamel::ConcurrentQueue<ResultTup> result_queue;
 
-    std::shared_ptr<CaptionResult> latest_caption_result;
+    std::shared_ptr<OutputCaptionResult> latest_caption_result;
+    string latest_caption_text_history;
     bool cleared = false;
 
 signals:
@@ -61,7 +62,13 @@ private:
 
 private slots:
 
-    void handle_caption_data_cb(shared_ptr<CaptionResult> caption_result, bool interrupted, bool cleared, int active_delay_sec);
+    void handle_caption_data_cb(
+            shared_ptr<OutputCaptionResult> caption_result,
+            bool interrupted,
+            bool cleared,
+            int active_delay_sec,
+            string recent_caption_text
+    );
 
     void handle_audio_capture_status_change(const int new_status);
 

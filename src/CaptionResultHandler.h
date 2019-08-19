@@ -85,44 +85,35 @@ struct CaptionFormatSettings {
 
 
 using namespace json11;
-using namespace std;
 
-struct CaptionResult {
+struct OutputCaptionResult {
 
-    int index = 0;
-    bool final = false;
-    double stability = 0.0;
-    string caption_text;
+    CaptionResult caption_result;
+    string clean_caption_text;
     vector<string> output_lines;
-    std::shared_ptr<CaptionResult> last_final_result;
-    std::chrono::steady_clock::time_point created_at;
 
-    CaptionResult(
-            int index,
-            bool final,
-            double stability,
-            string caption_text
-    ) :
-            index(index),
-            final(final),
-            stability(stability),
-            caption_text(caption_text),
-            created_at(std::chrono::steady_clock::now()) {
+    OutputCaptionResult(
+            const CaptionResult &caption_result
+    ) : caption_result(caption_result) {
+
     }
 };
+
 
 class CaptionResultHandler {
     CaptionFormatSettings settings;
 
-    std::shared_ptr<CaptionResult> last_final_result;
-    string last_line;
+//    std::shared_ptr<CaptionResult> last_final_result;
+//    string last_line;
 
 public:
     explicit CaptionResultHandler(CaptionFormatSettings settings);
 
-    shared_ptr<CaptionResult> parse_caption_object(const string &caption_obj, bool fillup_with_previous);
+    shared_ptr<OutputCaptionResult> prepare_caption_output(
+            const CaptionResult &caption_result,
+            bool fillup_with_previous,
+            const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history);
 
-    void clear_history();
 };
 
 #endif //CPPTESTING_CAPTIONRESULTHANDLER_H

@@ -135,14 +135,14 @@ void ContinuousCaptions::cycle_streams() {
     interrupted = true;
 }
 
-void ContinuousCaptions::on_caption_text_cb(const string &data) {
+void ContinuousCaptions::on_caption_text_cb(const CaptionResult &caption_result) {
 //    debug_log("got caption data");
 //    debug_log("got caption data %s", data.c_str());
 
     {
         std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
         if (on_caption_cb_handle.callback_fn) {
-            on_caption_cb_handle.callback_fn(data, interrupted);
+            on_caption_cb_handle.callback_fn(caption_result, interrupted);
         }
     }
 
