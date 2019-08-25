@@ -166,10 +166,7 @@ static void save_obs_CaptionerSettings(obs_data_t *save_data, CaptionerSettings 
 }
 
 static bool is_stream_live() {
-    obs_output_t *output = obs_frontend_get_streaming_output();
-    bool live = !!output;
-    obs_output_release(output);
-    return live;
+    return obs_frontend_streaming_active();
 }
 
 
