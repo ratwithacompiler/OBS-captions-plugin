@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(DEVMODE OFF)
 if (USE_DEVMODE)
     message(WARNING "building in DEVMODE mode")
-#    set(DEVMODE ON)
+    set(DEVMODE ON)
 endif ()
 
 if (DEVMODE)
@@ -76,6 +76,7 @@ set(obs_google_caption_plugin_HEADERS
 
         src/ui/MainCaptionWidget.h
         src/ui/CaptionSettingsWidget.h
+        src/caption_output_writer.h
         )
 
 set(obs_google_caption_plugin_UIS

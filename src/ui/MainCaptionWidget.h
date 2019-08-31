@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <concurrentqueue.h>
 
-typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, bool, int, string> ResultTup;
+typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, bool, string> ResultTup;
 
 class MainCaptionWidget : public QWidget, Ui_MainCaptionWidget {
 Q_OBJECT
@@ -66,7 +66,6 @@ private slots:
             shared_ptr<OutputCaptionResult> caption_result,
             bool interrupted,
             bool cleared,
-            int active_delay_sec,
             string recent_caption_text
     );
 
@@ -96,6 +95,9 @@ public:
     void update_caption_text_ui();
 
     void external_state_changed();
+
+    void stream_started_event();
+    void stream_stopped_event();
 
     void set_enabled(bool is_enabled);
 };

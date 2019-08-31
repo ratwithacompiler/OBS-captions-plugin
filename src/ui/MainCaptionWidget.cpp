@@ -62,10 +62,9 @@ void MainCaptionWidget::apply_changed_settings(CaptionerSettings new_settings,
                                                bool is_preview_open,
                                                bool force_update) {
     // apply settings if they are different
-    printf("is_stream_live() %d, isVisible() %d source: '%s'\n", is_stream_live(), isVisible(),
-           new_settings.caption_source_settings.caption_source_name.c_str());
-    printf("is_live %d, is_preview_open %d \n", is_live, is_preview_open);
-    printf("is_live %d, is_preview_open %d \n", is_live, is_preview_open);
+    info_log("is_stream_live() %d, isVisible() %d source: '%s'\n", is_stream_live(), isVisible(),
+             new_settings.caption_source_settings.caption_source_name.c_str());
+    info_log("is_live %d, is_preview_open %d \n", is_live, is_preview_open);
     enforce_sensible_values(new_settings);
     bool equal_settings = current_settings == new_settings;
     bool do_captioning = (is_live || is_preview_open) && new_settings.enabled;
@@ -167,15 +166,12 @@ void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
     auto caption_result = std::get<0>(tup);
 //    bool interrupted = std::get<1>(tup);
     bool was_cleared = std::get<2>(tup);
-    bool active_delay_sec = std::get<3>(tup);
-    string recent_caption_text = std::get<4>(tup);
-//    info_log("handle_caption_result_tup, %d %d %d", interrupted, was_cleared, active_delay_sec);
+    string recent_caption_text = std::get<3>(tup);
+//    info_log("handle_caption_result_tup, %d %d", interrupted, was_cleared);
 
     if (was_cleared) {
-        if (!active_delay_sec) {
-            this->captionLinesPlainTextEdit->clear();
-            this->cleared = true;
-        }
+        this->captionLinesPlainTextEdit->clear();
+        this->cleared = true;
 
         return;
     }
@@ -193,12 +189,11 @@ void MainCaptionWidget::handle_caption_data_cb(
         shared_ptr<OutputCaptionResult> caption_result,
         bool interrupted,
         bool cleared,
-        int active_delay_sec,
         string recent_caption_text) {
     //called from different thread
 
 //    info_log("emitttttttttttttttttttt");
-    result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, active_delay_sec, recent_caption_text));
+    result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, recent_caption_text));
     emit process_item_queue();
 }
 
@@ -239,6 +234,16 @@ MainCaptionWidget::~MainCaptionWidget() {
 
 void MainCaptionWidget::external_state_changed() {
     apply_changed_settings(current_settings);
+}
+
+void MainCaptionWidget::stream_started_event() {
+    captioner.stream_started_event();
+    external_state_changed();
+}
+
+void MainCaptionWidget::stream_stopped_event() {
+    captioner.stream_stopped_event();
+    external_state_changed();
 }
 
 void MainCaptionWidget::handle_audio_capture_status_change(const int new_status) {

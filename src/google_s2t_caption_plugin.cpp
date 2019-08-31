@@ -90,6 +90,7 @@ void finished_loading_event() {
 
 #ifdef USE_DEVMODE
         main_caption_widget->show();
+        main_caption_widget->stream_started_event();
 #endif
     }
 }
@@ -97,13 +98,13 @@ void finished_loading_event() {
 void stream_started_event() {
     info_log("stream_started_event");
     if (main_caption_widget)
-        main_caption_widget->external_state_changed();
+        main_caption_widget->stream_started_event();
 }
 
 void stream_stopped_event() {
     info_log("stream_stopped_event");
     if (main_caption_widget)
-        main_caption_widget->external_state_changed();
+        main_caption_widget->stream_stopped_event();
 }
 
 void obs_frontent_exiting() {

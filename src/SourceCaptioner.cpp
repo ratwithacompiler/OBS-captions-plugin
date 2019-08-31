@@ -28,7 +28,6 @@ SourceCaptioner::SourceCaptioner(CaptionerSettings settings) :
         last_caption_at(std::chrono::steady_clock::now()),
         last_caption_cleared(true) {
 
-    QObject::connect(this, &SourceCaptioner::caption_text_line_received, this, &SourceCaptioner::send_caption_text, Qt::QueuedConnection);
     QObject::connect(&timer, &QTimer::timeout, this, &SourceCaptioner::clear_output_timer_cb);
     timer.start(1000);
 
@@ -154,42 +153,7 @@ void SourceCaptioner::clear_output_timer_cb() {
         this->last_caption_cleared = true;
     }
 
-    int active_delay = 0;
-    obs_output_t *output = obs_frontend_get_streaming_output();
-    if (output) {
-//        info_log("built caption lines, sending: '%s'", output_caption_line.c_str());
-        active_delay = obs_output_get_active_delay(output);
-        obs_output_output_caption_text2(output, "", 0.01);
-        obs_output_release(output);
-    }
-
-    emit caption_result_received(nullptr, false, true, active_delay, "");
-}
-
-void SourceCaptioner::send_caption_text(const string text, int send_in_secs) {
-    if (send_in_secs) {
-        auto call = [this, text, send_in_secs]() {
-            info_log("SLOT sending lines, was delayed, waited %d  '%s'", send_in_secs, text.c_str());
-            obs_output_t *output = obs_frontend_get_streaming_output();
-            if (output) {
-                // TODO: add must_match_output_delay bool param, check if delay is still the same if true
-                // to avoid old ones firing after delay was turned off?
-
-                this->caption_was_output();
-                obs_output_output_caption_text2(output, text.c_str(), 0.01);
-                obs_output_release(output);
-            }
-        };
-        this->timer.singleShot(send_in_secs * 1000, this, call);
-    } else {
-        info_log("SLOT sending lines direct, sending,  '%s'", text.c_str());
-        obs_output_t *output = obs_frontend_get_streaming_output();
-        if (output) {
-            this->caption_was_output();
-            obs_output_output_caption_text2(output, text.c_str(), 0.01);
-            obs_output_release(output);
-        }
-    }
+    emit caption_result_received(nullptr, false, true, "");
 }
 
 void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_result, bool interrupted) {
@@ -207,7 +171,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
             if (held_nonfinal_caption_result) {
                 results_history.push_back(held_nonfinal_caption_result);
                 debug_log("interrupt, saving latest nonfinal result to history, %s",
-                         held_nonfinal_caption_result->clean_caption_text.c_str());
+                          held_nonfinal_caption_result->clean_caption_text.c_str());
             }
         }
 
@@ -235,7 +199,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
             }
         }
 
-        if (output_caption_line == last_output_line) {
+        if (output_caption_line == last_output_line || output_caption_line.empty()) {
 //            debug_log("ignoring duplicate: '%s'", output_caption_line.c_str());
             return;
         }
@@ -275,43 +239,23 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
         }
     }
 
-    int active_delay_sec = 0;
     if (!output_caption_line.empty()) {
-        active_delay_sec = this->output_caption_text(output_caption_line);
+        this->output_caption_text(CaptionOutput(output_caption_line, output_result->caption_result.created_at));
     }
 
-    emit caption_result_received(output_result, interrupted, false, active_delay_sec, recent_captions);
+    emit caption_result_received(output_result, interrupted, false, recent_captions);
 }
 
-int SourceCaptioner::output_caption_text(const string &line) {
-    int active_delay_sec = 0;
-
-    obs_output_t *output = obs_frontend_get_streaming_output();
-    if (output) {
-        active_delay_sec = obs_output_get_active_delay(output);
-        if (active_delay_sec) {
-            debug_log("queueing caption lines, preparing delay: %d,  '%s'",
-                      active_delay_sec, line.c_str());
-
-            string text(line);
-            emit this->caption_text_line_received(text, active_delay_sec);
-
-        } else {
-            debug_log("sending caption lines, sending direct now: '%s'", line.c_str());
-            this->caption_was_output();
-            obs_output_output_caption_text2(output, line.c_str(), 0.01);
+void SourceCaptioner::output_caption_text(const CaptionOutput &output) {
+    debug_log("queuing caption line '%s'", output.line.c_str());
+    {
+        std::lock_guard<recursive_mutex> lock(caption_stream_output_mutex);
+        if (caption_stream_output_control) {
+            caption_stream_output_control->caption_queue.enqueue(output);
         }
-    } else {
-//            info_log("built caption lines, no output, not sending, not live?: '%s'", output_caption_line.c_str());
     }
-    obs_output_release(output);
-
-    return active_delay_sec;
 }
 
-SourceCaptioner::~SourceCaptioner() {
-    clear_settings(false);
-}
 
 void SourceCaptioner::not_not_captioning_status() {
     emit audio_capture_status_changed(-1);
@@ -322,3 +266,32 @@ void SourceCaptioner::caption_was_output() {
     this->last_caption_cleared = false;
 }
 
+
+void SourceCaptioner::stream_started_event() {
+    {
+        std::lock_guard<recursive_mutex> lock(caption_stream_output_mutex);
+        if (caption_stream_output_control) {
+            caption_stream_output_control->stop_soon();
+            caption_stream_output_control = nullptr;
+        }
+
+        caption_stream_output_control = new CaptionOutputControl();
+        std::thread th(caption_output_writer_loop, caption_stream_output_control, true);
+        th.detach();
+    }
+}
+
+void SourceCaptioner::stream_stopped_event() {
+    {
+        std::lock_guard<recursive_mutex> lock(caption_stream_output_mutex);
+        if (caption_stream_output_control) {
+            caption_stream_output_control->stop_soon();
+            caption_stream_output_control = nullptr;
+        }
+    }
+}
+
+SourceCaptioner::~SourceCaptioner() {
+    stream_stopped_event();
+    clear_settings(false);
+}

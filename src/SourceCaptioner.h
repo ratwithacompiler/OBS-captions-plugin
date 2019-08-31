@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "AudioCaptureSession.h"
 #include "ContinuousCaptions.h"
 #include "CaptionResultHandler.h"
+#include "caption_output_writer.h"
 
 #include <QObject>
 #include <QTimer>
@@ -110,7 +111,6 @@ Q_OBJECT
     std::unique_ptr<CaptionResultHandler> caption_result_handler;
     std::recursive_mutex settings_change_mutex;
 
-
     std::chrono::steady_clock::time_point last_caption_at;
     bool last_caption_cleared;
     QTimer timer;
@@ -120,15 +120,18 @@ Q_OBJECT
 
     string last_output_line;
 
+    std::recursive_mutex caption_stream_output_mutex;
+    CaptionOutputControl *caption_stream_output_control = nullptr;
+
     void caption_was_output();
 
-    int output_caption_text(const string &line);
+    void output_caption_text(const CaptionOutput &output);
 
 private slots:
 
     void clear_output_timer_cb();
 
-    void send_caption_text(const string text, int send_in_secs);
+//    void send_caption_text(const string text, int send_in_secs);
 
 signals:
 
@@ -138,7 +141,6 @@ signals:
             shared_ptr<OutputCaptionResult> caption,
             bool interrupted,
             bool cleared,
-            int active_delay_sec,
             string recent_caption_text);
 
     void audio_capture_status_changed(const int new_status);
@@ -163,7 +165,8 @@ public:
 
     void not_not_captioning_status();
 
-
+    void stream_started_event();
+    void stream_stopped_event();
 };
 
 
