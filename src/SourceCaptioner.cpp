@@ -153,6 +153,7 @@ void SourceCaptioner::clear_output_timer_cb() {
         this->last_caption_cleared = true;
     }
 
+    output_caption_text(CaptionOutput());
     emit caption_result_received(nullptr, false, true, "");
 }
 
