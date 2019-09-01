@@ -36,5 +36,10 @@ cd ..
 cd
 dir build_32
 
+:: copy the cmake processed file with version_string
+copy build_64\CI\post-install-script-win.cmd CI\post-install-script-win.cmd
+dir CI
+type CI\post-install-script-win.cmd
+
 dir
 

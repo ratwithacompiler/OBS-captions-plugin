@@ -2,7 +2,7 @@
 
 
 jobs:
-  - job: 'Build_macOS'
+  - job: 'Build_MacOS'
     pool:
       vmImage: 'macos-10.13'
 
@@ -40,7 +40,7 @@ jobs:
       - task: PublishPipelineArtifact@1
         inputs:
           path: './build/libobs_google_caption_plugin.so'
-          artifact: Closed_Captions_Plugin__MacOs
+          artifact: Closed_Captions_Plugin__MacOS
 
   - job: 'Build_Windows'
     pool:

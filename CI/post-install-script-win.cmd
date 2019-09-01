@@ -1,11 +1,12 @@
 
 dir
 mkdir release_dir
-mkdir release_dir\32bit
-mkdir release_dir\64bit
+mkdir release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows
+mkdir release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\32bit
+mkdir release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\64bit
 
-copy build_32\RelWithDebInfo\obs_google_caption_plugin.dll release_dir\32bit\obs_google_caption_plugin.dll
-copy build_64\RelWithDebInfo\obs_google_caption_plugin.dll release_dir\64bit\obs_google_caption_plugin.dll
+copy build_32\RelWithDebInfo\obs_google_caption_plugin.dll release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\32bit\obs_google_caption_plugin.dll
+copy build_64\RelWithDebInfo\obs_google_caption_plugin.dll release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\64bit\obs_google_caption_plugin.dll
 
-dir release_dir\32bit
-dir release_dir\64bit
+dir release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\32bit
+dir release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\64bit

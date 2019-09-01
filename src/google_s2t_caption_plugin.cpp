@@ -172,7 +172,7 @@ void setup_UI() {
 
 
 bool obs_module_load(void) {
-    info_log("hiiiiiiiiiiiiiiiiiiiii obs_module_load");
+    info_log("google_s2t_caption_plugin %s obs_module_load", VERSION_STRING);
     p_libsys_init();
     qRegisterMetaType<std::string>();
     qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
@@ -184,11 +184,11 @@ bool obs_module_load(void) {
 }
 
 void obs_module_post_load(void) {
-    info_log("hwoooooooooooooooo obs_module_post_load");
+    info_log("google_s2t_caption_plugin %s obs_module_post_load", VERSION_STRING);
 
 
 }
 
 void obs_module_unload(void) {
-    info_log("hwoooooooooooooooo obs_module_unload");
+    info_log("google_s2t_caption_plugin %s obs_module_unload", VERSION_STRING);
 }

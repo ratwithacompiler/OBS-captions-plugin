@@ -6,6 +6,7 @@ project(obs_google_caption_plugin)
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
 set(CMAKE_CXX_STANDARD 14)
+set(VERSION_STRING "0.0.10")
 
 set(DEVMODE OFF)
 if (USE_DEVMODE)
@@ -31,6 +32,7 @@ if (NOT GOOGLE_API_KEY)
     message(FATAL_ERROR "no google api key set")
 endif ()
 add_compile_definitions(GOOGLE_API_KEY_STR="${GOOGLE_API_KEY}")
+add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
 set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
 set(OBS_LIB_BIN_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
@@ -51,6 +53,9 @@ endif ()
 if (NOT OBS_LIB_DIR)
     message(FATAL_ERROR "OBS_LIB_DIR not set")
 endif ()
+
+configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget.ui)
+configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
 
 add_subdirectory(lib)
 
@@ -89,7 +94,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
-
 
 add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_UIS}
