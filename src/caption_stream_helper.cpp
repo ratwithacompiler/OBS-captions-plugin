@@ -169,6 +169,10 @@ static bool is_stream_live() {
     return obs_frontend_streaming_active();
 }
 
+static bool is_recording_live() {
+    return obs_frontend_recording_active();
+}
+
 
 static void setup_combobox_profanity(QComboBox &comboBox) {
     while (comboBox.count())

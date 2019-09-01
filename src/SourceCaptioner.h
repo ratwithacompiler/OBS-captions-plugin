@@ -123,9 +123,15 @@ Q_OBJECT
     std::recursive_mutex caption_stream_output_mutex;
     CaptionOutputControl *caption_stream_output_control = nullptr;
 
+    std::recursive_mutex caption_recording_output_mutex;
+    CaptionOutputControl *caption_recording_output_control = nullptr;
+
     void caption_was_output();
 
     void output_caption_text(const CaptionOutput &output);
+
+    void store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted);
+    void prepare_recent(string &recent_captions_output);
 
 private slots:
 
@@ -167,6 +173,9 @@ public:
 
     void stream_started_event();
     void stream_stopped_event();
+
+    void recording_started_event();
+    void recording_stopped_event();
 };
 
 

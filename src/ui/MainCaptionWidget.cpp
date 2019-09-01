@@ -54,26 +54,38 @@ MainCaptionWidget::MainCaptionWidget(CaptionerSettings initial_settings) :
 }
 
 void MainCaptionWidget::apply_changed_settings(CaptionerSettings new_settings, bool force_update) {
-    apply_changed_settings(new_settings, is_stream_live(), isVisible(), force_update);
+
+    bool is_recording = false;
+
+#ifdef USE_DEVMODE
+    is_recording = is_recording_live();
+#endif
+
+    apply_changed_settings(new_settings, is_stream_live(), isVisible(), is_recording, force_update);
 }
 
 void MainCaptionWidget::apply_changed_settings(CaptionerSettings new_settings,
                                                bool is_live,
                                                bool is_preview_open,
+                                               bool is_recording,
                                                bool force_update) {
     // apply settings if they are different
-    info_log("is_stream_live() %d, isVisible() %d source: '%s'\n", is_stream_live(), isVisible(),
+    info_log("is_stream_live() %d, is_recording_live() %d, isVisible() %d source: '%s'\n",
+             is_stream_live(), is_recording_live(), isVisible(),
              new_settings.caption_source_settings.caption_source_name.c_str());
-    info_log("is_live %d, is_preview_open %d \n", is_live, is_preview_open);
+
+    info_log("is_live %d, is_recording %d, is_preview_open %d, force_update %d \n",
+            is_live, is_recording, is_preview_open, force_update);
+
     enforce_sensible_values(new_settings);
     bool equal_settings = current_settings == new_settings;
-    bool do_captioning = (is_live || is_preview_open) && new_settings.enabled;
+    bool do_captioning = (is_live || is_preview_open || is_recording) && new_settings.enabled;
 
     if (current_settings.enabled != new_settings.enabled)
             emit this->enabled_state_changed(new_settings.enabled);
 
     if (!force_update && (equal_settings && do_captioning == this->is_captioning)) {
-        info_log("settings unchagned, ignoring");
+        info_log("settings unchanged, ignoring");
         return;
     }
 
@@ -243,6 +255,16 @@ void MainCaptionWidget::stream_started_event() {
 
 void MainCaptionWidget::stream_stopped_event() {
     captioner.stream_stopped_event();
+    external_state_changed();
+}
+
+void MainCaptionWidget::recording_started_event() {
+    captioner.recording_started_event();
+    external_state_changed();
+}
+
+void MainCaptionWidget::recording_stopped_event() {
+    captioner.recording_stopped_event();
     external_state_changed();
 }
 

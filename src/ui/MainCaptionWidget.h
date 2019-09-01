@@ -56,7 +56,7 @@ private:
     void apply_changed_settings(CaptionerSettings new_settings, bool force_update = false);
 
     void apply_changed_settings(CaptionerSettings new_settings, bool is_live, bool is_preview_open,
-                                bool force_update = false);
+                                bool is_recording, bool force_update = false);
 
     void do_process_item_queue();
 
@@ -97,7 +97,12 @@ public:
     void external_state_changed();
 
     void stream_started_event();
+
     void stream_stopped_event();
+
+    void recording_started_event();
+
+    void recording_stopped_event();
 
     void set_enabled(bool is_enabled);
 };

@@ -49,6 +49,10 @@ void stream_started_event();
 
 void stream_stopped_event();
 
+void recording_started_event();
+
+void recording_stopped_event();
+
 void setup_UI();
 
 void closed_caption_tool_menu_clicked();
@@ -64,6 +68,10 @@ static void obs_event(enum obs_frontend_event event, void *) {
         stream_started_event();
     } else if (event == OBS_FRONTEND_EVENT_STREAMING_STOPPED) {
         stream_stopped_event();
+    } else if (event == OBS_FRONTEND_EVENT_RECORDING_STARTED) {
+        recording_started_event();
+    } else if (event == OBS_FRONTEND_EVENT_RECORDING_STOPPED) {
+        recording_stopped_event();
     } else if (event == OBS_FRONTEND_EVENT_EXIT) {
         obs_frontent_exiting();
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
@@ -105,6 +113,22 @@ void stream_stopped_event() {
     info_log("stream_stopped_event");
     if (main_caption_widget)
         main_caption_widget->stream_stopped_event();
+}
+
+void recording_started_event() {
+#ifdef USE_DEVMODE
+    info_log("recording_started_event");
+    if (main_caption_widget)
+        main_caption_widget->recording_started_event();
+#endif
+}
+
+void recording_stopped_event() {
+#ifdef USE_DEVMODE
+    info_log("recording_stopped_event");
+    if (main_caption_widget)
+        main_caption_widget->recording_stopped_event();
+#endif
 }
 
 void obs_frontent_exiting() {
