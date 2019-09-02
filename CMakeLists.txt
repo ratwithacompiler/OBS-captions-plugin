@@ -54,7 +54,6 @@ if (NOT OBS_LIB_DIR)
     message(FATAL_ERROR "OBS_LIB_DIR not set")
 endif ()
 
-configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget.ui)
 configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
 
 add_subdirectory(lib)
@@ -84,19 +83,16 @@ set(obs_google_caption_plugin_HEADERS
         src/caption_output_writer.h
         )
 
-set(obs_google_caption_plugin_UIS
-        src/ui/MainCaptionWidget.ui
-        src/ui/CaptionSettingsWidget.ui
-        )
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
 
+configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
+
 add_library(obs_google_caption_plugin MODULE
-        ${obs_google_caption_plugin_UIS}
         ${obs_google_caption_plugin_HEADERS}
         ${obs_google_caption_plugin_SOURCES}
         )
