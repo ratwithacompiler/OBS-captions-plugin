@@ -153,7 +153,7 @@ void SourceCaptioner::clear_output_timer_cb() {
         this->last_caption_cleared = true;
     }
 
-    output_caption_text(CaptionOutput());
+    output_caption_text(CaptionOutput(), true);
     emit caption_result_received(nullptr, false, true, "");
 }
 
@@ -262,7 +262,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
     emit caption_result_received(output_result, interrupted, false, recent_caption_text);
 }
 
-void SourceCaptioner::output_caption_text(const CaptionOutput &output) {
+void SourceCaptioner::output_caption_text(const CaptionOutput &output, bool is_clearance) {
 
     bool sent_stream = false;
     {
@@ -285,7 +285,8 @@ void SourceCaptioner::output_caption_text(const CaptionOutput &output) {
     debug_log("queuing caption line , stream: %d, recording: %d, '%s'",
               sent_stream, sent_recording, output.line.c_str());
 
-    caption_was_output();
+    if (!is_clearance)
+        caption_was_output();
 }
 
 

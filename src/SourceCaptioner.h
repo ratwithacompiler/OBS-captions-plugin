@@ -128,7 +128,7 @@ Q_OBJECT
 
     void caption_was_output();
 
-    void output_caption_text(const CaptionOutput &output);
+    void output_caption_text(const CaptionOutput &output, bool is_clearance = false);
 
     void store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted);
     void prepare_recent(string &recent_captions_output);
