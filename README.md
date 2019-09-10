@@ -1,7 +1,7 @@
-## Closed Captioning OBS Plugin using Google Speech Recognition API
+## Closed Captioning OBS Plugin
 
 Provides closed captioning via Google Cloud Speech Recognition API as a standalone OBS plugin, no other tools required. 
-It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC and iOS, no Twitch extension needed.  
+It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC, Android and iOS, no Twitch extension required.  
 
 #### Features:
   * Captions only when the microphone source is unmuted and active to ensure safety
@@ -31,7 +31,9 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * **On iOS** it's a system wide setting: `Settings -> General -> Accessibility -> Subtitles & Captioning -> Closed Captions + SHD` 
   * If it's already off but viewers still see captions they have to turn it on and off again (appears to be a bug on some iOS versions)
   
-Does NOT work with SLOBS (Streamlabs OBS).
+* **On Android** it's `Closed Captions` under the player settings options right beneath the quality selection. The option will only show up once the streamer has talked.
+  
+Does NOT work with Streamlabs OBS (SLOBS).
 
 This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
 Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.  
