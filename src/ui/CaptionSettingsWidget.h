@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <QWidget>
-#include <lib/caption_stream/CaptionStream.h>
+#include <CaptionStream.h>
 #include <src/ui/ui_CaptionSettingsWidget_out.h>
 
 #include "../AudioCaptureSession.h"

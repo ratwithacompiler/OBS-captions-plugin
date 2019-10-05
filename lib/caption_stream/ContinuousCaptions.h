@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CPPTESTING_CONTINUOUSCAPTIONS_H
 
 
-#include "CaptionStream.h"
+#include <CaptionStream.h>
 
 struct ContinuousCaptionStreamSettings {
     uint connect_second_after_secs;
@@ -66,6 +66,13 @@ struct ContinuousCaptionStreamSettings {
 
 typedef std::function<void(const CaptionResult &caption_result, bool interrupted)> continuous_caption_text_callback;
 
+/*
+ Provides a continuous stream of caption messages for audio data, abstracting issues like reconnects after network errors and
+ API limitation workarounds (Google Speech API v1 currently has a 5 minute maximum limit for a single streaming session).
+
+ Minimizes impact of these regular disconnects by starting a second connection shortly before the first once
+ is about to hit the limit and feeds both with the same audio for a bit before switching to the new one to avoid captioning gap.
+ */
 class ContinuousCaptions {
     std::shared_ptr<CaptionStream> current_stream;
     std::shared_ptr<CaptionStream> prepared_stream;

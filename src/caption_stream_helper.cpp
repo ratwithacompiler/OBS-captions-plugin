@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include <lib/caption_stream/CaptionStream.h>
+#include <CaptionStream.h>
 #include "log.c"
 #include <utils.h>
 #include "storage_utils.h"
@@ -39,8 +39,8 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
 
 static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings() {
     return {
-            260,
-            275,
+            280,
+            255,
             10,
             default_CaptionStreamSettings()
     };
@@ -84,12 +84,9 @@ static void enforce_sensible_values(CaptionerSettings &settings) {
 }
 
 static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
-    info_log("obs load event");
-
     obs_data_t *obj = obs_data_get_obj(load_data, SAVE_ENTRY_NAME);
     auto settings = default_CaptionerSettings();
 
-    printf("\n\n");
     settings.print();
     if (!obj) {
         info_log("first time loading, keeping default settings");
@@ -134,7 +131,6 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
         enforce_sensible_values(settings);
     }
     obs_data_release(obj);
-    printf("\n\n");
     settings.print();
     return settings;
 

@@ -23,9 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include "log.h"
-#include "CaptionStream.h"
-#include <json11.hpp>
-
+#include <CaptionStream.h>
 
 struct CaptionFormatSettings {
     uint caption_line_length;
@@ -83,8 +81,6 @@ struct CaptionFormatSettings {
 
 };
 
-
-using namespace json11;
 
 struct OutputCaptionResult {
 

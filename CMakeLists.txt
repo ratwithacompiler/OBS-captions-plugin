@@ -6,7 +6,8 @@ project(obs_google_caption_plugin)
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
 set(CMAKE_CXX_STANDARD 14)
-set(VERSION_STRING "0.0.10")
+set(VERSION_STRING "0.0.11")
+
 
 set(DEVMODE OFF)
 if (USE_DEVMODE)
@@ -15,9 +16,14 @@ if (USE_DEVMODE)
 endif ()
 
 if (DEVMODE)
-    add_compile_definitions(GOOGLE="127.0.0.1")
-    add_compile_definitions(PORTUP=9125)
-    add_compile_definitions(PORTDOWN=9125)
+    add_compile_definitions(GOOGLE="www.google.com")
+    add_compile_definitions(PORTUP=80)
+    add_compile_definitions(PORTDOWN=80)
+
+    #    add_compile_definitions(GOOGLE="127.0.0.1")
+    #    add_compile_definitions(PORTUP=9125)
+    #    add_compile_definitions(PORTDOWN=9125)
+
     add_compile_definitions(USE_DEVMODE=1)
     message("using api: localhost")
 else ()
@@ -27,18 +33,20 @@ else ()
     message("using api: google")
 endif ()
 
-set(GOOGLE_API_KEY "" CACHE STRING "google api key")
+set(GOOGLE_API_KEY "" CACHE STRING "google api key with speech API enabled")
 if (NOT GOOGLE_API_KEY)
-    message(FATAL_ERROR "no google api key set")
+    message(FATAL_ERROR "no GOOGLE_API_KEY set")
 endif ()
 add_compile_definitions(GOOGLE_API_KEY_STR="${GOOGLE_API_KEY}")
 add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
 set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
 set(OBS_LIB_BIN_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
+set(QT_DIR "" CACHE STRING "Path to Qt dir")
 
 message("hmm ${OBS_SOURCE_DIR}")
 message("hmm ${OBS_LIB_DIR}")
+message("hmm ${QT_DIR}")
 
 if (DEFINED QT_DIR)
     list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
@@ -87,39 +95,53 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
+
+
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
 
 configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
+
 
 add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_HEADERS}
         ${obs_google_caption_plugin_SOURCES}
         )
 
-#message("prefix: ${CMAKE_FIND_LIBRARY_PREFIXES}")
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
-
 
 find_library(LIBOBS_LIBRARY obs
         ${OBS_LIB_DIR}
         ${OBS_LIB_DIR}/libobs/
         ${OBS_LIB_DIR}/libobs/RelWithDebInfo/
+        ${OBS_LIB_DIR}/libobs/Relase/
         ${OBS_LIB_DIR}/libobs/*/
         )
-message("LIBOBS_LIBRARY: ${LIBOBS_LIBRARY}")
+
+if (NOT LIBOBS_LIBRARY)
+    message(FATAL_ERROR "libOBS not found: ${OBS_LIB_DIR}")
+endif ()
+message("using libOBS: ${LIBOBS_LIBRARY}")
 
 find_library(OBS_FRONTEND_LIBRARY obs-frontend-api
         ${OBS_LIB_DIR}
         ${OBS_LIB_DIR}/UI/obs-frontend-api/
         ${OBS_LIB_DIR}/UI/obs-frontend-api/RelWithDebInfo/
+        ${OBS_LIB_DIR}/UI/obs-frontend-api/Release/
         ${OBS_LIB_DIR}/UI/obs-frontend-api/*/
         )
-message("OBS_FRONTEND_LIBRARY: ${OBS_FRONTEND_LIBRARY}")
 
+if (NOT OBS_FRONTEND_LIBRARY)
+    message(FATAL_ERROR "obs_frontend_library not found: ${OBS_LIB_DIR}")
+endif ()
+message("using obs_frontend_library: ${OBS_FRONTEND_LIBRARY}")
+
+if (NOT OBS_FRONTEND_LIBRARY)
+    message(FATAL_ERROR "obs_frontend_library not found")
+endif ()
 
 target_link_libraries(obs_google_caption_plugin
-        caption_stream_static
+        caption_stream
         ${OBS_FRONTEND_LIBRARY}
         ${LIBOBS_LIBRARY}
 

@@ -265,7 +265,6 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         last_output_line = output_caption_line;
 
 //        info_log("got caption '%s'", output_result->clean_caption_text.c_str());
-//        info_log("got caption obj '%s'", output_result->caption_result.raw_message.c_str());
 //        info_log("output line '%s'", output_caption_line.c_str());
 
         prepare_recent(recent_caption_text);
@@ -307,8 +306,8 @@ void SourceCaptioner::output_caption_text(
         }
     }
 
-    debug_log("queuing caption line , stream: %d, recording: %d, '%s'",
-              sent_stream, sent_recording, output.line.c_str());
+//    debug_log("queuing caption line , stream: %d, recording: %d, '%s'",
+//              sent_stream, sent_recording, output.line.c_str());
 
     if (!is_clearance)
         caption_was_output();

@@ -98,7 +98,7 @@ void finished_loading_event() {
 
 #ifdef USE_DEVMODE
         main_caption_widget->show();
-        main_caption_widget->stream_started_event();
+//        main_caption_widget->stream_started_event();
 #endif
     }
 }
@@ -169,7 +169,6 @@ void setup_UI() {
 
 bool obs_module_load(void) {
     info_log("google_s2t_caption_plugin %s obs_module_load", VERSION_STRING);
-    p_libsys_init();
     qRegisterMetaType<std::string>();
     qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
     qRegisterMetaType<CaptionResult>();

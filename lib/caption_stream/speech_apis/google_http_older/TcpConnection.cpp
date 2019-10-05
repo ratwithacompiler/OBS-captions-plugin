@@ -22,12 +22,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define READ_BUFFER_SIZE 2048
 
+#include "ip_utils.c"
+
 //testing
 #define SOCKET_RECV_BUFFER_SIZE 4096
 #define SOCKET_SEND_BUFFER_SIZE 1024
 
+volatile bool is_setup = false;
+
+static void setup_check() {
+    if (is_setup)
+        return;
+
+    info_log("p_libsys_init");
+    p_libsys_init();
+    is_setup = true;
+}
+
+
 TcpConnection::TcpConnection(string hostname, uint port)
         : hostname(hostname), port(port) {
+    setup_check();
     debug_log("TcpConnection!!!!!!!!!!");
 }
 
