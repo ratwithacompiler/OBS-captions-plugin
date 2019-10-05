@@ -119,6 +119,11 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
         settings.stream_settings.stream_settings.language = obs_data_get_string(obj, "source_language");
         settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(obj, "profanity_filter");
 
+        // backwards compatibility with old settings that had off, mild, strict instead off/on.
+        // ensure old strict/2 falls back to on/1 not off/0 default.
+        if (settings.stream_settings.stream_settings.profanity_filter == 2)
+            settings.stream_settings.stream_settings.profanity_filter = 1;
+
         settings.format_settings.caption_timeout_enabled = obs_data_get_bool(obj, "caption_timeout_enabled");
         settings.format_settings.caption_timeout_seconds = obs_data_get_double(obj, "caption_timeout_secs");
 
@@ -185,8 +190,7 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
         comboBox.removeItem(0);
 
     comboBox.addItem("Off", 0);
-    comboBox.addItem("Some (Very Unreliable!)", 1);
-    comboBox.addItem("Strict (Very Unreliable!)", 2);
+    comboBox.addItem("On (Unreliable!)", 1);
 }
 
 static void setup_combobox_output_target(QComboBox &comboBox) {

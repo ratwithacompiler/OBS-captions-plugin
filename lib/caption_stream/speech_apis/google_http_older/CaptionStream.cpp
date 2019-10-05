@@ -173,10 +173,10 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     post_req.append("&lang=");
     post_req.append(settings.language);
 
-    stringstream profStr;
-    profStr << settings.profanity_filter;
-    post_req.append("&pFilter=");
-    post_req.append(profStr.str());
+    if(settings.profanity_filter)
+        post_req.append("&pFilter=1");
+    else
+        post_req.append("&pFilter=0");
 
     post_req.append("&client=chromium&continuous&interim HTTP/1.1\r\n"
                     "Host: www.google.com\r\n"
