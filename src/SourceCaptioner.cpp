@@ -53,10 +53,13 @@ void SourceCaptioner::clear_settings(bool send_signal) {
 
 bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
     info_log("set_settingsset_settingsset_settings");
-    clear_settings(false);
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
+        audio_capture_session = nullptr;
+        caption_result_handler = nullptr;
+
+        bool caption_settings_equal = settings.stream_settings == new_settings.stream_settings;
         settings = new_settings;
 
         if (new_settings.caption_source_settings.caption_source_name.empty()) {
@@ -85,9 +88,19 @@ bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
             }
         }
 
-        auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
-        captioner = std::make_unique<ContinuousCaptions>(new_settings.stream_settings);
-        captioner->on_caption_cb_handle.set(caption_cb, true);
+        debug_log("caption_settings_equal: %d, %d", caption_settings_equal, captioner != nullptr);
+        if (!captioner || !caption_settings_equal) {
+            try {
+                auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
+                captioner = std::make_unique<ContinuousCaptions>(new_settings.stream_settings);
+                captioner->on_caption_cb_handle.set(caption_cb, true);
+            }
+            catch (...) {
+                warn_log("couldn't create ContinuousCaptions");
+                clear_settings();
+                return false;
+            }
+        }
         caption_result_handler = std::make_unique<CaptionResultHandler>(new_settings.format_settings);
 
         try {
