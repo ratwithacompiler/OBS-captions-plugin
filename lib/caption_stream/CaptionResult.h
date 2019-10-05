@@ -35,6 +35,8 @@ struct CaptionResult {
 
     std::chrono::steady_clock::time_point created_at;
 
+    CaptionResult(){};
+
     CaptionResult(
             int index,
             bool final,

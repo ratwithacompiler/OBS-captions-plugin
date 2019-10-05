@@ -36,6 +36,8 @@ Q_DECLARE_METATYPE(std::string)
 
 Q_DECLARE_METATYPE(shared_ptr<OutputCaptionResult>)
 
+Q_DECLARE_METATYPE(CaptionResult)
+
 #define MAX_HISTORY_VIEW_LENGTH 2000
 
 enum CaptionSourceMuteType {
@@ -143,7 +145,7 @@ Q_OBJECT
             bool to_stream,
             bool to_recoding,
             bool is_clearance = false
-            );
+    );
 
     void store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted);
 
@@ -153,11 +155,15 @@ private slots:
 
     void clear_output_timer_cb();
 
+    void process_caption_result(const CaptionResult, bool interrupted);
+
 //    void send_caption_text(const string text, int send_in_secs);
 
 signals:
 
     void caption_text_line_received(string caption_text, int delay_sec);
+
+    void received_caption_result(const CaptionResult, bool interrupted);
 
     void caption_result_received(
             shared_ptr<OutputCaptionResult> caption,

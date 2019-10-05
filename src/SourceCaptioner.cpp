@@ -29,6 +29,10 @@ SourceCaptioner::SourceCaptioner(CaptionerSettings settings) :
         last_caption_cleared(true) {
 
     QObject::connect(&timer, &QTimer::timeout, this, &SourceCaptioner::clear_output_timer_cb);
+
+    QObject::connect(this, &SourceCaptioner::received_caption_result,
+                     this, &SourceCaptioner::process_caption_result, Qt::QueuedConnection);
+
     timer.start(1000);
 
     info_log("SourceCaptioner, source '%s'", settings.caption_source_settings.caption_source_name.c_str());
@@ -221,12 +225,25 @@ void SourceCaptioner::prepare_recent(string &recent_captions_output) {
 }
 
 void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_result, bool interrupted) {
+    // emit qt signal to avoid possible thread deadlock
+    // this callback comes from the captioner thread, result processing needs settings_change_mutex, so does clearing captioner,
+    // but that waits for the captioner callback to finish which might be waiting on the lock otherwise.
+
+    emit received_caption_result(caption_result, interrupted);
+}
+
+void SourceCaptioner::process_caption_result(const CaptionResult caption_result, bool interrupted) {
     shared_ptr<OutputCaptionResult> output_result;
     string output_caption_line;
     string recent_caption_text;
     bool to_stream, to_recording;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
+
+        if (!caption_result_handler) {
+            warn_log("no caption_result_handler, shouldn't happen, there should be no AudioCaptureSession running");
+            return;
+        }
 
         output_result = caption_result_handler->prepare_caption_output(caption_result, true, results_history);
         if (!output_result)
@@ -362,3 +379,4 @@ SourceCaptioner::~SourceCaptioner() {
     recording_stopped_event();
     clear_settings(false);
 }
+
