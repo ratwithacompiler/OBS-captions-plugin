@@ -184,8 +184,6 @@ private slots:
 
 signals:
 
-    void caption_text_line_received(string caption_text, int delay_sec);
-
     void received_caption_result(const CaptionResult, bool interrupted);
 
     void caption_result_received(

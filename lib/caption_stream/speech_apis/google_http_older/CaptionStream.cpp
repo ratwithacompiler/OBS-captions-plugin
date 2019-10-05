@@ -196,6 +196,7 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     if (is_stopped())
         return;
 
+//    debug_log("post: %s", post_req.c_str());
     debug_log("sent head bytes %lu, language: %s, profanity filter: %d",
               post_req.size(), settings.language.c_str(), settings.profanity_filter);
 

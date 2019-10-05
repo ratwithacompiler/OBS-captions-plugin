@@ -97,5 +97,6 @@ if (DEVMODE)
             dev/main.cpp
             )
 
-    target_link_libraries(caption_stream_dev_main caption_stream)
+    target_link_libraries(caption_stream_dev_main caption_stream plibsysstatic)
+    add_dependencies(caption_stream_dev_main caption_stream)
 endif ()
