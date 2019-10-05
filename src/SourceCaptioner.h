@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define OBS_STUDIO_SOURCECAPTIONER_H
 
 
+#include <ContinuousCaptions.h>
 #include "AudioCaptureSession.h"
-#include "ContinuousCaptions.h"
 #include "CaptionResultHandler.h"
 #include "caption_output_writer.h"
 
@@ -112,6 +112,34 @@ struct CaptionerSettings {
     }
 };
 
+struct OutputWriter {
+    std::recursive_mutex control_change_mutex;
+    std::shared_ptr<CaptionOutputControl> control;
+
+    void clear() {
+        std::lock_guard<recursive_mutex> lock(control_change_mutex);
+        if (control) {
+            control->stop_soon();
+            control = nullptr;
+        }
+    }
+
+    void set_control(const std::shared_ptr<CaptionOutputControl> &set_control) {
+        std::lock_guard<recursive_mutex> lock(control_change_mutex);
+        clear();
+        this->control = set_control;
+    }
+
+    bool enqueue(const CaptionOutput &output) {
+        std::lock_guard<recursive_mutex> lock(control_change_mutex);
+        if (control) {
+            control->caption_queue.enqueue(output);
+            return true;
+        }
+        return false;
+    }
+};
+
 class SourceCaptioner : public QObject {
 Q_OBJECT
 
@@ -130,13 +158,8 @@ Q_OBJECT
     std::vector<std::shared_ptr<OutputCaptionResult>> results_history; // final ones + last ones before interruptions
     std::shared_ptr<OutputCaptionResult> held_nonfinal_caption_result;
 
-    string last_output_line;
-
-    std::recursive_mutex caption_stream_output_mutex;
-    CaptionOutputControl *caption_stream_output_control = nullptr;
-
-    std::recursive_mutex caption_recording_output_mutex;
-    CaptionOutputControl *caption_recording_output_control = nullptr;
+    OutputWriter streaming_output;
+    OutputWriter recording_output;
 
     void caption_was_output();
 

@@ -86,7 +86,9 @@ struct OutputCaptionResult {
 
     CaptionResult caption_result;
     string clean_caption_text;
-    vector<string> output_lines;
+
+    vector<string> output_lines; //optionally cleaned and filled with history
+    string output_line; // joined output_lines
 
     OutputCaptionResult(
             const CaptionResult &caption_result
@@ -108,6 +110,7 @@ public:
     shared_ptr<OutputCaptionResult> prepare_caption_output(
             const CaptionResult &caption_result,
             bool fillup_with_previous,
+            bool insert_newlines,
             const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history);
 
 };

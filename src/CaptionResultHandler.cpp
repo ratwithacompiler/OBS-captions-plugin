@@ -52,10 +52,20 @@ void split_into_non_wrapped_lines(vector<string> &output_lines, const string &te
 //        debug_log("%s", line.c_str());
 }
 
+static void join_strings(const vector<string> &lines, char join_char, string &output) {
+    for (const string &a_line: lines) {
+        if (!output.empty())
+            output.push_back(join_char);
+
+        output.append(a_line);
+    }
+}
+
 
 shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const CaptionResult &caption_result,
         bool fillup_with_previous,
+        bool insert_newlines,
         const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history
 ) {
 
@@ -132,10 +142,15 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const uint use_lines_cnt = all_lines.size() > targeted_line_count ? targeted_line_count : all_lines.size();
         output_result->output_lines.insert(output_result->output_lines.end(), all_lines.end() - use_lines_cnt, all_lines.end());
 
+        if (!output_result->output_lines.empty()) {
+            char join_char = insert_newlines ? '\n' : ' ';
+            join_strings(output_result->output_lines, join_char, output_result->output_line);
+        }
+
 //        debug_log("lines: %lu", output_result->output_lines.size());
 //        for (const auto &line: output_result->output_lines)
 //            debug_log("line: %s", line.c_str());
-//        debug_log("");
+//        debug_log("");an
 
         return output_result;
 
