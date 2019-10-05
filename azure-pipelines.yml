@@ -19,7 +19,8 @@ jobs:
           source: 'specific'
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
-          runVersion: 'latest'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/master"
           itemPattern: "obs_deps_macos/archive_osx.zip"
 
       - script: ./CI/install-script-osx.sh
@@ -59,7 +60,8 @@ jobs:
           source: 'specific'
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
-          runVersion: 'latest'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/master"
           itemPattern: "obs_deps_windows/archive.7z"
 
       - script: .\CI\install-script-win.cmd
