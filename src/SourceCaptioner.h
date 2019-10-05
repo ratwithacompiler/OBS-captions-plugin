@@ -62,6 +62,8 @@ struct CaptionSourceSettings {
 
 struct CaptionerSettings {
     bool enabled;
+    bool streaming_output_enabled;
+    bool recording_output_enabled;
     CaptionSourceSettings caption_source_settings;
 
     CaptionFormatSettings format_settings;
@@ -69,17 +71,23 @@ struct CaptionerSettings {
 
     CaptionerSettings(
             bool enabled,
+            bool streaming_output_enabled,
+            bool recording_output_enabled,
             const CaptionSourceSettings caption_source_settings,
             const CaptionFormatSettings format_settings,
             const ContinuousCaptionStreamSettings stream_settings
     ) :
             enabled(enabled),
+            streaming_output_enabled(streaming_output_enabled),
+            recording_output_enabled(recording_output_enabled),
             caption_source_settings(caption_source_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
 
     bool operator==(const CaptionerSettings &rhs) const {
         return enabled == rhs.enabled &&
+               streaming_output_enabled == rhs.streaming_output_enabled &&
+               recording_output_enabled == rhs.recording_output_enabled &&
                caption_source_settings == rhs.caption_source_settings &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
@@ -93,6 +101,8 @@ struct CaptionerSettings {
     void print() {
         printf("CaptionerSettings\n");
         printf("    enabled: %d\n", enabled);
+        printf("    streaming_output_enabled: %d\n", streaming_output_enabled);
+        printf("    recording_output_enabled: %d\n", recording_output_enabled);
         printf("    string: %s\n", caption_source_settings.caption_source_name.c_str());
         stream_settings.print();
         format_settings.print();
@@ -128,9 +138,15 @@ Q_OBJECT
 
     void caption_was_output();
 
-    void output_caption_text(const CaptionOutput &output, bool is_clearance = false);
+    void output_caption_text(
+            const CaptionOutput &output,
+            bool to_stream,
+            bool to_recoding,
+            bool is_clearance = false
+            );
 
     void store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted);
+
     void prepare_recent(string &recent_captions_output);
 
 private slots:
@@ -161,8 +177,6 @@ public:
 
     bool set_settings(CaptionerSettings settings);
 
-    CaptionerSettings get_settings();
-
     void on_audio_data_callback(const uint8_t *data, const size_t size);
 
     void on_audio_capture_status_change_callback(const audio_source_capture_status status);
@@ -172,9 +186,11 @@ public:
     void not_not_captioning_status();
 
     void stream_started_event();
+
     void stream_stopped_event();
 
     void recording_started_event();
+
     void recording_stopped_event();
 };
 

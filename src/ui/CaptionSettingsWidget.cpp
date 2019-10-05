@@ -62,6 +62,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(CaptionerSettings latest_settings)
 
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
+    setup_combobox_output_target(*outputTargetComboBox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -101,6 +102,12 @@ void CaptionSettingsWidget::accept_current_settings() {
 
     new_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
     new_settings.enabled = enabledCheckBox->isChecked();
+
+    const int output_combobox_val = outputTargetComboBox->currentData().toInt();
+    if (!set_streaming_recording_enabled(output_combobox_val,
+                                         new_settings.streaming_output_enabled, new_settings.recording_output_enabled)) {
+        error_log("invalid output target combobox value, wtf: %d", output_combobox_val);
+    }
 
     new_settings.format_settings.caption_timeout_enabled = this->captionTimeoutEnabledCheckBox->isChecked();
     new_settings.format_settings.caption_timeout_seconds = this->captionTimeoutDoubleSpinBox->value();
@@ -150,6 +157,8 @@ void CaptionSettingsWidget::updateUi() {
     insertLinebreaksCheckBox->setChecked(latest_settings.format_settings.caption_insert_newlines);
 
     enabledCheckBox->setChecked(latest_settings.enabled);
+    update_combobox_output_target(*outputTargetComboBox,
+                                  latest_settings.streaming_output_enabled, latest_settings.recording_output_enabled);
 
     this->captionTimeoutEnabledCheckBox->setChecked(latest_settings.format_settings.caption_timeout_enabled);
     this->captionTimeoutDoubleSpinBox->setValue(latest_settings.format_settings.caption_timeout_seconds);

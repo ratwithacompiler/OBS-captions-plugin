@@ -47,11 +47,6 @@ void SourceCaptioner::clear_settings(bool send_signal) {
         not_not_captioning_status();
 }
 
-CaptionerSettings SourceCaptioner::get_settings() {
-    std::lock_guard<recursive_mutex> lock(settings_change_mutex);
-    return settings;
-}
-
 bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
     info_log("set_settingsset_settingsset_settings");
     clear_settings(false);
@@ -136,6 +131,7 @@ void SourceCaptioner::on_audio_data_callback(const uint8_t *data, const size_t s
 void SourceCaptioner::clear_output_timer_cb() {
 //    info_log("clear timer checkkkkkkkkkkkkkkk");
 
+    bool to_stream, to_recording;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         if (!this->settings.format_settings.caption_timeout_enabled || this->last_caption_cleared)
@@ -151,9 +147,11 @@ void SourceCaptioner::clear_output_timer_cb() {
                  secs_since_last_caption, this->settings.format_settings.caption_timeout_seconds);
 
         this->last_caption_cleared = true;
+        to_stream = settings.streaming_output_enabled;
+        to_recording = settings.recording_output_enabled;
     }
 
-    output_caption_text(CaptionOutput(), true);
+    output_caption_text(CaptionOutput(), to_stream, to_recording, true);
     emit caption_result_received(nullptr, false, true, "");
 }
 
@@ -226,6 +224,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
     shared_ptr<OutputCaptionResult> output_result;
     string output_caption_line;
     string recent_caption_text;
+    bool to_stream, to_recording;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
@@ -253,19 +252,28 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
 //        info_log("output line '%s'", output_caption_line.c_str());
 
         prepare_recent(recent_caption_text);
+
+        to_stream = settings.streaming_output_enabled;
+        to_recording = settings.recording_output_enabled;
     }
 
     if (!output_caption_line.empty()) {
-        this->output_caption_text(CaptionOutput(output_caption_line, output_result->caption_result.created_at));
+        this->output_caption_text(
+                CaptionOutput(output_caption_line, output_result->caption_result.created_at),
+                to_stream, to_recording, false);
     }
 
     emit caption_result_received(output_result, interrupted, false, recent_caption_text);
 }
 
-void SourceCaptioner::output_caption_text(const CaptionOutput &output, bool is_clearance) {
+void SourceCaptioner::output_caption_text(
+        const CaptionOutput &output,
+        bool to_stream,
+        bool to_recoding,
+        bool is_clearance) {
 
     bool sent_stream = false;
-    {
+    if (to_stream) {
         std::lock_guard<recursive_mutex> lock(caption_stream_output_mutex);
         if (caption_stream_output_control) {
             caption_stream_output_control->caption_queue.enqueue(output);
@@ -274,7 +282,7 @@ void SourceCaptioner::output_caption_text(const CaptionOutput &output, bool is_c
     }
 
     bool sent_recording = false;
-    {
+    if (to_recoding) {
         std::lock_guard<recursive_mutex> lock(caption_recording_output_mutex);
         if (caption_recording_output_control) {
             caption_recording_output_control->caption_queue.enqueue(output);

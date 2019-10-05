@@ -116,19 +116,15 @@ void stream_stopped_event() {
 }
 
 void recording_started_event() {
-#ifdef USE_DEVMODE
     info_log("recording_started_event");
     if (main_caption_widget)
         main_caption_widget->recording_started_event();
-#endif
 }
 
 void recording_stopped_event() {
-#ifdef USE_DEVMODE
     info_log("recording_stopped_event");
     if (main_caption_widget)
         main_caption_widget->recording_stopped_event();
-#endif
 }
 
 void obs_frontent_exiting() {

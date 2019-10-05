@@ -69,6 +69,8 @@ static CaptionSourceSettings default_CaptionSourceSettings() {
 static CaptionerSettings default_CaptionerSettings() {
     return CaptionerSettings(
             false,
+            true,
+            false,
             default_CaptionSourceSettings(),
             default_CaptionFormatSettings(),
             default_ContinuousCaptionStreamSettings()
@@ -93,6 +95,8 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
         info_log("first time loading, keeping default settings");
     } else {
         obs_data_set_default_bool(obj, "enabled", settings.enabled);
+        obs_data_set_default_bool(obj, "streaming_output_enabled", settings.streaming_output_enabled);
+        obs_data_set_default_bool(obj, "recording_output_enabled", settings.recording_output_enabled);
         obs_data_set_default_bool(obj, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
         obs_data_set_default_int(obj, "caption_line_count", settings.format_settings.caption_line_count);
         obs_data_set_default_string(obj, "manual_banned_words", "");
@@ -107,6 +111,9 @@ static CaptionerSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
 
 
         settings.enabled = obs_data_get_bool(obj, "enabled");
+        settings.streaming_output_enabled = obs_data_get_bool(obj, "streaming_output_enabled");
+        settings.recording_output_enabled = obs_data_get_bool(obj, "recording_output_enabled");
+
         settings.format_settings.caption_insert_newlines = obs_data_get_bool(obj, "caption_insert_newlines");
         settings.format_settings.caption_line_count = (int) obs_data_get_int(obj, "caption_line_count");
 
@@ -138,6 +145,9 @@ static void save_obs_CaptionerSettings(obs_data_t *save_data, CaptionerSettings 
     obs_data_t *obj = obs_data_create();
 
     obs_data_set_bool(obj, "enabled", settings.enabled);
+    obs_data_set_bool(obj, "streaming_output_enabled", settings.streaming_output_enabled);
+    obs_data_set_bool(obj, "recording_output_enabled", settings.recording_output_enabled);
+
     obs_data_set_int(obj, "caption_line_count", settings.format_settings.caption_line_count);
     obs_data_set_bool(obj, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
 //    obs_data_set_bool(obj, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
@@ -181,6 +191,50 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
     comboBox.addItem("Off", 0);
     comboBox.addItem("Some (Very Unreliable!)", 1);
     comboBox.addItem("Strict (Very Unreliable!)", 2);
+}
+
+static void setup_combobox_output_target(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("Streams Only", 0);
+    comboBox.addItem("Recordings Only", 1);
+    comboBox.addItem("Streams & Recordings", 2);
+}
+
+
+static bool set_streaming_recording_enabled(const int combo_box_data, bool &streaming_enabled, bool &recording_enabled) {
+    if (combo_box_data == 0) {
+        streaming_enabled = true;
+        recording_enabled = false;
+        return true;
+    }
+
+    if (combo_box_data == 1) {
+        streaming_enabled = false;
+        recording_enabled = true;
+        return true;
+    }
+
+    if (combo_box_data == 2) {
+        streaming_enabled = true;
+        recording_enabled = true;
+        return true;
+    }
+
+    return false;
+}
+
+static void update_combobox_output_target(QComboBox &comboBox, bool streaming_enabled, bool recording_enabled) {
+    int index = 0;
+    if (streaming_enabled && !recording_enabled)
+        index = 0;
+    else if (!streaming_enabled && recording_enabled)
+        index = 1;
+    else if (streaming_enabled && recording_enabled)
+        index = 2;
+
+    comboBox.setCurrentIndex(index);
 }
 
 static void setup_combobox_languages(QComboBox &comboBox) {
