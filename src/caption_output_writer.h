@@ -78,7 +78,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control,
             continue;
         }
 
-        if (!caption_output.is_clearance and caption_output.output_result->output_line.empty()) {
+        if (!caption_output.is_clearance && caption_output.output_result->output_line.empty()) {
             debug_log("ingoring empty non clearance, %s", to_what.c_str());
             continue;
         }
