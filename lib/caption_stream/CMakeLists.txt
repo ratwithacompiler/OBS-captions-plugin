@@ -90,6 +90,11 @@ if (SPEECH_API_COMPILE_DEFINITIONS)
     add_compile_definitions(${SPEECH_API_COMPILE_DEFINITIONS})
 endif ()
 
+
+if (UNIX AND NOT APPLE)
+    target_compile_options(caption_stream PRIVATE "-fPIC")
+endif()
+
 if (DEVMODE)
     add_executable(caption_stream_dev_main
             ${caption_stream_SOURCES}

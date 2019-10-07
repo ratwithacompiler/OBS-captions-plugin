@@ -67,7 +67,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
 
-    QObject::connect(captionWhenComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    QObject::connect(captionWhenComboBox, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::caption_when_index_change);
 }
 

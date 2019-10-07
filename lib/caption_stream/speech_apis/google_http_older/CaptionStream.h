@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CPPTESTING_CAPTIONSTREAM_H
 #define CPPTESTING_CAPTIONSTREAM_H
 
-
+#include <functional>
 #include "TcpConnection.h"
 #include <iostream>
 #include <thread>

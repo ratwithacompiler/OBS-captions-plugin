@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef CPPTESTING_CONTINUOUSCAPTIONS_H
 #define CPPTESTING_CONTINUOUSCAPTIONS_H
 
-
+#include <functional>
 #include <CaptionStream.h>
 
 struct ContinuousCaptionStreamSettings {

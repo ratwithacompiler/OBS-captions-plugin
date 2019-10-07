@@ -32,6 +32,7 @@ jobs:
 
       - bash: |
           pwd
+          set -e
           cd ./build
           make -j4
           cd -
@@ -105,3 +106,55 @@ jobs:
         inputs:
           path: '$(Build.SourcesDirectory)/CI/release_dir/'
           artifact: Closed_Captions_Plugin__Release_Windows
+
+
+  - job: 'Build_Linux'
+    pool:
+      vmImage: 'ubuntu-16.04'
+
+    variables:
+      - group: Build_Vars
+
+    steps:
+      - script: git submodule update --init --recursive
+        displayName: 'Checkout Submodules'
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/linux_obs"
+          artifactName: obs_deps_linux
+          targetPath: $(Build.SourcesDirectory)/CI/obs_deps/
+
+      - script: $(Build.SourcesDirectory)/CI/install-script-linux.sh
+        displayName: 'Setup, CMake'
+        workingDirectory: $(Build.SourcesDirectory)/CI
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - bash: |
+          pwd
+          set -e
+          cd ./build
+          make -j4
+          cd -
+        displayName: 'Build'
+        workingDirectory: $(Build.SourcesDirectory)/CI
+
+      - script: $(Build.SourcesDirectory)/CI/post-install-script-linux.sh
+        displayName: 'Post install'
+        workingDirectory: $(Build.SourcesDirectory)/CI
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: "$(Build.SourcesDirectory)/CI/build/"
+          artifact: buildresult_plugin_linux64
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: "$(Build.SourcesDirectory)/CI/build/libobs_google_caption_plugin.so"
+          artifact: Closed_Captions_Plugin__Release_Linux64

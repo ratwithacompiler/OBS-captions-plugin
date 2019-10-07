@@ -34,7 +34,6 @@ static const char *host_to_ip(const char *hostname) {
 #else
 
 #include <netdb.h>
-#include <Tcl/tcl.h>
 #include <arpa/inet.h>
 
 static const char *host_to_ip(const char *hostname) {

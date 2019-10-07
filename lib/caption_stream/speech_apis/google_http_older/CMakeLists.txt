@@ -19,6 +19,10 @@ include_directories(${PLIBSYS_DIR}/src ${CMAKE_BINARY_DIR})
 add_subdirectory(${PLIBSYS_DIR} plibsys EXCLUDE_FROM_ALL)
 ###PLIBSYS
 
+if (UNIX AND NOT APPLE)
+    target_compile_options(plibsysstatic PRIVATE "-fPIC")
+endif ()
+
 set(SPEECH_API_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/TcpConnection.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/CaptionStream.cpp
