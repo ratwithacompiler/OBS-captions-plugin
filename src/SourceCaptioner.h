@@ -62,8 +62,7 @@ struct CaptionSourceSettings {
     }
 };
 
-struct CaptionerSettings {
-    bool enabled;
+struct SourceCaptionerSettings {
     bool streaming_output_enabled;
     bool recording_output_enabled;
     CaptionSourceSettings caption_source_settings;
@@ -71,24 +70,21 @@ struct CaptionerSettings {
     CaptionFormatSettings format_settings;
     ContinuousCaptionStreamSettings stream_settings;
 
-    CaptionerSettings(
-            bool enabled,
+    SourceCaptionerSettings(
             bool streaming_output_enabled,
             bool recording_output_enabled,
             const CaptionSourceSettings caption_source_settings,
             const CaptionFormatSettings format_settings,
             const ContinuousCaptionStreamSettings stream_settings
     ) :
-            enabled(enabled),
             streaming_output_enabled(streaming_output_enabled),
             recording_output_enabled(recording_output_enabled),
             caption_source_settings(caption_source_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
 
-    bool operator==(const CaptionerSettings &rhs) const {
-        return enabled == rhs.enabled &&
-               streaming_output_enabled == rhs.streaming_output_enabled &&
+    bool operator==(const SourceCaptionerSettings &rhs) const {
+        return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
                caption_source_settings == rhs.caption_source_settings &&
                format_settings == rhs.format_settings &&
@@ -96,19 +92,19 @@ struct CaptionerSettings {
     }
 
 
-    bool operator!=(const CaptionerSettings &rhs) const {
+    bool operator!=(const SourceCaptionerSettings &rhs) const {
         return !(rhs == *this);
     }
 
-    void print() {
-        printf("CaptionerSettings\n");
-        printf("    enabled: %d\n", enabled);
-        printf("    streaming_output_enabled: %d\n", streaming_output_enabled);
-        printf("    recording_output_enabled: %d\n", recording_output_enabled);
-        printf("    string: %s\n", caption_source_settings.caption_source_name.c_str());
-        stream_settings.print();
-        format_settings.print();
-        printf("-----------");
+    void print(const char *line_prefix = "") {
+        printf("%sSourceCaptionerSettings\n", line_prefix);
+        printf("%s  streaming_output_enabled: %d\n", line_prefix, streaming_output_enabled);
+        printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
+        printf("%s  string: %s\n", line_prefix, caption_source_settings.caption_source_name.c_str());
+
+
+        stream_settings.print((string(line_prefix) + "  ").c_str());
+        format_settings.print((string(line_prefix) + "  ").c_str());
     }
 };
 
@@ -144,10 +140,10 @@ class SourceCaptioner : public QObject {
 Q_OBJECT
 
     std::unique_ptr<AudioCaptureSession> audio_capture_session;
-    std::unique_ptr<ContinuousCaptions> captioner;
+    std::unique_ptr<ContinuousCaptions> continuous_captions;
     uint audio_chunk_count = 0;
 
-    CaptionerSettings settings;
+    SourceCaptionerSettings settings;
     std::unique_ptr<CaptionResultHandler> caption_result_handler;
     std::recursive_mutex settings_change_mutex;
 
@@ -196,13 +192,13 @@ signals:
 
 public:
 
-    SourceCaptioner(CaptionerSettings settings);
+    SourceCaptioner(const SourceCaptionerSettings &settings, bool start);
 
     ~SourceCaptioner();
 
-    void clear_settings(bool send_signal = true);
+    bool start_caption_stream(const SourceCaptionerSettings &new_settings);
 
-    bool set_settings(CaptionerSettings settings);
+    void stop_caption_stream(bool send_signal = true);
 
     void on_audio_data_callback(const uint8_t *data, const size_t size);
 
@@ -219,6 +215,7 @@ public:
     void recording_started_event();
 
     void recording_stopped_event();
+
 };
 
 

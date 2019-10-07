@@ -52,16 +52,16 @@ struct CaptionFormatSettings {
         info_log("CaptionFormatSettings banned words: %lu %lu, ", default_banned_words.size(), manual_banned_words.size());
     }
 
-    void print() {
-        printf("CaptionFormatSettings\n");
-        printf("    caption_line_length: %d\n", caption_line_length);
-        printf("    caption_line_count: %d\n", caption_line_count);
-        printf("    caption_insert_newlines: %d\n", caption_insert_newlines);
-        printf("    manual_banned_words: %lu\n", manual_banned_words.size());
+    void print(const char *line_prefix = "") {
+        printf("%sCaptionFormatSettings\n", line_prefix);
+        printf("%s  caption_line_length: %d\n", line_prefix, caption_line_length);
+        printf("%s  caption_line_count: %d\n", line_prefix, caption_line_count);
+        printf("%s  caption_insert_newlines: %d\n", line_prefix, caption_insert_newlines);
+        printf("%s  manual_banned_words: %lu\n", line_prefix, manual_banned_words.size());
         for (auto &word : manual_banned_words)
-            printf("        '%s'\n", word.c_str());
+            printf("%s        '%s'\n", line_prefix, word.c_str());
 
-        printf("-----------");
+//        printf("%s-----------\n", line_prefix);
     }
 
     bool operator==(const CaptionFormatSettings &rhs) const {

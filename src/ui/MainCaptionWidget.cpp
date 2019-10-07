@@ -22,14 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../caption_stream_helper.cpp"
 #include "../log.c"
 
-MainCaptionWidget::MainCaptionWidget(CaptionerSettings initial_settings) :
+MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
         QWidget(),
         Ui_MainCaptionWidget(),
-        current_settings(initial_settings),
-        captioner(initial_settings),
-        caption_settings_widget(initial_settings) {
+        plugin_manager(plugin_manager),
+        caption_settings_widget(plugin_manager.plugin_settings) {
     info_log("MainCaptionWidget");
-    enforce_sensible_values(current_settings);
     setupUi(this);
 
     this->captionHistoryPlainTextEdit->setPlainText("");
@@ -44,71 +42,18 @@ MainCaptionWidget::MainCaptionWidget(CaptionerSettings initial_settings) :
     QObject::connect(&caption_settings_widget, &CaptionSettingsWidget::settings_accepted,
                      this, &MainCaptionWidget::accept_widget_settings);
 
-    QObject::connect(&captioner, &SourceCaptioner::caption_result_received,
+    QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::caption_result_received,
                      this, &MainCaptionWidget::handle_caption_data_cb, Qt::QueuedConnection);
 
-    QObject::connect(&captioner, &SourceCaptioner::audio_capture_status_changed,
+    QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::audio_capture_status_changed,
                      this, &MainCaptionWidget::handle_audio_capture_status_change, Qt::QueuedConnection);
 
-    apply_changed_settings(initial_settings, true);
+    QObject::connect(&plugin_manager, &CaptionPluginManager::settings_changed,
+                     this, &MainCaptionWidget::settings_changed_event);
+
+    settings_changed_event(plugin_manager.plugin_settings);
 }
 
-void MainCaptionWidget::apply_changed_settings(CaptionerSettings new_settings, bool force_update) {
-
-    apply_changed_settings(new_settings, is_stream_live(), isVisible(), is_recording_live(), force_update);
-}
-
-void MainCaptionWidget::apply_changed_settings(CaptionerSettings new_settings,
-                                               bool is_live,
-                                               bool is_preview_open,
-                                               bool is_recording,
-                                               bool force_update) {
-    // apply settings if they are different
-    bool is_live_use = is_live && new_settings.streaming_output_enabled;
-    bool is_recording_use = is_recording && new_settings.recording_output_enabled;
-
-    info_log("is_live %d, is_live_use: %d, is_recording %d, is_recording_use: %d,"
-             " is_preview_open %d, force_update %d, source:  %s \n",
-             is_live, is_live_use, is_recording, is_recording_use, is_preview_open, force_update,
-             new_settings.caption_source_settings.caption_source_name.c_str());
-
-    enforce_sensible_values(new_settings);
-    bool equal_settings = current_settings == new_settings;
-    bool do_captioning = (is_live_use || is_recording_use || is_preview_open) && new_settings.enabled;
-
-    if (current_settings.enabled != new_settings.enabled)
-            emit this->enabled_state_changed(new_settings.enabled);
-
-    if (!force_update && (equal_settings && do_captioning == this->is_captioning)) {
-        info_log("settings unchanged, ignoring");
-        return;
-    }
-
-    current_settings = new_settings;
-    this->is_captioning = do_captioning;
-
-    if (current_settings.enabled != enabledCheckbox->isChecked()) {
-        info_log("updating enabled checkbox");
-        const QSignalBlocker blocker(enabledCheckbox);
-        enabledCheckbox->setChecked(current_settings.enabled);
-    }
-
-    latest_caption_result = nullptr;
-    update_caption_text_ui();
-
-    if (do_captioning) {
-        info_log("settings chagned, starting captioning");
-        bool worked = captioner.set_settings(new_settings);
-        if (!worked) {
-            this->handle_audio_capture_status_change(-1);
-        }
-
-    } else {
-        info_log("settings chagned, disabling captioning");
-        captioner.clear_settings();
-        this->handle_audio_capture_status_change(-1);
-    }
-}
 
 void MainCaptionWidget::showEvent(QShowEvent *event) {
     info_log("show event");
@@ -197,9 +142,6 @@ void MainCaptionWidget::handle_caption_data_cb(
         bool interrupted,
         bool cleared,
         string recent_caption_text) {
-    //called from different thread
-
-//    info_log("emitttttttttttttttttttt");
     result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, recent_caption_text));
     emit process_item_queue();
 }
@@ -209,57 +151,45 @@ void MainCaptionWidget::menu_button_clicked() {
     raise();
 }
 
-void MainCaptionWidget::save_event_cb(obs_data_t *save_data) {
-    save_obs_CaptionerSettings(save_data, current_settings);
-}
-
 void MainCaptionWidget::show_settings() {
     info_log("show_settings");
-
-    caption_settings_widget.set_settings(current_settings);
-
+    caption_settings_widget.set_settings(plugin_manager.plugin_settings);
 
     caption_settings_widget.show();
     caption_settings_widget.raise();
 }
 
-void MainCaptionWidget::accept_widget_settings(CaptionerSettings new_settings) {
+void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_settings) {
     info_log("accept_widget_settings %p", &caption_settings_widget);
     caption_settings_widget.hide();
-
-    apply_changed_settings(new_settings);
-}
-
-void MainCaptionWidget::set_settings(CaptionerSettings new_settings) {
-    apply_changed_settings(new_settings);
-    caption_settings_widget.hide();
-}
-
-MainCaptionWidget::~MainCaptionWidget() {
-    captioner.clear_settings(false);
+    plugin_manager.update_settings(new_settings);
 }
 
 void MainCaptionWidget::external_state_changed() {
-    apply_changed_settings(current_settings);
+    plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live());
+}
+
+MainCaptionWidget::~MainCaptionWidget() {
+    plugin_manager.source_captioner.stop_caption_stream(false);
 }
 
 void MainCaptionWidget::stream_started_event() {
-    captioner.stream_started_event();
+    plugin_manager.source_captioner.stream_started_event();
     external_state_changed();
 }
 
 void MainCaptionWidget::stream_stopped_event() {
-    captioner.stream_stopped_event();
+    plugin_manager.source_captioner.stream_stopped_event();
     external_state_changed();
 }
 
 void MainCaptionWidget::recording_started_event() {
-    captioner.recording_started_event();
+    plugin_manager.source_captioner.recording_started_event();
     external_state_changed();
 }
 
 void MainCaptionWidget::recording_stopped_event() {
-    captioner.recording_stopped_event();
+    plugin_manager.source_captioner.recording_stopped_event();
     external_state_changed();
 }
 
@@ -281,16 +211,19 @@ void MainCaptionWidget::handle_audio_capture_status_change(const int new_status)
 
 
 void MainCaptionWidget::enabled_state_checkbox_changed(int new_checkbox_state) {
-    info_log("enabled_state_changed");
-    this->set_enabled(!!new_checkbox_state);
+    info_log("enabled_state_checkbox_changed");
+    plugin_manager.toggle_enabled();
 }
 
-void MainCaptionWidget::set_enabled(bool is_enabled) {
-    CaptionerSettings new_settings = current_settings;
-    new_settings.enabled = is_enabled;
+void MainCaptionWidget::settings_changed_event(CaptionPluginSettings new_settings) {
+    debug_log("settings_changed_event");
 
-    current_settings.print();
-    apply_changed_settings(new_settings);
-    current_settings.print();
+    if (new_settings.enabled != enabledCheckbox->isChecked()) {
+        const QSignalBlocker blocker(enabledCheckbox);
+        enabledCheckbox->setChecked(new_settings.enabled);
+    }
+
+//    latest_caption_result = nullptr;
+//    latest_caption_text_history.clear();
+//    update_caption_text_ui();
 }
-

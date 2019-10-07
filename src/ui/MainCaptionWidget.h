@@ -26,15 +26,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../log.c"
 
 #include <concurrentqueue.h>
+#include "../CaptionPluginSettings.h"
+#include "../CaptionPluginManager.h"
 
 typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, bool, string> ResultTup;
 
+
 class MainCaptionWidget : public QWidget, Ui_MainCaptionWidget {
 Q_OBJECT
-    CaptionerSettings current_settings;
-    SourceCaptioner captioner;
+    CaptionPluginManager &plugin_manager;
     CaptionSettingsWidget caption_settings_widget;
-    bool is_captioning = false;
     moodycamel::ConcurrentQueue<ResultTup> result_queue;
 
     std::shared_ptr<OutputCaptionResult> latest_caption_result;
@@ -45,22 +46,15 @@ signals:
 
     void process_item_queue();
 
-    void enabled_state_changed(bool is_enabled);
-
 private:
 
     void showEvent(QShowEvent *event) override;
 
     void hideEvent(QHideEvent *event) override;
 
-    void apply_changed_settings(CaptionerSettings new_settings, bool force_update = false);
-
-    void apply_changed_settings(CaptionerSettings new_settings, bool is_live, bool is_preview_open,
-                                bool is_recording, bool force_update = false);
-
     void do_process_item_queue();
 
-private slots:
+    void accept_widget_settings(CaptionPluginSettings new_settings);
 
     void handle_caption_data_cb(
             shared_ptr<OutputCaptionResult> caption_result,
@@ -71,7 +65,8 @@ private slots:
 
     void handle_audio_capture_status_change(const int new_status);
 
-    void accept_widget_settings(CaptionerSettings new_settings);
+
+    void settings_changed_event(CaptionPluginSettings new_settings);
 
 public slots:
 
@@ -79,14 +74,11 @@ public slots:
 
     void show_settings();
 
-    void set_settings(CaptionerSettings new_settings);
 
 public:
-    explicit MainCaptionWidget(CaptionerSettings initial_settings);
+    MainCaptionWidget(CaptionPluginManager &plugin_manager);
 
     void menu_button_clicked();
-
-    void save_event_cb(obs_data_t *save_data);
 
     virtual ~MainCaptionWidget();
 
@@ -103,8 +95,6 @@ public:
     void recording_started_event();
 
     void recording_stopped_event();
-
-    void set_enabled(bool is_enabled);
 };
 
 

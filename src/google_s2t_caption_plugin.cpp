@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ui/MainCaptionWidget.h"
 #include "caption_stream_helper.cpp"
+#include "CaptionPluginManager.h"
 
 #include "log.c"
 
@@ -39,6 +40,7 @@ using namespace std;
 
 //SourceCaptioner *captioner_instance = nullptr;
 MainCaptionWidget *main_caption_widget = nullptr;
+CaptionPluginManager *plugin_manager = nullptr;
 
 OBS_DECLARE_MODULE()
 
@@ -95,6 +97,7 @@ void finished_loading_event() {
 //    printf("OBS_FRONTEND_EVENT_FINISHED_LOADING\n");
     if (main_caption_widget) {
         setup_UI();
+        main_caption_widget->external_state_changed();
 
 #ifdef USE_DEVMODE
         main_caption_widget->show();
@@ -134,6 +137,9 @@ void obs_frontent_exiting() {
 //        main_caption_widget->stop();
         delete main_caption_widget;
         main_caption_widget = nullptr;
+
+        delete plugin_manager;
+        plugin_manager = nullptr;
     }
 
 }
@@ -142,16 +148,20 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
     info_log("save_or_load_event_callback %d, %d", saving, tid);
 
-    if (saving && main_caption_widget) {
-        main_caption_widget->save_event_cb(save_data);
+    if (saving && plugin_manager) {
+        plugin_manager->save(save_data);
     }
 
     if (!saving) {
         auto loaded_settings = load_obs_CaptionerSettings(save_data);
-        if (main_caption_widget) {
-            main_caption_widget->set_settings(loaded_settings);
+        if (plugin_manager && main_caption_widget) {
+            plugin_manager->update_settings(loaded_settings);
+        } else if (plugin_manager || main_caption_widget) {
+            error_log("only one of plugin_manager and main_caption_widget, wtf, %d %d",
+                      plugin_manager != nullptr, main_caption_widget != nullptr);
         } else {
-            main_caption_widget = new MainCaptionWidget(loaded_settings);
+            plugin_manager = new CaptionPluginManager(loaded_settings);
+            main_caption_widget = new MainCaptionWidget(*plugin_manager);
         }
     }
 

@@ -27,7 +27,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <chrono>
 #include <mutex>
 #include "thirdparty/cameron314/blockingconcurrentqueue.h"
-#include "log.h"
 
 #include "ThreadsaferCallback.h"
 #include "CaptionResult.h"
@@ -65,7 +64,7 @@ struct CaptionStreamSettings {
             max_queue_depth(max_queue_depth),
             download_thread_start_delay_ms(download_thread_start_delay_ms),
             language(language),
-            profanity_filter(profanity_filter){}
+            profanity_filter(profanity_filter) {}
 
     bool operator==(const CaptionStreamSettings &rhs) const {
         return connect_timeout_ms == rhs.connect_timeout_ms &&
@@ -84,16 +83,16 @@ struct CaptionStreamSettings {
 //    CaptionStreamSettings() {};
 
 
-    void print() {
-        printf("CaptionStreamSettings\n");
-        printf("    connect_timeout_ms: %d\n", connect_timeout_ms);
-        printf("    send_timeout_ms: %d\n", send_timeout_ms);
-        printf("    recv_timeout_ms: %d\n", recv_timeout_ms);
+    void print(const char *line_prefix = "") {
+        printf("%sCaptionStreamSettings\n", line_prefix);
+        printf("%s  connect_timeout_ms: %d\n", line_prefix, connect_timeout_ms);
+        printf("%s  send_timeout_ms: %d\n", line_prefix, send_timeout_ms);
+        printf("%s  recv_timeout_ms: %d\n", line_prefix, recv_timeout_ms);
 
-        printf("    max_queue_depth: %d\n", max_queue_depth);
-        printf("    download_thread_start_delay_ms: %d\n", download_thread_start_delay_ms);
+        printf("%s  max_queue_depth: %d\n", line_prefix, max_queue_depth);
+        printf("%s  download_thread_start_delay_ms: %d\n", line_prefix, download_thread_start_delay_ms);
 
-        printf("-----------");
+//        printf("%s-----------\n", line_prefix);
     }
 };
 

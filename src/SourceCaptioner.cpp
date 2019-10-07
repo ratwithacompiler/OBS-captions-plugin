@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log.c"
 
 
-SourceCaptioner::SourceCaptioner(CaptionerSettings settings) :
+SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, bool start) :
         QObject(),
         settings(settings),
         last_caption_at(std::chrono::steady_clock::now()),
@@ -36,23 +36,24 @@ SourceCaptioner::SourceCaptioner(CaptionerSettings settings) :
     timer.start(1000);
 
     info_log("SourceCaptioner, source '%s'", settings.caption_source_settings.caption_source_name.c_str());
-    set_settings(settings);
+    if (start)
+        start_caption_stream(settings);
 }
 
 
-void SourceCaptioner::clear_settings(bool send_signal) {
+void SourceCaptioner::stop_caption_stream(bool send_signal) {
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         audio_capture_session = nullptr;
         caption_result_handler = nullptr;
-        captioner = nullptr;
+        continuous_captions = nullptr;
     }
     if (send_signal)
         not_not_captioning_status();
 }
 
-bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
-    info_log("set_settingsset_settingsset_settings");
+bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_settings) {
+    info_log("start_caption_stream");
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
@@ -63,16 +64,16 @@ bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
         settings = new_settings;
 
         if (new_settings.caption_source_settings.caption_source_name.empty()) {
-            warn_log("SourceCaptioner set_settings, empty source given.", new_settings.caption_source_settings.caption_source_name.c_str());
-            clear_settings();
+            warn_log("SourceCaptioner start_caption_stream, empty source given.");
+            stop_caption_stream();
             return false;
         }
 
         OBSSource caption_source = obs_get_source_by_name(new_settings.caption_source_settings.caption_source_name.c_str());
         if (!caption_source) {
-            warn_log("SourceCaptioner set_settings, no caption source with name: '%s'",
+            warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
                      new_settings.caption_source_settings.caption_source_name.c_str());
-            clear_settings();
+            stop_caption_stream();
             return false;
         }
 
@@ -81,23 +82,23 @@ bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
             mute_source = obs_get_source_by_name(new_settings.caption_source_settings.mute_source_name.c_str());
 
             if (!mute_source) {
-                warn_log("SourceCaptioner set_settings, no mute source with name: '%s'",
+                warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
                          new_settings.caption_source_settings.mute_source_name.c_str());
-                clear_settings();
+                stop_caption_stream();
                 return false;
             }
         }
 
-        debug_log("caption_settings_equal: %d, %d", caption_settings_equal, captioner != nullptr);
-        if (!captioner || !caption_settings_equal) {
+        debug_log("caption_settings_equal: %d, %d", caption_settings_equal, continuous_captions != nullptr);
+        if (!continuous_captions || !caption_settings_equal) {
             try {
                 auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
-                captioner = std::make_unique<ContinuousCaptions>(new_settings.stream_settings);
-                captioner->on_caption_cb_handle.set(caption_cb, true);
+                continuous_captions = std::make_unique<ContinuousCaptions>(new_settings.stream_settings);
+                continuous_captions->on_caption_cb_handle.set(caption_cb, true);
             }
             catch (...) {
                 warn_log("couldn't create ContinuousCaptions");
-                clear_settings();
+                stop_caption_stream();
                 return false;
             }
         }
@@ -117,12 +118,12 @@ bool SourceCaptioner::set_settings(CaptionerSettings new_settings) {
         }
         catch (std::string err) {
             warn_log("couldn't create AudioCaptureSession, %s", err.c_str());
-            clear_settings();
+            stop_caption_stream();
             return false;
         }
         catch (...) {
             warn_log("couldn't create AudioCaptureSession");
-            clear_settings();
+            stop_caption_stream();
             return false;
         }
 
@@ -138,8 +139,8 @@ void SourceCaptioner::on_audio_capture_status_change_callback(const audio_source
 
 void SourceCaptioner::on_audio_data_callback(const uint8_t *data, const size_t size) {
 //    info_log("audio data");
-    if (captioner) {
-        captioner->queue_audio_data((char *) data, size);
+    if (continuous_captions) {
+        continuous_captions->queue_audio_data((char *) data, size);
     }
     audio_chunk_count++;
 
@@ -330,6 +331,5 @@ void SourceCaptioner::recording_stopped_event() {
 SourceCaptioner::~SourceCaptioner() {
     stream_stopped_event();
     recording_stopped_event();
-    clear_settings(false);
+    stop_caption_stream(false);
 }
-

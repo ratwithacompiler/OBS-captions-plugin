@@ -27,29 +27,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../AudioCaptureSession.h"
 #include "../log.c"
 #include "../SourceCaptioner.h"
+#include "../CaptionPluginSettings.h"
 
 class CaptionSettingsWidget : public QWidget, Ui_CaptionSettingsWidget {
 Q_OBJECT
 
-    CaptionerSettings latest_settings;
+    CaptionPluginSettings latest_settings;
 
     void accept_current_settings();
-
 
 private slots:
 
     void caption_when_index_change(int index);
 
-
 signals:
 
-    void settings_accepted(CaptionerSettings new_settings);
-
+    void settings_accepted(CaptionPluginSettings new_settings);
 
 public:
-    CaptionSettingsWidget(CaptionerSettings latest_settings);
+    CaptionSettingsWidget(const CaptionPluginSettings &latest_settings);
 
-    void set_settings(CaptionerSettings new_settings);
+    void set_settings(const CaptionPluginSettings &new_settings);
 
     void updateUi();
 

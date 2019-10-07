@@ -52,14 +52,14 @@ struct ContinuousCaptionStreamSettings {
         return !(rhs == *this);
     }
 
-    void print() {
-        printf("ContinuousCaptionStreamSettings\n");
-        printf("    connect_second_after_secs: %d\n", connect_second_after_secs);
-        printf("    switchover_second_after_secs: %d\n", switchover_second_after_secs);
-        printf("    minimum_reconnect_interval_secs: %d\n", minimum_reconnect_interval_secs);
+    void print(const char *line_prefix = "") {
+        printf("%sContinuousCaptionStreamSettings\n", line_prefix);
+        printf("%s  connect_second_after_secs: %d\n", line_prefix, connect_second_after_secs);
+        printf("%s  switchover_second_after_secs: %d\n", line_prefix, switchover_second_after_secs);
+        printf("%s  minimum_reconnect_interval_secs: %d\n", line_prefix, minimum_reconnect_interval_secs);
 
-        stream_settings.print();
-        printf("-----------");
+        stream_settings.print((string(line_prefix) + "  ").c_str());
+//        printf("%s-----------\n", line_prefix);
     }
 
 };

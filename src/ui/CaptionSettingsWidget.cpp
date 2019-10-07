@@ -50,7 +50,7 @@ static void update_combobox_with_current_sources(QComboBox &comboBox) {
     obs_enum_sources(cb, &comboBox);
 }
 
-CaptionSettingsWidget::CaptionSettingsWidget(CaptionerSettings latest_settings)
+CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest_settings)
         : QWidget(),
           Ui_CaptionSettingsWidget(),
           latest_settings(latest_settings) {
@@ -80,41 +80,45 @@ void CaptionSettingsWidget::caption_when_index_change(int new_index) {
 }
 
 void CaptionSettingsWidget::accept_current_settings() {
-    CaptionerSettings new_settings = latest_settings;
+    CaptionPluginSettings new_settings = latest_settings;
+    SourceCaptionerSettings &source_settings = new_settings.source_cap_settings;
 
-    new_settings.caption_source_settings.caption_source_name = sourcesComboBox->currentText().toStdString();
-    new_settings.caption_source_settings.mute_source_name = muteSourceComboBox->currentText().toStdString();
+    source_settings.caption_source_settings.caption_source_name = sourcesComboBox->currentText().toStdString();
+    source_settings.caption_source_settings.mute_source_name = muteSourceComboBox->currentText().toStdString();
 
     string lang_str = languageComboBox->currentData().toString().toStdString();
-    new_settings.stream_settings.stream_settings.language = lang_str;
+    source_settings.stream_settings.stream_settings.language = lang_str;
     info_log("lang: %s", lang_str.c_str());
 
     const int profanity_filter = profanityFilterComboBox->currentData().toInt();
-    new_settings.stream_settings.stream_settings.profanity_filter = profanity_filter;
+    source_settings.stream_settings.stream_settings.profanity_filter = profanity_filter;
     info_log("profanity_filter: %d", profanity_filter);
 
     string when_str = captionWhenComboBox->currentData().toString().toStdString();
 //    info_log("accepting when: %s", when_str.c_str());
-    new_settings.caption_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
+    source_settings.caption_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
 //    info_log("accepting when: %d", latest_settings.caption_source_settings.mute_when);
 
-    new_settings.format_settings.caption_line_count = lineCountSpinBox->value();
+    source_settings.format_settings.caption_line_count = lineCountSpinBox->value();
 
-    new_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
+    source_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
     new_settings.enabled = enabledCheckBox->isChecked();
 
     const int output_combobox_val = outputTargetComboBox->currentData().toInt();
     if (!set_streaming_recording_enabled(output_combobox_val,
-                                         new_settings.streaming_output_enabled, new_settings.recording_output_enabled)) {
+                                         source_settings.streaming_output_enabled, source_settings.recording_output_enabled)) {
         error_log("invalid output target combobox value, wtf: %d", output_combobox_val);
     }
 
-    new_settings.format_settings.caption_timeout_enabled = this->captionTimeoutEnabledCheckBox->isChecked();
-    new_settings.format_settings.caption_timeout_seconds = this->captionTimeoutDoubleSpinBox->value();
+    source_settings.format_settings.caption_timeout_enabled = this->captionTimeoutEnabledCheckBox->isChecked();
+    source_settings.format_settings.caption_timeout_seconds = this->captionTimeoutDoubleSpinBox->value();
 
     string banned_words_line = this->bannedWordsPlainTextEdit->toPlainText().toStdString();
-    new_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
+    source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
 //    info_log("acceptt %s, words: %lu", banned_words_line.c_str(), banned_words.size());
+
+    info_log("accepting changes");
+    new_settings.print();
 
     emit settings_accepted(new_settings);
 }
@@ -139,38 +143,40 @@ static int combobox_set_data_int(QComboBox &combo_box, const int data, int defau
 }
 
 void CaptionSettingsWidget::updateUi() {
+    SourceCaptionerSettings &source_settings = latest_settings.source_cap_settings;
+
     update_combobox_with_current_sources(*sourcesComboBox);
     update_combobox_with_current_sources(*muteSourceComboBox);
-    sourcesComboBox->setCurrentText(QString(latest_settings.caption_source_settings.caption_source_name.c_str()));
-    muteSourceComboBox->setCurrentText(QString(latest_settings.caption_source_settings.mute_source_name.c_str()));
+    sourcesComboBox->setCurrentText(QString(source_settings.caption_source_settings.caption_source_name.c_str()));
+    muteSourceComboBox->setCurrentText(QString(source_settings.caption_source_settings.mute_source_name.c_str()));
 
-    combobox_set_data_str(*languageComboBox, latest_settings.stream_settings.stream_settings.language.c_str(), 0);
-    combobox_set_data_int(*profanityFilterComboBox, latest_settings.stream_settings.stream_settings.profanity_filter, 0);
+    combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
+    combobox_set_data_int(*profanityFilterComboBox, source_settings.stream_settings.stream_settings.profanity_filter, 0);
 
-    info_log("latest_settings.caption_source_settings.mute_when %d", latest_settings.caption_source_settings.mute_when);
-    string mute_when_str = mute_setting_to_string(latest_settings.caption_source_settings.mute_when, "own_source");
+    info_log("source_settings.caption_source_settings.mute_when %d", source_settings.caption_source_settings.mute_when);
+    string mute_when_str = mute_setting_to_string(source_settings.caption_source_settings.mute_when, "own_source");
 
     int when_index = combobox_set_data_str(*captionWhenComboBox, mute_when_str.c_str(), 0);
     info_log("setting mute_when_str '%s', index %d", mute_when_str.c_str(), when_index);
 
-    lineCountSpinBox->setValue(latest_settings.format_settings.caption_line_count);
-    insertLinebreaksCheckBox->setChecked(latest_settings.format_settings.caption_insert_newlines);
+    lineCountSpinBox->setValue(source_settings.format_settings.caption_line_count);
+    insertLinebreaksCheckBox->setChecked(source_settings.format_settings.caption_insert_newlines);
 
     enabledCheckBox->setChecked(latest_settings.enabled);
     update_combobox_output_target(*outputTargetComboBox,
-                                  latest_settings.streaming_output_enabled, latest_settings.recording_output_enabled);
+                                  source_settings.streaming_output_enabled, source_settings.recording_output_enabled);
 
-    this->captionTimeoutEnabledCheckBox->setChecked(latest_settings.format_settings.caption_timeout_enabled);
-    this->captionTimeoutDoubleSpinBox->setValue(latest_settings.format_settings.caption_timeout_seconds);
+    this->captionTimeoutEnabledCheckBox->setChecked(source_settings.format_settings.caption_timeout_enabled);
+    this->captionTimeoutDoubleSpinBox->setValue(source_settings.format_settings.caption_timeout_seconds);
 
     string banned_words_line;
-    words_to_string(latest_settings.format_settings.manual_banned_words, banned_words_line);
+    words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
     this->bannedWordsPlainTextEdit->setPlainText(QString(banned_words_line.c_str()));
 
-    this->update_other_source_visibility(latest_settings.caption_source_settings.mute_when);
+    this->update_other_source_visibility(source_settings.caption_source_settings.mute_when);
 }
 
-void CaptionSettingsWidget::set_settings(CaptionerSettings new_settings) {
+void CaptionSettingsWidget::set_settings(const CaptionPluginSettings &new_settings) {
     latest_settings = new_settings;
     updateUi();
 }
