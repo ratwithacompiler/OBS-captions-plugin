@@ -45,8 +45,8 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
     QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::caption_result_received,
                      this, &MainCaptionWidget::handle_caption_data_cb, Qt::QueuedConnection);
 
-    QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::audio_capture_status_changed,
-                     this, &MainCaptionWidget::handle_audio_capture_status_change, Qt::QueuedConnection);
+    QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::source_capture_status_changed,
+                     this, &MainCaptionWidget::handle_source_capture_status_change, Qt::QueuedConnection);
 
     QObject::connect(&plugin_manager, &CaptionPluginManager::settings_changed,
                      this, &MainCaptionWidget::settings_changed_event);
@@ -193,17 +193,36 @@ void MainCaptionWidget::recording_stopped_event() {
     external_state_changed();
 }
 
-void MainCaptionWidget::handle_audio_capture_status_change(const int new_status) {
-    info_log("handle_audio_capture_status_changehandle_audio_capture_status_change %d", new_status);
+void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {
+    info_log("handle_source_capture_status_change");
+    if (!status)
+        return;
+
     string text;
-    if (new_status == AUDIO_SOURCE_CAPTURING)
-        text = "🔴 Captioning";
-    else if (new_status == AUDIO_SOURCE_MUTED)
-        text = "Muted";
-    else if (new_status == AUDIO_SOURCE_NOT_STREAMED)
-        text = "Source not streamed";
-    else
-        text = "Off";
+    if (!plugin_manager.plugin_settings.enabled) {
+        text = "Disabled";
+    } else {
+        if (status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STOPPED
+            || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_ERROR
+            || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_NEW_SETTINGS_STOPPED) {
+            text = "Off";
+        } else if (status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK
+                   || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE) {
+
+            if (status->audio_capture_status == AUDIO_SOURCE_CAPTURING)
+                text = "🔴 Captioning";
+            else if (status->audio_capture_status == AUDIO_SOURCE_MUTED)
+                text = "Muted";
+            else if (status->audio_capture_status == AUDIO_SOURCE_NOT_STREAMED)
+                text = "Source not streamed";
+            else
+                text = "??";
+
+        } else {
+            text = "?";
+        }
+
+    }
 
     this->statusTextLabel->setText(text.c_str());
     this->statusTextLabel->setVisible(true);

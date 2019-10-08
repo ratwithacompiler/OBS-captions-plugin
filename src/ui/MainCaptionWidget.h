@@ -63,7 +63,7 @@ private:
             string recent_caption_text
     );
 
-    void handle_audio_capture_status_change(const int new_status);
+    void handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status);
 
 
     void settings_changed_event(CaptionPluginSettings new_settings);

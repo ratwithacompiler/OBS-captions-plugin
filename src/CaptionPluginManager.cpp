@@ -60,7 +60,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
         bool worked = source_captioner.start_caption_stream(source_settings);
     } else {
         info_log("settings changed, disabling captioning");
-        source_captioner.stop_caption_stream();
+        source_captioner.set_settings(source_settings);
     }
 
     info_log("emit settings_changed");

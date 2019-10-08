@@ -182,6 +182,7 @@ bool obs_module_load(void) {
     qRegisterMetaType<std::string>();
     qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
     qRegisterMetaType<CaptionResult>();
+    qRegisterMetaType<std::shared_ptr<SourceCaptionerStatus>>();
 
     obs_frontend_add_event_callback(obs_event, nullptr);
     obs_frontend_add_save_callback(save_or_load_event_callback, nullptr);

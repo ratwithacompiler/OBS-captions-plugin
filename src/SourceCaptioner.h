@@ -70,6 +70,8 @@ struct SourceCaptionerSettings {
     CaptionFormatSettings format_settings;
     ContinuousCaptionStreamSettings stream_settings;
 
+    SourceCaptionerSettings();
+
     SourceCaptionerSettings(
             bool streaming_output_enabled,
             bool recording_output_enabled,
@@ -136,6 +138,37 @@ struct OutputWriter {
     }
 };
 
+enum SourceCaptionerStatusEvent {
+    SOURCE_CAPTIONER_STATUS_EVENT_STOPPED,
+
+    SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK,
+    SOURCE_CAPTIONER_STATUS_EVENT_STARTED_ERROR,
+
+    SOURCE_CAPTIONER_STATUS_EVENT_NEW_SETTINGS_STOPPED,
+
+    SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE,
+};
+
+struct SourceCaptionerStatus {
+    // TODO: add starting error msg string
+    SourceCaptionerStatusEvent event_type;
+
+    bool settings_changed;
+    bool stream_settings_changed;
+    SourceCaptionerSettings settings;
+
+    audio_source_capture_status audio_capture_status;
+
+    bool active;
+
+    SourceCaptionerStatus(SourceCaptionerStatusEvent eventType, bool settingsChanged, bool streamSettingsChanged,
+                          const SourceCaptionerSettings &settings, audio_source_capture_status audioCaptureStatus, bool active)
+            : event_type(eventType), settings_changed(settingsChanged), stream_settings_changed(streamSettingsChanged), settings(settings),
+              audio_capture_status(audioCaptureStatus), active(active) {}
+};
+
+Q_DECLARE_METATYPE(std::shared_ptr<SourceCaptionerStatus>)
+
 class SourceCaptioner : public QObject {
 Q_OBJECT
 
@@ -170,11 +203,21 @@ Q_OBJECT
 
     void prepare_recent(string &recent_captions_output);
 
+    void on_audio_data_callback(const uint8_t *data, const size_t size);
+
+    void on_audio_capture_status_change_callback(const audio_source_capture_status status);
+
+    void on_caption_text_callback(const CaptionResult &caption_result, bool interrupted);
+
+    bool _start_caption_stream(bool restart_stream);
+
+    void process_caption_result(const CaptionResult, bool interrupted);
+
+    void process_audio_capture_status_change(const int new_status);
+
 private slots:
 
     void clear_output_timer_cb();
-
-    void process_caption_result(const CaptionResult, bool interrupted);
 
 //    void send_caption_text(const string text, int send_in_secs);
 
@@ -190,23 +233,20 @@ signals:
 
     void audio_capture_status_changed(const int new_status);
 
+    void source_capture_status_changed(shared_ptr<SourceCaptionerStatus> status);
+
 public:
 
     SourceCaptioner(const SourceCaptionerSettings &settings, bool start);
 
     ~SourceCaptioner();
 
+    bool set_settings(const SourceCaptionerSettings &new_settings);
+
     bool start_caption_stream(const SourceCaptionerSettings &new_settings);
 
     void stop_caption_stream(bool send_signal = true);
 
-    void on_audio_data_callback(const uint8_t *data, const size_t size);
-
-    void on_audio_capture_status_change_callback(const audio_source_capture_status status);
-
-    void on_caption_text_callback(const CaptionResult &caption_result, bool interrupted);
-
-    void not_not_captioning_status();
 
     void stream_started_event();
 
