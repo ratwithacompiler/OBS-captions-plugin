@@ -41,8 +41,8 @@ enum source_capture_config {
 
 
 using std::string;
-typedef std::function<void(const uint8_t *, const size_t)> audio_chunk_data_cb;
-typedef std::function<void(const audio_source_capture_status status)> audio_capture_status_change_cb;
+typedef std::function<void(const int id, const uint8_t *, const size_t)> audio_chunk_data_cb;
+typedef std::function<void(const int id, const audio_source_capture_status status)> audio_capture_status_change_cb;
 
 #define FRAME_SIZE 2
 
@@ -55,6 +55,7 @@ class AudioCaptureSession {
     audio_resampler_t *resampler;
     audio_source_capture_status capture_status;
     bool use_muting_cb_signal = true;
+    const int id;
 public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;
@@ -65,7 +66,9 @@ public:
             audio_chunk_data_cb audio_data_cb,
             audio_capture_status_change_cb status_change_cb,
             resample_info resample_to,
-            source_capture_config muted_handling
+            source_capture_config muted_handling,
+            bool send_startup_change_signal,
+            int id
     );
 
     void audio_capture_cb(obs_source_t *source, const struct audio_data *audio, bool muted);
@@ -74,7 +77,7 @@ public:
 
     void state_changed_check(bool always_signal = false);
 
-    bool should_send_data();
+    audio_source_capture_status get_current_capture_status();
 
     audio_source_capture_status check_source_status();
 };

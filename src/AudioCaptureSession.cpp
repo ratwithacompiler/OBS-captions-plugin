@@ -41,15 +41,18 @@ AudioCaptureSession::AudioCaptureSession(
         audio_chunk_data_cb audio_data_cb,
         audio_capture_status_change_cb status_change_cb,
         resample_info resample_to,
-        source_capture_config muted_handling
+        source_capture_config muted_handling,
+        bool send_startup_change_signal,
+        int id
 ) :
         audio_source(audio_source_arg),
         muting_source(muting_source_arg),
         on_caption_cb_handle(audio_data_cb),
         on_status_cb_handle(status_change_cb),
         muted_handling(muted_handling),
-        use_muting_cb_signal(true) {
-    info_log("AudioCaptureSession()");
+        use_muting_cb_signal(true),
+        id(id) {
+    debug_log("AudioCaptureSession()");
 
     obs_audio_info backend_audio_settings;
     if (!obs_get_audio_info(&backend_audio_settings))
@@ -98,7 +101,8 @@ AudioCaptureSession::AudioCaptureSession(
 
 //    const bool do_capture = should_send_data();
     capture_status = check_source_status();
-    state_changed_check(true);
+    if (send_startup_change_signal)
+        state_changed_check(true);
 }
 
 void AudioCaptureSession::state_changed_check(bool always_signal) {
@@ -106,12 +110,12 @@ void AudioCaptureSession::state_changed_check(bool always_signal) {
     if (!always_signal && new_status == capture_status)
         return;
 
-    info_log("Capture status changed %s %d", obs_source_get_name(muting_source), new_status);
+    debug_log("AudioCaptureSession %d status changed %s %d", id, obs_source_get_name(muting_source), new_status);
     capture_status = new_status;
     {
         std::lock_guard<std::recursive_mutex> lock(on_status_cb_handle.mutex);
         if (on_status_cb_handle.callback_fn)
-            on_status_cb_handle.callback_fn(new_status);
+            on_status_cb_handle.callback_fn(id, new_status);
     }
 
 //    info_log("");
@@ -173,7 +177,7 @@ void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct au
             {
                 std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
                 if (on_caption_cb_handle.callback_fn)
-                    on_caption_cb_handle.callback_fn(buffer, size);
+                    on_caption_cb_handle.callback_fn(id, buffer, size);
             }
 
             delete[] buffer;
@@ -195,7 +199,7 @@ void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct au
     {
         std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
         if (on_caption_cb_handle.callback_fn)
-            on_caption_cb_handle.callback_fn(out[0], size);
+            on_caption_cb_handle.callback_fn(id, out[0], size);
     }
 }
 
@@ -217,5 +221,9 @@ AudioCaptureSession::~AudioCaptureSession() {
 
     audio_resampler_destroy(resampler);
 
-    info_log("~AudioCaptureSession() deaded");
+    debug_log("~AudioCaptureSession() deaded");
+}
+
+audio_source_capture_status AudioCaptureSession::get_current_capture_status() {
+    return capture_status;
 }

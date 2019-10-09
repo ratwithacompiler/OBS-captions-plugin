@@ -75,7 +75,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
 }
 
 bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings) {
-    info_log("SourceCaptioner::set_settings");
+//    debug_log("SourceCaptioner::set_settings");
 
     bool settings_equal;
     bool stream_settings_equal;
@@ -122,11 +122,12 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
             stop_caption_stream(false);
 
         if (started_ok && audio_capture_session) {
-            audio_cap_status = audio_capture_session->check_source_status();
+            audio_cap_status = audio_capture_session->get_current_capture_status();
         }
     }
 
     if (started_ok) {
+//        info_log("start_caption_stream OK, %d ", audio_cap_status);
         emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
                 SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK,
                 !settings_equal,
@@ -136,6 +137,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                 true
         ));
     } else {
+//        info_log("start_caption_stream FAIL");
         emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
                 SOURCE_CAPTIONER_STATUS_EVENT_STARTED_ERROR,
                 !settings_equal,
@@ -148,7 +150,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
 }
 
 bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
-    info_log("start_caption_stream");
+//    debug_log("start_caption_stream");
 
     bool caption_settings_equal;
     {
@@ -193,14 +195,17 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         try {
             resample_info resample_to = {16000, AUDIO_FORMAT_16BIT, SPEAKERS_MONO};
             audio_chunk_data_cb audio_cb = std::bind(&SourceCaptioner::on_audio_data_callback, this,
-                                                     std::placeholders::_1, std::placeholders::_2);
+                                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-            auto audio_status_cb = std::bind(&SourceCaptioner::on_audio_capture_status_change_callback, this, std::placeholders::_1);
+            auto audio_status_cb = std::bind(&SourceCaptioner::on_audio_capture_status_change_callback, this,
+                                             std::placeholders::_1, std::placeholders::_2);
 
+            audio_capture_id++;
             audio_capture_session = std::make_unique<AudioCaptureSession>(caption_source, mute_source, audio_cb, audio_status_cb,
                                                                           resample_to,
-//                                                                      MUTED_SOURCE_DISCARD_WHEN_MUTED);
-                                                                          MUTED_SOURCE_REPLACE_WITH_ZERO);
+                                                                          MUTED_SOURCE_REPLACE_WITH_ZERO,
+                                                                          false,
+                                                                          audio_capture_id);
         }
         catch (std::string err) {
             warn_log("couldn't create AudioCaptureSession, %s", err.c_str());
@@ -212,21 +217,32 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         }
 
     }
-    info_log("started captioning source '%s'", settings.caption_source_settings.caption_source_name.c_str());
+//    debug_log("started captioning source '%s'", settings.caption_source_settings.caption_source_name.c_str());
+//    debug_log("started captioning source tid '%d'", std::hash<std::thread::id>{}(std::this_thread::get_id()));
     return true;
 }
 
-void SourceCaptioner::on_audio_capture_status_change_callback(const audio_source_capture_status status) {
-    info_log("capture status change %d ", status);
-    emit audio_capture_status_changed(status);
+void SourceCaptioner::on_audio_capture_status_change_callback(const int id, const audio_source_capture_status status) {
+//    debug_log("capture status change %d %d", status, std::hash<std::thread::id>{}(std::this_thread::get_id()));
+    emit audio_capture_status_changed(id, status);
 }
 
 
-void SourceCaptioner::process_audio_capture_status_change(const int new_status) {
+void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_capture_id, const int new_status) {
+//    debug_log("process_audio_capture_status_change %d %d", new_status, std::hash<std::thread::id>{}(std::this_thread::get_id()));
+
     settings_change_mutex.lock();
+
+    bool is_old_audio_session = cb_audio_capture_id != audio_capture_id;
     SourceCaptionerSettings cur_settings = settings;
     bool active = continuous_captions != nullptr;
+
     settings_change_mutex.unlock();
+
+    if (is_old_audio_session) {
+//        debug_log("ignoring old audio capture status!!");
+        return;
+    }
 
     emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
             SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE,
@@ -239,7 +255,7 @@ void SourceCaptioner::process_audio_capture_status_change(const int new_status) 
 }
 
 
-void SourceCaptioner::on_audio_data_callback(const uint8_t *data, const size_t size) {
+void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, const size_t size) {
 //    info_log("audio data");
     if (continuous_captions) {
         continuous_captions->queue_audio_data((char *) data, size);

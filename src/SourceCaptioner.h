@@ -190,6 +190,8 @@ Q_OBJECT
     OutputWriter streaming_output;
     OutputWriter recording_output;
 
+    int audio_capture_id = 0;
+
     void caption_was_output();
 
     void output_caption_text(
@@ -203,9 +205,9 @@ Q_OBJECT
 
     void prepare_recent(string &recent_captions_output);
 
-    void on_audio_data_callback(const uint8_t *data, const size_t size);
+    void on_audio_data_callback(const int id, const uint8_t *data, const size_t size);
 
-    void on_audio_capture_status_change_callback(const audio_source_capture_status status);
+    void on_audio_capture_status_change_callback(const int id, const audio_source_capture_status status);
 
     void on_caption_text_callback(const CaptionResult &caption_result, bool interrupted);
 
@@ -213,7 +215,7 @@ Q_OBJECT
 
     void process_caption_result(const CaptionResult, bool interrupted);
 
-    void process_audio_capture_status_change(const int new_status);
+    void process_audio_capture_status_change(const int id, const int new_status);
 
 private slots:
 
@@ -231,7 +233,7 @@ signals:
             bool cleared,
             string recent_caption_text);
 
-    void audio_capture_status_changed(const int new_status);
+    void audio_capture_status_changed(const int id, const int new_status);
 
     void source_capture_status_changed(shared_ptr<SourceCaptionerStatus> status);
 
