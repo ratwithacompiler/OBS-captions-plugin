@@ -20,6 +20,9 @@ if (DEVMODE)
     add_compile_definitions(PORTUP=80)
     add_compile_definitions(PORTDOWN=80)
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    message("CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
+
     #    add_compile_definitions(GOOGLE="127.0.0.1")
     #    add_compile_definitions(PORTUP=9125)
     #    add_compile_definitions(PORTDOWN=9125)

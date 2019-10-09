@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define CPPTESTING_CAPTIONRESULTHANDLER_H
 
 #include <string>
-#include "log.h"
 #include <CaptionStream.h>
 
 struct CaptionFormatSettings {
@@ -49,7 +48,6 @@ struct CaptionFormatSettings {
             default_banned_words(default_banned_words),
             caption_timeout_enabled(caption_timeout_enabled),
             caption_timeout_seconds(caption_timeout_seconds) {
-        info_log("CaptionFormatSettings banned words: %lu %lu, ", default_banned_words.size(), manual_banned_words.size());
     }
 
     void print(const char *line_prefix = "") {
