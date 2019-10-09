@@ -97,11 +97,7 @@ endif()
 
 if (DEVMODE)
     add_executable(caption_stream_dev_main
-            ${caption_stream_SOURCES}
-            ${caption_stream_HEADERS}
             dev/main.cpp
             )
-
-    target_link_libraries(caption_stream_dev_main caption_stream plibsysstatic)
-    add_dependencies(caption_stream_dev_main caption_stream)
+    target_link_libraries(caption_stream_dev_main caption_stream)
 endif ()

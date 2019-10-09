@@ -65,7 +65,6 @@ private:
 
     void handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status);
 
-
     void settings_changed_event(CaptionPluginSettings new_settings);
 
 public slots:

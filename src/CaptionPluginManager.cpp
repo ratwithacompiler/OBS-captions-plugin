@@ -56,14 +56,19 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     this->is_captioning_preview = is_preview_relevant;
 
     if (do_captioning) {
-        info_log("settings changed, starting captioning");
+        info_log("caption settings changed, starting captioning");
         bool worked = source_captioner.start_caption_stream(source_settings);
+        if(worked)
+            info_log("captioning start ok");
+        else
+            info_log("captioning start failed");
+
     } else {
         info_log("settings changed, disabling captioning");
         source_captioner.set_settings(source_settings);
     }
 
-    info_log("emit settings_changed");
+//    debug_log("emit settings_changed");
     emit settings_changed(new_settings);
 }
 

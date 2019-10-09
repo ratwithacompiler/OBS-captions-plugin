@@ -11,6 +11,12 @@
 
 class CaptionPluginManager : public QObject {
 Q_OBJECT
+
+public:
+    CaptionPluginSettings plugin_settings;
+    SourceCaptioner source_captioner;
+
+private:
     bool external_is_streaming = false;
     bool external_is_recording = false;
     bool external_is_preview_open = false;
@@ -24,9 +30,6 @@ Q_OBJECT
 
 public:
     CaptionPluginManager(const CaptionPluginSettings &initial_settings);
-
-    CaptionPluginSettings plugin_settings;
-    SourceCaptioner source_captioner;
 
 //    void update_settings(CaptionPluginSettings &new_settings, bool force_update = false);
 

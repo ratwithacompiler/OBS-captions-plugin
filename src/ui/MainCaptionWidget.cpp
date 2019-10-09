@@ -28,7 +28,7 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
         Ui_MainCaptionWidget(),
         plugin_manager(plugin_manager),
         caption_settings_widget(plugin_manager.plugin_settings) {
-    info_log("MainCaptionWidget");
+//    debug_log("MainCaptionWidget");
     setupUi(this);
 
     this->captionHistoryPlainTextEdit->setPlainText("");
@@ -57,16 +57,16 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
 
 
 void MainCaptionWidget::showEvent(QShowEvent *event) {
-    info_log("show event");
+    debug_log("MainCaptionWidget show event");
     QWidget::showEvent(event);
     update_caption_text_ui();
     external_state_changed();
 }
 
 void MainCaptionWidget::hideEvent(QHideEvent *event) {
+    debug_log("MainCaptionWidget hide event");
     QWidget::hideEvent(event);
 
-    info_log("hide event");
     update_caption_text_ui();
     external_state_changed();
 }
@@ -110,7 +110,7 @@ void MainCaptionWidget::update_caption_text_ui() {
             single_caption_line.append(a_line);
         }
 
-        this->captionLinesPlainTextEdit->setPlainText(single_caption_line.c_str());
+        this->captionLinesPlainTextEdit->setPlainText(QString::fromStdString(single_caption_line));
     }
 }
 
@@ -153,7 +153,7 @@ void MainCaptionWidget::menu_button_clicked() {
 }
 
 void MainCaptionWidget::show_settings() {
-    info_log("show_settings");
+    debug_log("MainCaptionWidget show_settings");
     caption_settings_widget.set_settings(plugin_manager.plugin_settings);
 
     caption_settings_widget.show();
@@ -161,7 +161,7 @@ void MainCaptionWidget::show_settings() {
 }
 
 void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_settings) {
-    info_log("accept_widget_settings %p", &caption_settings_widget);
+    debug_log("MainCaptionWidget accept_widget_settings %p", &caption_settings_widget);
     caption_settings_widget.hide();
     plugin_manager.update_settings(new_settings);
 }
@@ -195,7 +195,7 @@ void MainCaptionWidget::recording_stopped_event() {
 }
 
 void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {
-    info_log("handle_source_capture_status_change");
+//    info_log("handle_source_capture_status_change");
     if (!status)
         return;
 
@@ -208,12 +208,12 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
 
 
 void MainCaptionWidget::enabled_state_checkbox_changed(int new_checkbox_state) {
-    info_log("enabled_state_checkbox_changed");
+    debug_log("MainCaptionWidget enabled_state_checkbox_changed");
     plugin_manager.toggle_enabled();
 }
 
 void MainCaptionWidget::settings_changed_event(CaptionPluginSettings new_settings) {
-    debug_log("settings_changed_event");
+    debug_log("MainCaptionWidget settings_changed_event");
 
     if (new_settings.enabled != enabledCheckbox->isChecked()) {
         const QSignalBlocker blocker(enabledCheckbox);
