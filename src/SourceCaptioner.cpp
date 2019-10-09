@@ -147,6 +147,8 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                 false
         ));
     }
+
+    return started_ok;
 }
 
 bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
