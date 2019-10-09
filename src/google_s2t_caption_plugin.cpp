@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QAction>
 #include <QMessageBox>
+#include <QMainWindow>
 
 #include <media-io/audio-resampler.h>
 #include <fstream>
@@ -33,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui/MainCaptionWidget.h"
 #include "caption_stream_helper.cpp"
 #include "CaptionPluginManager.h"
+#include "ui/CaptionDock.h"
 
 #include "log.c"
 
@@ -42,7 +44,12 @@ using namespace std;
 MainCaptionWidget *main_caption_widget = nullptr;
 CaptionPluginManager *plugin_manager = nullptr;
 
+CaptionDock *caption_dock = nullptr;
+bool frontend_loading_finished = false;
+bool ui_setup_done = false;
+
 OBS_DECLARE_MODULE()
+
 
 //OBS_MODULE_USE_DEFAULT_LOCALE("my-plugin", "en-US")
 void finished_loading_event();
@@ -84,21 +91,48 @@ static void obs_event(enum obs_frontend_event event, void *) {
 
 
 void closed_caption_tool_menu_clicked() {
-    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
+    debug_log("caption menu button clicked ");
+//    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
 //    info_log("test clicked %d", tid);
-    info_log("caption menu button clicked ");
+
     if (main_caption_widget) {
         main_caption_widget->menu_button_clicked();
     }
 }
 
-void finished_loading_event() {
-    info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING");
-//    printf("OBS_FRONTEND_EVENT_FINISHED_LOADING\n");
-    if (main_caption_widget) {
-        setup_UI();
-        main_caption_widget->external_state_changed();
+void setup_dock() {
+    debug_log("setup_dock()");
+    if (caption_dock || !plugin_manager)
+        return;
 
+    caption_dock = new CaptionDock("Captions", *plugin_manager);
+    caption_dock->setObjectName("cloud_caption_caption_dock");
+
+    QMainWindow *main_wid = (QMainWindow *) obs_frontend_get_main_window();
+    main_wid->addDockWidget(Qt::BottomDockWidgetArea, caption_dock);
+    obs_frontend_add_dock(caption_dock);
+}
+
+void setup_UI() {
+    if (ui_setup_done || !frontend_loading_finished)
+        return;
+
+    debug_log("setup_UI()");
+    QAction *action = (QAction *) obs_frontend_add_tools_menu_qaction("Cloud Closed Captions");
+    action->connect(action, &QAction::triggered, &closed_caption_tool_menu_clicked);
+
+    setup_dock();
+
+    ui_setup_done = true;
+}
+
+void finished_loading_event() {
+    frontend_loading_finished = true;
+    setup_UI();
+
+    info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING, plugin_manager loaded: %d", plugin_manager != nullptr);
+    if (main_caption_widget) {
+        main_caption_widget->external_state_changed();
 #ifdef USE_DEVMODE
         main_caption_widget->show();
 //        main_caption_widget->stream_started_event();
@@ -162,20 +196,11 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
         } else {
             plugin_manager = new CaptionPluginManager(loaded_settings);
             main_caption_widget = new MainCaptionWidget(*plugin_manager);
+            setup_UI(); // just in case that gets called after frontend_finished_
         }
     }
 
 }
-
-
-void setup_UI() {
-//    printf("main setup_UI()\n");
-    QAction *action = (QAction *) obs_frontend_add_tools_menu_qaction("Cloud Closed Captions");
-    action->connect(action, &QAction::triggered, &closed_caption_tool_menu_clicked);
-
-//    setupDock();
-}
-
 
 bool obs_module_load(void) {
     info_log("google_s2t_caption_plugin %s obs_module_load", VERSION_STRING);
@@ -186,14 +211,11 @@ bool obs_module_load(void) {
 
     obs_frontend_add_event_callback(obs_event, nullptr);
     obs_frontend_add_save_callback(save_or_load_event_callback, nullptr);
-
     return true;
 }
 
 void obs_module_post_load(void) {
     info_log("google_s2t_caption_plugin %s obs_module_post_load", VERSION_STRING);
-
-
 }
 
 void obs_module_unload(void) {

@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QThread>
 #include "../caption_stream_helper.cpp"
 #include "../log.c"
+#include "uiutils.h"
 
 MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
         QWidget(),
@@ -199,30 +200,7 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
         return;
 
     string text;
-    if (!plugin_manager.plugin_settings.enabled) {
-        text = "Disabled";
-    } else {
-        if (status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STOPPED
-            || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_ERROR
-            || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_NEW_SETTINGS_STOPPED) {
-            text = "Off";
-        } else if (status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK
-                   || status->event_type == SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE) {
-
-            if (status->audio_capture_status == AUDIO_SOURCE_CAPTURING)
-                text = "🔴 Captioning";
-            else if (status->audio_capture_status == AUDIO_SOURCE_MUTED)
-                text = "Muted";
-            else if (status->audio_capture_status == AUDIO_SOURCE_NOT_STREAMED)
-                text = "Source not streamed";
-            else
-                text = "??";
-
-        } else {
-            text = "?";
-        }
-
-    }
+    captioning_status_string(plugin_manager.plugin_settings.enabled, *status, text);
 
     this->statusTextLabel->setText(text.c_str());
     this->statusTextLabel->setVisible(true);
