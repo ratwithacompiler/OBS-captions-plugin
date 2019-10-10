@@ -82,10 +82,10 @@ jobs:
           msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
           solution: $(Build.SourcesDirectory)\CI\build_64\obs_google_caption_plugin.sln
 
-      - task: PublishPipelineArtifact@1
-        inputs:
-          path: '$(Build.SourcesDirectory)/CI/build_64/RelWithDebInfo/'
-          artifact: buildresult_plugin_win64
+#      - task: PublishPipelineArtifact@1
+#        inputs:
+#          path: '$(Build.SourcesDirectory)/CI/build_64/RelWithDebInfo/'
+#          artifact: buildresult_plugin_win64
 
       - task: MSBuild@1
         displayName: 'Build 32-bit'
@@ -93,10 +93,10 @@ jobs:
           msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
           solution: $(Build.SourcesDirectory)\CI\build_32\obs_google_caption_plugin.sln
 
-      - task: PublishPipelineArtifact@1
-        inputs:
-          path: '$(Build.SourcesDirectory)/CI/build_32/RelWithDebInfo/'
-          artifact: buildresult_plugin_win32
+#      - task: PublishPipelineArtifact@1
+#        inputs:
+#          path: '$(Build.SourcesDirectory)/CI/build_32/RelWithDebInfo/'
+#          artifact: buildresult_plugin_win32
 
       - script: $(Build.SourcesDirectory)\CI\post-install-script-win.cmd
         workingDirectory: $(Build.SourcesDirectory)\CI
@@ -149,10 +149,10 @@ jobs:
         displayName: 'Post install'
         workingDirectory: $(Build.SourcesDirectory)/CI
 
-      - task: PublishPipelineArtifact@1
-        inputs:
-          path: "$(Build.SourcesDirectory)/CI/build/"
-          artifact: buildresult_plugin_linux64
+#      - task: PublishPipelineArtifact@1
+#        inputs:
+#          path: "$(Build.SourcesDirectory)/CI/build/"
+#          artifact: buildresult_plugin_linux64
 
       - task: PublishPipelineArtifact@1
         inputs:
