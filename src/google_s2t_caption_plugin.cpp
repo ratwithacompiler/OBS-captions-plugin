@@ -114,7 +114,7 @@ void setup_dock() {
 }
 
 void setup_UI() {
-    if (ui_setup_done || !frontend_loading_finished)
+    if (ui_setup_done)
         return;
 
     debug_log("setup_UI()");
@@ -128,7 +128,6 @@ void setup_UI() {
 
 void finished_loading_event() {
     frontend_loading_finished = true;
-    setup_UI();
 
     info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING, plugin_manager loaded: %d", plugin_manager != nullptr);
     if (main_caption_widget) {
@@ -196,7 +195,7 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
         } else {
             plugin_manager = new CaptionPluginManager(loaded_settings);
             main_caption_widget = new MainCaptionWidget(*plugin_manager);
-            setup_UI(); // just in case that gets called after frontend_finished_
+            setup_UI();
         }
     }
 
