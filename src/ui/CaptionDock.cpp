@@ -28,7 +28,11 @@ CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_mana
 void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {
 //    debug_log("CaptionDock::handle_source_capture_status_change %d", status->audio_capture_status);
     string status_text;
-    captioning_status_string(plugin_manager.plugin_settings.enabled, *status, status_text);
+    captioning_status_string(
+            plugin_manager.plugin_settings.enabled,
+            *status,
+            plugin_manager.plugin_settings.source_cap_settings.caption_source_settings.caption_source_name,
+            status_text);
 
     this->statusTextLabel->setText(QString::fromStdString(status_text));
 }

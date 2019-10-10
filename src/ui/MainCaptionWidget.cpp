@@ -200,7 +200,11 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
         return;
 
     string text;
-    captioning_status_string(plugin_manager.plugin_settings.enabled, *status, text);
+    captioning_status_string(
+            plugin_manager.plugin_settings.enabled,
+            *status,
+            plugin_manager.plugin_settings.source_cap_settings.caption_source_settings.caption_source_name,
+            text);
 
     this->statusTextLabel->setText(text.c_str());
     this->statusTextLabel->setVisible(true);
