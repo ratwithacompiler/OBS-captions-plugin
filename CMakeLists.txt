@@ -110,9 +110,13 @@ configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.
 set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
 
 
+set(obs_QRC src/resources/obs.qrc)
+qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
+
 add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_HEADERS}
         ${obs_google_caption_plugin_SOURCES}
+        ${obs_QRC_SOURCES}
         )
 
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")

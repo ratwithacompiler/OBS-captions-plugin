@@ -75,6 +75,9 @@ line4</string>
        </sizepolicy>
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <property name="spacing">
+        <number>2</number>
+       </property>
        <property name="leftMargin">
         <number>2</number>
        </property>
@@ -107,12 +110,25 @@ line4</string>
          </property>
         </spacer>
        </item>
+       <item>
+        <widget class="QToolButton" name="settingsToolButton">
+         <property name="text">
+          <string>🔧 </string>
+         </property>
+         <property name="icon">
+          <iconset resource="../resources/obs.qrc">
+           <normaloff>:/settings/images/settings/general.svg</normaloff>:/settings/images/settings/general.svg</iconset>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resources/obs.qrc"/>
+ </resources>
  <connections/>
 </ui>

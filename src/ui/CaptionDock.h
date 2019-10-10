@@ -8,11 +8,14 @@
 #include <QDockWidget>
 #include "../SourceCaptioner.h"
 #include "../CaptionPluginManager.h"
+#include "MainCaptionWidget.h"
 #include "ui_CaptionDock.h"
 
 class CaptionDock : public QDockWidget, Ui_CaptionDock {
+Q_OBJECT
 private:
     CaptionPluginManager &plugin_manager;
+    MainCaptionWidget &main_caption_widget;
     string last_output_line;
 
     void handle_caption_data_cb(
@@ -22,8 +25,12 @@ private:
             string recent_caption_text
     );
 
+private slots:
+
+    void on_settingsToolButton_clicked();
+
 public:
-    CaptionDock(const QString &title, CaptionPluginManager &plugin_manager);
+    CaptionDock(const QString &title, CaptionPluginManager &plugin_manager, MainCaptionWidget &main_caption_widget);
 
     void handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status);
 

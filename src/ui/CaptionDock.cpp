@@ -8,15 +8,14 @@
 #include "../log.c"
 #include "uiutils.h"
 
-CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_manager)
-        : QDockWidget(title), plugin_manager(plugin_manager) {
+CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_manager, MainCaptionWidget &main_caption_widget)
+        : QDockWidget(title), plugin_manager(plugin_manager), main_caption_widget(main_caption_widget) {
     setupUi(this);
     setWindowTitle(title);
     captionLinesPlainTextEdit->clear();
 
     setFeatures(QDockWidget::AllDockWidgetFeatures);
     setFloating(true);
-
 
     QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::source_capture_status_changed,
                      this, &CaptionDock::handle_source_capture_status_change, Qt::QueuedConnection);
@@ -67,4 +66,9 @@ void CaptionDock::handle_caption_data_cb(
 
     this->captionLinesPlainTextEdit->setPlainText(QString::fromStdString(single_caption_line));
     last_output_line = caption_result->output_line;
+}
+
+void CaptionDock::on_settingsToolButton_clicked() {
+//    debug_log("on_settingsToolButton_clicked");
+    main_caption_widget.show_settings_dialog();
 }

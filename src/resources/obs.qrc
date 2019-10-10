@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/res">
+  </qresource>
+  <qresource prefix="/settings">
+    <file>images/settings/general.svg</file>
+  </qresource>
+</RCC>
