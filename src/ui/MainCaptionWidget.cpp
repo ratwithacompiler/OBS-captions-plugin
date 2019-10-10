@@ -35,7 +35,7 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
     this->captionLinesPlainTextEdit->setPlainText("");
 
     QObject::connect(this->enabledCheckbox, &QCheckBox::stateChanged, this, &MainCaptionWidget::enabled_state_checkbox_changed);
-    QObject::connect(this->settingsToolButton, &QToolButton::clicked, this, &MainCaptionWidget::show_settings);
+    QObject::connect(this->settingsToolButton, &QToolButton::clicked, this, &MainCaptionWidget::show_settings_dialog);
     statusTextLabel->hide();
 
     QObject::connect(this, &MainCaptionWidget::process_item_queue, this, &MainCaptionWidget::do_process_item_queue);
@@ -100,7 +100,7 @@ void MainCaptionWidget::update_caption_text_ui() {
     this->captionHistoryPlainTextEdit->setTextCursor(cursor1);
     this->captionHistoryPlainTextEdit->ensureCursorVisible();
 
-    if (!this->cleared) {
+    if (!this->caption_cleared) {
         string single_caption_line;
         for (string &a_line: latest_caption_result->output_lines) {
 //                info_log("a line: %s", a_line.c_str());
@@ -124,7 +124,7 @@ void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
 
     if (was_cleared) {
         this->captionLinesPlainTextEdit->clear();
-        this->cleared = true;
+        this->caption_cleared = true;
 
         return;
     }
@@ -134,7 +134,7 @@ void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
 
     latest_caption_result = caption_result;
     latest_caption_text_history = recent_caption_text;
-    this->cleared = false;
+    this->caption_cleared = false;
 }
 
 
@@ -147,13 +147,13 @@ void MainCaptionWidget::handle_caption_data_cb(
     emit process_item_queue();
 }
 
-void MainCaptionWidget::menu_button_clicked() {
+void MainCaptionWidget::show_self() {
     show();
     raise();
 }
 
-void MainCaptionWidget::show_settings() {
-    debug_log("MainCaptionWidget show_settings");
+void MainCaptionWidget::show_settings_dialog() {
+    debug_log("MainCaptionWidget show_settings_dialog");
     caption_settings_widget.set_settings(plugin_manager.plugin_settings);
 
     caption_settings_widget.show();

@@ -96,7 +96,7 @@ void closed_caption_tool_menu_clicked() {
 //    info_log("test clicked %d", tid);
 
     if (main_caption_widget) {
-        main_caption_widget->menu_button_clicked();
+        main_caption_widget->show_self();
     }
 }
 

@@ -40,7 +40,7 @@ Q_OBJECT
 
     std::shared_ptr<OutputCaptionResult> latest_caption_result;
     string latest_caption_text_history;
-    bool cleared = false;
+     bool caption_cleared = false;
 
 signals:
 
@@ -71,13 +71,13 @@ public slots:
 
     void enabled_state_checkbox_changed(int new_checkbox_state);
 
-    void show_settings();
+    void show_settings_dialog();
 
 
 public:
     MainCaptionWidget(CaptionPluginManager &plugin_manager);
 
-    void menu_button_clicked();
+    void show_self();
 
     virtual ~MainCaptionWidget();
 
