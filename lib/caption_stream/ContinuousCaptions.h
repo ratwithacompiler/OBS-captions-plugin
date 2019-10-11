@@ -37,7 +37,7 @@ struct ContinuousCaptionStreamSettings {
             CaptionStreamSettings streamSettings
     ) :
             connect_second_after_secs(connectSecondAfterSecs),
-            switchover_second_after_secs(switchoverSecondAfterSecs),
+            switchover_second_after_secs(connectSecondAfterSecs + switchoverSecondAfterSecs),
             minimum_reconnect_interval_secs(minimumReconnectIntervalSecs),
             stream_settings(streamSettings) {}
 

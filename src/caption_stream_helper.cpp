@@ -43,7 +43,7 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
 static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings() {
     return {
             280,
-            255,
+            5,
             10,
             default_CaptionStreamSettings()
     };
