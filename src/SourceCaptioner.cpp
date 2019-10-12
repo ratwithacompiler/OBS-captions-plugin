@@ -50,6 +50,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
         audio_capture_session = nullptr;
         caption_result_handler = nullptr;
         continuous_captions = nullptr;
+        audio_capture_id++;
         return;
     }
 
@@ -59,6 +60,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
     audio_capture_session = nullptr;
     caption_result_handler = nullptr;
     continuous_captions = nullptr;
+    audio_capture_id++;
 
     settings_change_mutex.unlock();
 
@@ -115,6 +117,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
 
         audio_capture_session = nullptr;
         caption_result_handler = nullptr;
+        audio_capture_id++;
 
         started_ok = _start_caption_stream(!stream_settings_equal);
 
@@ -202,7 +205,6 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             auto audio_status_cb = std::bind(&SourceCaptioner::on_audio_capture_status_change_callback, this,
                                              std::placeholders::_1, std::placeholders::_2);
 
-            audio_capture_id++;
             audio_capture_session = std::make_unique<AudioCaptureSession>(caption_source, mute_source, audio_cb, audio_status_cb,
                                                                           resample_to,
                                                                           MUTED_SOURCE_REPLACE_WITH_ZERO,
