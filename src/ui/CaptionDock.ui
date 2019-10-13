@@ -112,6 +112,9 @@ line4</string>
        </item>
        <item>
         <widget class="QToolButton" name="settingsToolButton">
+         <property name="toolTip">
+          <string extracomment="Settings"/>
+         </property>
          <property name="text">
           <string>🔧 </string>
          </property>
