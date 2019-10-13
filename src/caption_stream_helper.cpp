@@ -210,8 +210,8 @@ static void setup_combobox_output_target(QComboBox &comboBox) {
         comboBox.removeItem(0);
 
     comboBox.addItem("Streams Only", 0);
-    comboBox.addItem("Recordings Only", 1);
-    comboBox.addItem("Streams & Recordings", 2);
+    comboBox.addItem("Local Recordings Only", 1);
+    comboBox.addItem("Streams & Local Recordings", 2);
 }
 
 
