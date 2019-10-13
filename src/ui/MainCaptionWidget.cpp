@@ -158,7 +158,10 @@ void MainCaptionWidget::show_self() {
 
 void MainCaptionWidget::show_settings_dialog() {
     debug_log("MainCaptionWidget show_settings_dialog");
-    caption_settings_widget.set_settings(plugin_manager.plugin_settings);
+    if (caption_settings_widget.isHidden()){
+        debug_log("updating captionwidget settings");
+        caption_settings_widget.set_settings(plugin_manager.plugin_settings);
+    }
 
     caption_settings_widget.show();
     caption_settings_widget.raise();
