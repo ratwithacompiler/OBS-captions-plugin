@@ -71,6 +71,10 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
                      this, &CaptionSettingsWidget::caption_when_index_change);
 }
 
+
+void CaptionSettingsWidget::on_previewPushButton_clicked() {
+    emit preview_requested();
+}
 void CaptionSettingsWidget::caption_when_index_change(int new_index) {
     QVariant data = captionWhenComboBox->currentData();
     string val_str = data.toString().toStdString();

@@ -43,6 +43,9 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
     QObject::connect(&caption_settings_widget, &CaptionSettingsWidget::settings_accepted,
                      this, &MainCaptionWidget::accept_widget_settings);
 
+    QObject::connect(&caption_settings_widget, &CaptionSettingsWidget::preview_requested,
+                     this, &MainCaptionWidget::show_self);
+
     QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::caption_result_received,
                      this, &MainCaptionWidget::handle_caption_data_cb, Qt::QueuedConnection);
 
@@ -59,6 +62,7 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
 void MainCaptionWidget::showEvent(QShowEvent *event) {
     debug_log("MainCaptionWidget show event");
     QWidget::showEvent(event);
+
     update_caption_text_ui();
     external_state_changed();
 }
@@ -168,10 +172,6 @@ void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_setting
 
 void MainCaptionWidget::external_state_changed() {
     plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live());
-}
-
-MainCaptionWidget::~MainCaptionWidget() {
-    plugin_manager.source_captioner.stop_caption_stream(false);
 }
 
 void MainCaptionWidget::stream_started_event() {

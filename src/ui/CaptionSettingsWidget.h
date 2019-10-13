@@ -40,9 +40,13 @@ private slots:
 
     void caption_when_index_change(int index);
 
+    void on_previewPushButton_clicked();
+
 signals:
 
     void settings_accepted(CaptionPluginSettings new_settings);
+
+    void preview_requested();
 
 public:
     CaptionSettingsWidget(const CaptionPluginSettings &latest_settings);
