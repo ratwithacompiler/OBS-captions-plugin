@@ -25,11 +25,11 @@ static bool captioning_status_string(
         if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STOPPED
             || status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_NEW_SETTINGS_STOPPED) {
             if (streaming_output_enabled && recording_output_enabled)
-                output = "CC Off. Not streaming/recording";
+                output = "Not streaming/recording. CC Off";
             else if (streaming_output_enabled)
-                output = "CC Off. Not streaming";
+                output = "Not streaming. CC Off";
             else if (recording_output_enabled)
-                output = "CC Off. Not recording";
+                output = "Not recording. CC Off";
             else
                 output = "Offline";
 
