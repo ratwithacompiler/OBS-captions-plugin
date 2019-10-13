@@ -9,14 +9,7 @@
 #include "CaptionPluginSettings.h"
 #include "SourceCaptioner.h"
 
-class CaptionPluginManager : public QObject {
-Q_OBJECT
-
-public:
-    CaptionPluginSettings plugin_settings;
-    SourceCaptioner source_captioner;
-
-private:
+struct CaptioningState {
     bool external_is_streaming = false;
     bool external_is_recording = false;
     bool external_is_preview_open = false;
@@ -25,6 +18,17 @@ private:
     bool is_captioning_streaming = false;
     bool is_captioning_recording = false;
     bool is_captioning_preview = false;
+};
+
+class CaptionPluginManager : public QObject {
+Q_OBJECT
+
+public:
+    CaptionPluginSettings plugin_settings;
+    SourceCaptioner source_captioner;
+    CaptioningState state;
+
+private:
 
     int update_count = 0;
 
@@ -40,6 +44,8 @@ public:
     bool toggle_enabled();
 
     void save(obs_data_t *save_data);
+
+    CaptioningState captioning_state();
 
 public slots:
 

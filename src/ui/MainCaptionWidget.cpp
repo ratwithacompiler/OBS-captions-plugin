@@ -202,6 +202,9 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
     string text;
     captioning_status_string(
             plugin_manager.plugin_settings.enabled,
+            plugin_manager.plugin_settings.source_cap_settings.streaming_output_enabled,
+            plugin_manager.plugin_settings.source_cap_settings.recording_output_enabled,
+            plugin_manager.captioning_state(),
             *status,
             plugin_manager.plugin_settings.source_cap_settings.caption_source_settings.caption_source_name,
             text);
