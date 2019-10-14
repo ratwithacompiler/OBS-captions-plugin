@@ -234,3 +234,9 @@ void MainCaptionWidget::settings_changed_event(CaptionPluginSettings new_setting
 //    latest_caption_text_history.clear();
 //    update_caption_text_ui();
 }
+
+MainCaptionWidget::~MainCaptionWidget() {
+//    debug_log("~MainCaptionWidget()");
+    plugin_manager.source_captioner.stop_caption_stream(false);
+//    debug_log("~MainCaptionWidget() done");
+}
