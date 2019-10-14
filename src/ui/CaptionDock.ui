@@ -50,10 +50,8 @@
     </property>
     <item>
      <widget class="QPlainTextEdit" name="captionLinesPlainTextEdit">
-      <property name="font">
-       <font>
-        <pointsize>15</pointsize>
-       </font>
+      <property name="lineWrapMode">
+       <enum>QPlainTextEdit::NoWrap</enum>
       </property>
       <property name="readOnly">
        <bool>true</bool>

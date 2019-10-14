@@ -22,6 +22,17 @@ CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_mana
 
     QObject::connect(&plugin_manager.source_captioner, &SourceCaptioner::caption_result_received,
                      this, &CaptionDock::handle_caption_data_cb, Qt::QueuedConnection);
+
+    QFontMetrics fm = this->captionLinesPlainTextEdit->fontMetrics();
+    info_log("dock: %d %d fs: %d", this->minimumWidth(), this->maximumWidth(), this->captionLinesPlainTextEdit->font().pointSize());
+
+    const int target_width = fm.width("This is a baseline example test okay") + 30;
+//    info_log("target: %d %d", target_width, 0);
+    if (target_width >= 150 && target_width <= 350) {
+        this->setMaximumWidth(target_width);
+        this->setMinimumWidth(target_width);
+    }
+//    info_log("after: %d %d", this->minimumWidth(), this->maximumWidth());
 }
 
 void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {
