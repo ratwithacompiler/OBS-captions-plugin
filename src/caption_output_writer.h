@@ -54,7 +54,6 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control,
     bool got_item;
     obs_output_t *output = nullptr;
 
-
     double waited_left_secs = 0;
     while (!control->stop) {
         control->caption_queue.wait_dequeue(caption_output);
@@ -67,13 +66,18 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control,
             continue;
         }
 
+        if (output) {
+            obs_output_release(output);
+            output = nullptr;
+        }
+
         if (to_stream)
             output = obs_frontend_get_streaming_output();
         else
             output = obs_frontend_get_recording_output();
 
         if (!output) {
-            info_log("built caption lines, no output, not sending, not %s?: '%s'", to_what.c_str(),
+            info_log("built caption lines, no output 1, not sending, not %s?: '%s'", to_what.c_str(),
                      caption_output.output_result->output_line.c_str());
             continue;
         }
@@ -112,17 +116,35 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control,
             debug_log("caption_output_writer_loop %s sleeping for %f seconds",
                       to_what.c_str(), waited_left_secs);
 
+            // release output before possible long thread sleep to not block a possible shutdown (or output change?)
+            obs_output_release(output);
+            output = nullptr;
+
             std::this_thread::sleep_for(wait_left);
 
             if (control->stop)
                 break;
+
+            if (to_stream)
+                output = obs_frontend_get_streaming_output();
+            else
+                output = obs_frontend_get_recording_output();
+
+            if (!output) {
+                info_log("built caption lines, no output 2, not sending, not %s?: '%s'", to_what.c_str(),
+                         caption_output.output_result->output_line.c_str());
+                continue;
+            }
         }
 
         debug_log("sending caption %s line now, waited %f: '%s'",
                   to_what.c_str(), waited_left_secs, caption_output.output_result->output_line.c_str());
 
         obs_output_output_caption_text2(output, caption_output.output_result->output_line.c_str(), 0.0);
+    }
+    if (output) {
         obs_output_release(output);
+        output = nullptr;
     }
 
     info_log("caption_output_writer_loop %s done", to_what.c_str());
