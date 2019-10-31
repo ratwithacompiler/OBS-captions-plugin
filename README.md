@@ -16,9 +16,8 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 * The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the mic is muted for the stream.
 * Video players with caption support like VLC can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
-* The quality of Google's Speech Recognition heavily depends on the speaker and what is being said.
 * You can enable and disable the caption preview dock in OBS under `View -> Docks -> Captions` 
-* The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
+* The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
 
 ![Example Image](https://i.imgur.com/UcPk8gz.png)
 ##### [Example VOD here](https://www.twitch.tv/videos/441407980?t=20s)
