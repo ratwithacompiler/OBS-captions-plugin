@@ -36,12 +36,8 @@ class MainCaptionWidget : public QWidget, Ui_MainCaptionWidget {
 Q_OBJECT
     CaptionPluginManager &plugin_manager;
     CaptionSettingsWidget caption_settings_widget;
-    moodycamel::ConcurrentQueue<ResultTup> result_queue;
 
-    std::shared_ptr<OutputCaptionResult> latest_caption_result;
-    string latest_caption_text_history;
-     bool caption_cleared = false;
-
+    std::unique_ptr<ResultTup> latest_caption_result_tup;
 signals:
 
     void process_item_queue();

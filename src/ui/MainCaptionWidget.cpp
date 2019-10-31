@@ -38,8 +38,6 @@ MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
     QObject::connect(this->settingsToolButton, &QToolButton::clicked, this, &MainCaptionWidget::show_settings_dialog);
     statusTextLabel->hide();
 
-    QObject::connect(this, &MainCaptionWidget::process_item_queue, this, &MainCaptionWidget::do_process_item_queue);
-
     QObject::connect(&caption_settings_widget, &CaptionSettingsWidget::settings_accepted,
                      this, &MainCaptionWidget::accept_widget_settings);
 
@@ -75,36 +73,18 @@ void MainCaptionWidget::hideEvent(QHideEvent *event) {
     external_state_changed();
 }
 
-void MainCaptionWidget::do_process_item_queue() {
-    if (QThread::currentThread() != this->thread()) {
-        return;
-    }
-
-    ResultTup tup;
-    int cnt = 0;
-    while (result_queue.try_dequeue(tup)) {
-        cnt++;
-    }
-
-    if (cnt) {
-        handle_caption_result_tup(tup);
-        if (isVisible())
-            this->update_caption_text_ui();
-    }
-//    info_log("handle_caption_data");
-}
-
 void MainCaptionWidget::update_caption_text_ui() {
-    if (!latest_caption_result)
+    if (!latest_caption_result_tup)
         return;
 
-    this->captionHistoryPlainTextEdit->setPlainText(latest_caption_text_history.c_str());
-    QTextCursor cursor1 = this->captionHistoryPlainTextEdit->textCursor();
-    cursor1.atEnd();
-    this->captionHistoryPlainTextEdit->setTextCursor(cursor1);
-    this->captionHistoryPlainTextEdit->ensureCursorVisible();
+    auto latest_caption_result = std::get<0>(*latest_caption_result_tup);
+    bool interrupted = std::get<1>(*latest_caption_result_tup);
+    bool was_cleared = std::get<2>(*latest_caption_result_tup);
+    string latest_caption_text_history = std::get<3>(*latest_caption_result_tup);
 
-    if (!this->caption_cleared) {
+    if (was_cleared) {
+        this->captionLinesPlainTextEdit->clear();
+    } else {
         string single_caption_line;
         for (string &a_line: latest_caption_result->output_lines) {
 //                info_log("a line: %s", a_line.c_str());
@@ -116,39 +96,24 @@ void MainCaptionWidget::update_caption_text_ui() {
 
         this->captionLinesPlainTextEdit->setPlainText(QString::fromStdString(single_caption_line));
     }
+
+    this->captionHistoryPlainTextEdit->setPlainText(latest_caption_text_history.c_str());
+//    QTextCursor cursor1 = this->captionHistoryPlainTextEdit->textCursor();
+//    cursor1.atEnd();
+//    this->captionHistoryPlainTextEdit->setTextCursor(cursor1);
+//    this->captionHistoryPlainTextEdit->ensureCursorVisible();
+
 }
-
-
-void MainCaptionWidget::handle_caption_result_tup(ResultTup &tup) {
-    auto caption_result = std::get<0>(tup);
-//    bool interrupted = std::get<1>(tup);
-    bool was_cleared = std::get<2>(tup);
-    string recent_caption_text = std::get<3>(tup);
-//    info_log("handle_caption_result_tup, %d %d", interrupted, was_cleared);
-
-    if (was_cleared) {
-        this->captionLinesPlainTextEdit->clear();
-        this->caption_cleared = true;
-
-        return;
-    }
-
-    if (!caption_result)
-        return;
-
-    latest_caption_result = caption_result;
-    latest_caption_text_history = recent_caption_text;
-    this->caption_cleared = false;
-}
-
 
 void MainCaptionWidget::handle_caption_data_cb(
         shared_ptr<OutputCaptionResult> caption_result,
         bool interrupted,
         bool cleared,
         string recent_caption_text) {
-    result_queue.enqueue(ResultTup(caption_result, interrupted, cleared, recent_caption_text));
-    emit process_item_queue();
+
+    latest_caption_result_tup = std::make_unique<ResultTup>(caption_result, interrupted, cleared, recent_caption_text);
+    if (isVisible())
+        this->update_caption_text_ui();
 }
 
 void MainCaptionWidget::show_self() {
@@ -158,7 +123,7 @@ void MainCaptionWidget::show_self() {
 
 void MainCaptionWidget::show_settings_dialog() {
     debug_log("MainCaptionWidget show_settings_dialog");
-    if (caption_settings_widget.isHidden()){
+    if (caption_settings_widget.isHidden()) {
         debug_log("updating captionwidget settings");
         caption_settings_widget.set_settings(plugin_manager.plugin_settings);
     }
@@ -229,10 +194,6 @@ void MainCaptionWidget::settings_changed_event(CaptionPluginSettings new_setting
         const QSignalBlocker blocker(enabledCheckbox);
         enabledCheckbox->setChecked(new_settings.enabled);
     }
-
-//    latest_caption_result = nullptr;
-//    latest_caption_text_history.clear();
-//    update_caption_text_ui();
 }
 
 MainCaptionWidget::~MainCaptionWidget() {
