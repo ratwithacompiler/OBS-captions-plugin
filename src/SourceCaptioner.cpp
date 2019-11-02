@@ -22,9 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "log.c"
 
 
-SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, bool start) :
+SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start) :
         QObject(),
         settings(settings),
+        selected_scene_collection_name(scene_collection_name),
         last_caption_at(std::chrono::steady_clock::now()),
         last_caption_cleared(true) {
 
@@ -38,9 +39,14 @@ SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, bool s
 
     timer.start(1000);
 
-    info_log("SourceCaptioner, source '%s'", settings.caption_source_settings.caption_source_name.c_str());
+    const CaptionSourceSettings *selected_caption_source_settings = this->settings.get_caption_source_settings_ptr(scene_collection_name);
+    if (selected_caption_source_settings)
+        debug_log("SourceCaptioner, source '%s'", selected_caption_source_settings->caption_source_name.c_str());
+    else
+        debug_log("SourceCaptioner, no selected caption source settings found");
+
     if (start)
-        start_caption_stream(settings);
+        start_caption_stream(settings, scene_collection_name);
 }
 
 
@@ -57,6 +63,8 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
     settings_change_mutex.lock();
 
     SourceCaptionerSettings cur_settings = settings;
+    string cur_scene_collection_name = this->selected_scene_collection_name;
+
     audio_capture_session = nullptr;
     caption_result_handler = nullptr;
     continuous_captions = nullptr;
@@ -70,13 +78,14 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
                 false,
                 false,
                 cur_settings,
+                cur_scene_collection_name,
                 AUDIO_SOURCE_NOT_STREAMED,
                 false
         ));
     }
 }
 
-bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings) {
+bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings, const string &scene_collection_name) {
 //    debug_log("SourceCaptioner::set_settings");
 
     bool settings_equal;
@@ -87,7 +96,9 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings) 
 
         settings_equal = settings == new_settings;
         stream_settings_equal = settings.stream_settings == new_settings.stream_settings;
+
         settings = new_settings;
+        selected_scene_collection_name = scene_collection_name;
     }
 
     emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
@@ -95,6 +106,7 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings) 
             !settings_equal,
             !stream_settings_equal,
             new_settings,
+            scene_collection_name,
             AUDIO_SOURCE_NOT_STREAMED,
             false
     ));
@@ -102,7 +114,7 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings) 
     return true;
 }
 
-bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_settings) {
+bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_settings, const string &scene_collection_name) {
     bool started_ok;
     bool settings_equal;
     bool stream_settings_equal;
@@ -114,6 +126,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
         stream_settings_equal = settings.stream_settings == new_settings.stream_settings;
 
         settings = new_settings;
+        selected_scene_collection_name = scene_collection_name;
 
         audio_capture_session = nullptr;
         caption_result_handler = nullptr;
@@ -136,6 +149,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                 !settings_equal,
                 !stream_settings_equal,
                 new_settings,
+                scene_collection_name,
                 audio_cap_status,
                 true
         ));
@@ -146,6 +160,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                 !settings_equal,
                 !stream_settings_equal,
                 new_settings,
+                scene_collection_name,
                 AUDIO_SOURCE_NOT_STREAMED,
                 false
         ));
@@ -160,25 +175,34 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
     bool caption_settings_equal;
     {
 
-        if (settings.caption_source_settings.caption_source_name.empty()) {
+        const CaptionSourceSettings *selected_caption_source_settings = this->settings.get_caption_source_settings_ptr(
+                selected_scene_collection_name);
+        if (selected_caption_source_settings)
+            debug_log("SourceCaptioner start_caption_stream, source '%s'", selected_caption_source_settings->caption_source_name.c_str());
+        else {
+            warn_log("SourceCaptioner start_caption_stream, no selected caption source settings found");
+            return false;
+        }
+
+        if (selected_caption_source_settings->caption_source_name.empty()) {
             warn_log("SourceCaptioner start_caption_stream, empty source given.");
             return false;
         }
 
-        OBSSource caption_source = obs_get_source_by_name(settings.caption_source_settings.caption_source_name.c_str());
+        OBSSource caption_source = obs_get_source_by_name(selected_caption_source_settings->caption_source_name.c_str());
         if (!caption_source) {
             warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
-                     settings.caption_source_settings.caption_source_name.c_str());
+                     selected_caption_source_settings->caption_source_name.c_str());
             return false;
         }
 
         OBSSource mute_source;
-        if (settings.caption_source_settings.mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
-            mute_source = obs_get_source_by_name(settings.caption_source_settings.mute_source_name.c_str());
+        if (selected_caption_source_settings->mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
+            mute_source = obs_get_source_by_name(selected_caption_source_settings->mute_source_name.c_str());
 
             if (!mute_source) {
                 warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
-                         settings.caption_source_settings.mute_source_name.c_str());
+                         selected_caption_source_settings->mute_source_name.c_str());
                 return false;
             }
         }
@@ -221,30 +245,31 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         }
 
     }
-//    debug_log("started captioning source '%s'", settings.caption_source_settings.caption_source_name.c_str());
+//    debug_log("started captioning source '%s'", selected_caption_source_settings->caption_source_name.c_str());
 //    debug_log("started captioning source tid '%d'", std::hash<std::thread::id>{}(std::this_thread::get_id()));
     return true;
 }
 
 void SourceCaptioner::on_audio_capture_status_change_callback(const int id, const audio_source_capture_status status) {
-//    debug_log("capture status change %d %d", status, std::hash<std::thread::id>{}(std::this_thread::get_id()));
+    debug_log("capture status change %d %d", status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
     emit audio_capture_status_changed(id, status);
 }
 
 
 void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_capture_id, const int new_status) {
-//    debug_log("process_audio_capture_status_change %d %d", new_status, std::hash<std::thread::id>{}(std::this_thread::get_id()));
+    debug_log("process_audio_capture_status_change %d %d", new_status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
 
     settings_change_mutex.lock();
 
     bool is_old_audio_session = cb_audio_capture_id != audio_capture_id;
     SourceCaptionerSettings cur_settings = settings;
+    string cur_scene_collection_name = selected_scene_collection_name;
     bool active = continuous_captions != nullptr;
 
     settings_change_mutex.unlock();
 
     if (is_old_audio_session) {
-//        debug_log("ignoring old audio capture status!!");
+        debug_log("ignoring old audio capture status!!");
         return;
     }
 
@@ -253,6 +278,7 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
             false,
             false,
             cur_settings,
+            cur_scene_collection_name,
             (audio_source_capture_status) new_status,
             active
     ));

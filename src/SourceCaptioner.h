@@ -65,7 +65,8 @@ struct CaptionSourceSettings {
 struct SourceCaptionerSettings {
     bool streaming_output_enabled;
     bool recording_output_enabled;
-    CaptionSourceSettings caption_source_settings;
+
+    std::map<string, CaptionSourceSettings> caption_source_settings_map;
 
     CaptionFormatSettings format_settings;
     ContinuousCaptionStreamSettings stream_settings;
@@ -81,14 +82,13 @@ struct SourceCaptionerSettings {
     ) :
             streaming_output_enabled(streaming_output_enabled),
             recording_output_enabled(recording_output_enabled),
-            caption_source_settings(caption_source_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
 
     bool operator==(const SourceCaptionerSettings &rhs) const {
         return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
-               caption_source_settings == rhs.caption_source_settings &&
+               caption_source_settings_map == rhs.caption_source_settings_map &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
     }
@@ -102,11 +102,27 @@ struct SourceCaptionerSettings {
         printf("%sSourceCaptionerSettings\n", line_prefix);
         printf("%s  streaming_output_enabled: %d\n", line_prefix, streaming_output_enabled);
         printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
-        printf("%s  string: %s\n", line_prefix, caption_source_settings.caption_source_name.c_str());
+        printf("%s  Scene Collection Settings: %lu\n", line_prefix, caption_source_settings_map.size());
 
+        for (auto it = caption_source_settings_map.begin(); it != caption_source_settings_map.end(); ++it) {
+            printf("%s    Collection: %s, source: %s, mute source: %s \n",
+                   line_prefix, it->first.c_str(), it->second.caption_source_name.c_str(), it->second.mute_source_name.c_str());
+        }
 
         stream_settings.print((string(line_prefix) + "  ").c_str());
         format_settings.print((string(line_prefix) + "  ").c_str());
+    }
+
+    const CaptionSourceSettings *get_caption_source_settings_ptr(const string scene_collection_name) const {
+        auto it = caption_source_settings_map.find(scene_collection_name);
+        if (it != caption_source_settings_map.end())
+            return &(it->second);
+
+        return nullptr;
+    }
+
+    void update_setting(const string scene_collection_name, const CaptionSourceSettings &new_settings) {
+        caption_source_settings_map[scene_collection_name] = new_settings;
     }
 };
 
@@ -156,15 +172,17 @@ struct SourceCaptionerStatus {
     bool settings_changed;
     bool stream_settings_changed;
     SourceCaptionerSettings settings;
+    string scene_collection_name;
 
     audio_source_capture_status audio_capture_status;
 
     bool active;
 
     SourceCaptionerStatus(SourceCaptionerStatusEvent eventType, bool settingsChanged, bool streamSettingsChanged,
-                          const SourceCaptionerSettings &settings, audio_source_capture_status audioCaptureStatus, bool active)
+                          const SourceCaptionerSettings &settings, string scene_collection_name,
+                          audio_source_capture_status audioCaptureStatus, bool active)
             : event_type(eventType), settings_changed(settingsChanged), stream_settings_changed(streamSettingsChanged), settings(settings),
-              audio_capture_status(audioCaptureStatus), active(active) {}
+              scene_collection_name(scene_collection_name), audio_capture_status(audioCaptureStatus), active(active) {}
 };
 
 Q_DECLARE_METATYPE(std::shared_ptr<SourceCaptionerStatus>)
@@ -177,6 +195,8 @@ Q_OBJECT
     uint audio_chunk_count = 0;
 
     SourceCaptionerSettings settings;
+    string selected_scene_collection_name;
+
     std::unique_ptr<CaptionResultHandler> caption_result_handler;
     std::recursive_mutex settings_change_mutex;
 
@@ -239,13 +259,13 @@ signals:
 
 public:
 
-    SourceCaptioner(const SourceCaptionerSettings &settings, bool start);
+    SourceCaptioner(const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start);
 
     ~SourceCaptioner();
 
-    bool set_settings(const SourceCaptionerSettings &new_settings);
+    bool set_settings(const SourceCaptionerSettings &new_settings, const string &scene_collection_name);
 
-    bool start_caption_stream(const SourceCaptionerSettings &new_settings);
+    bool start_caption_stream(const SourceCaptionerSettings &new_settings, const string &scene_collection_name);
 
     void stop_caption_stream(bool send_signal = true);
 

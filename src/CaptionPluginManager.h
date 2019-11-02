@@ -13,11 +13,13 @@ struct CaptioningState {
     bool external_is_streaming = false;
     bool external_is_recording = false;
     bool external_is_preview_open = false;
+    string external_scene_collection_name = "";
 
     bool is_captioning = false;
     bool is_captioning_streaming = false;
     bool is_captioning_recording = false;
     bool is_captioning_preview = false;
+    string captioning_scene_collection_name = "";
 };
 
 class CaptionPluginManager : public QObject {
@@ -37,13 +39,11 @@ public:
 
 //    void update_settings(CaptionPluginSettings &new_settings, bool force_update = false);
 
-    void external_state_changed(bool is_live, bool is_preview_open, bool is_recording);
+    void external_state_changed(bool is_live, bool is_preview_open, bool is_recording, const string &scene_collection_name);
 
     void update_settings(const CaptionPluginSettings &new_settings);
 
     bool toggle_enabled();
-
-    void save(obs_data_t *save_data);
 
     CaptioningState captioning_state();
 

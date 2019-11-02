@@ -32,7 +32,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class CaptionSettingsWidget : public QWidget, Ui_CaptionSettingsWidget {
 Q_OBJECT
 
-    CaptionPluginSettings latest_settings;
+    CaptionPluginSettings current_settings;
+    string scene_collection_name;
 
     void accept_current_settings();
 
@@ -40,7 +41,15 @@ private slots:
 
     void caption_when_index_change(int index);
 
+    void sources_combo_index_change(int index);
+
+    void scene_collection_combo_index_change(int index);
+
     void on_previewPushButton_clicked();
+
+    void apply_ui_scene_collection_settings();
+
+    void update_source_combo_boxes(const string &scene_collection_name);
 
 signals:
 

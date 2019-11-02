@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utils.h>
 #include "storage_utils.h"
 #include "CaptionPluginSettings.h"
+#include <util/util.hpp>
+#include <util/platform.h>
 
 #define SAVE_ENTRY_NAME "cloud_closed_caption_rat"
 
@@ -98,94 +100,193 @@ static void enforce_sensible_values(CaptionPluginSettings &settings) {
         source_settings.stream_settings.stream_settings.profanity_filter = 1;
 }
 
-static CaptionPluginSettings load_obs_CaptionerSettings(obs_data_t *load_data) {
-    obs_data_t *obj = obs_data_get_obj(load_data, SAVE_ENTRY_NAME);
+static string current_scene_collection_name() {
+    string name;
+
+    char *scene_collection_name = obs_frontend_get_current_scene_collection();
+    if (scene_collection_name)
+        name = scene_collection_name;
+    bfree(scene_collection_name);
+
+    return name;
+}
+
+static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *load_data) {
     auto settings = default_CaptionPluginSettings();
-
     SourceCaptionerSettings &source_settings = settings.source_cap_settings;
+
     source_settings.print();
-    if (!obj) {
-        info_log("first time loading, keeping default settings");
+    if (!load_data) {
+        info_log("no data, using default CaptionPluginSettings");
     } else {
-        obs_data_set_default_bool(obj, "enabled", settings.enabled);
+        obs_data_set_default_bool(load_data, "enabled", settings.enabled);
 
-        obs_data_set_default_bool(obj, "streaming_output_enabled", source_settings.streaming_output_enabled);
-        obs_data_set_default_bool(obj, "recording_output_enabled", source_settings.recording_output_enabled);
-        obs_data_set_default_bool(obj, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
-        obs_data_set_default_int(obj, "caption_line_count", source_settings.format_settings.caption_line_count);
-        obs_data_set_default_string(obj, "manual_banned_words", "");
-        obs_data_set_default_string(obj, "source_name", source_settings.caption_source_settings.caption_source_name.c_str());
-        obs_data_set_default_string(obj, "mute_source_name", "");
-        obs_data_set_default_string(obj, "source_caption_when", "");
-        obs_data_set_default_string(obj, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
-        obs_data_set_default_int(obj, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
+        obs_data_set_default_bool(load_data, "streaming_output_enabled", source_settings.streaming_output_enabled);
+        obs_data_set_default_bool(load_data, "recording_output_enabled", source_settings.recording_output_enabled);
+        obs_data_set_default_bool(load_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+        obs_data_set_default_int(load_data, "caption_line_count", source_settings.format_settings.caption_line_count);
+        obs_data_set_default_string(load_data, "manual_banned_words", "");
+        obs_data_set_default_string(load_data, "mute_source_name", "");
+        obs_data_set_default_string(load_data, "source_caption_when", "");
+        obs_data_set_default_string(load_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
+        obs_data_set_default_int(load_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
 
-        obs_data_set_default_double(obj, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
-        obs_data_set_default_bool(obj, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
+        obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
+        obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
 
 
-        settings.enabled = obs_data_get_bool(obj, "enabled");
-        source_settings.streaming_output_enabled = obs_data_get_bool(obj, "streaming_output_enabled");
-        source_settings.recording_output_enabled = obs_data_get_bool(obj, "recording_output_enabled");
+        settings.enabled = obs_data_get_bool(load_data, "enabled");
+        source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
+        source_settings.recording_output_enabled = obs_data_get_bool(load_data, "recording_output_enabled");
 
-        source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(obj, "caption_insert_newlines");
-        source_settings.format_settings.caption_line_count = (int) obs_data_get_int(obj, "caption_line_count");
+        source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(load_data, "caption_insert_newlines");
+        source_settings.format_settings.caption_line_count = (int) obs_data_get_int(load_data, "caption_line_count");
 
-        source_settings.caption_source_settings.caption_source_name = obs_data_get_string(obj, "source_name");
-        source_settings.caption_source_settings.mute_source_name = obs_data_get_string(obj, "mute_source_name");
-        source_settings.stream_settings.stream_settings.language = obs_data_get_string(obj, "source_language");
-        source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(obj, "profanity_filter");
+        source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
+        source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
 
-        source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(obj, "caption_timeout_enabled");
-        source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(obj, "caption_timeout_secs");
+        source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(load_data, "caption_timeout_enabled");
+        source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(load_data, "caption_timeout_secs");
 
-        string mute_when_str = obs_data_get_string(obj, "source_caption_when");
-        source_settings.caption_source_settings.mute_when = string_to_mute_setting(mute_when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
-
-        string banned_words_line = obs_data_get_string(obj, "manual_banned_words");
+        string banned_words_line = obs_data_get_string(load_data, "manual_banned_words");
         source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
+
+        obs_data_array_t *scene_collection_sources_array = obs_data_get_array(load_data, "scene_collection_sources");
+
+        CaptionSourceSettings default_caption_source_settings = default_CaptionSourceSettings();
+        for (size_t index = 0; index < obs_data_array_count(scene_collection_sources_array); index++) {
+            obs_data_t *a_scene_source_obj = obs_data_array_item(scene_collection_sources_array, index);
+
+            string scene_collection_name = obs_data_get_string(a_scene_source_obj, "scene_collection_name");
+            if (!scene_collection_name.empty()) {
+                CaptionSourceSettings caption_source_settings;
+
+                obs_data_set_default_string(a_scene_source_obj, "source_name", default_caption_source_settings.caption_source_name.c_str());
+                caption_source_settings.caption_source_name = obs_data_get_string(a_scene_source_obj, "source_name");
+                caption_source_settings.mute_source_name = obs_data_get_string(a_scene_source_obj, "mute_source_name");
+
+                string mute_when_str = obs_data_get_string(a_scene_source_obj, "source_caption_when");
+                caption_source_settings.mute_when = string_to_mute_setting(mute_when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
+
+                source_settings.caption_source_settings_map[scene_collection_name] = caption_source_settings;
+            }
+            obs_data_release(a_scene_source_obj);
+        }
+        obs_data_array_release(scene_collection_sources_array);
 
         enforce_sensible_values(settings);
     }
-    obs_data_release(obj);
     source_settings.print();
     return settings;
 }
 
-static void save_obs_CaptionerSettings(obs_data_t *save_data, const CaptionPluginSettings &settings) {
+static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const CaptionPluginSettings &settings) {
     info_log("obs save event");
-    obs_data_t *obj = obs_data_create();
     const SourceCaptionerSettings &source_settings = settings.source_cap_settings;
 
-    obs_data_set_bool(obj, "enabled", settings.enabled);
-    obs_data_set_bool(obj, "streaming_output_enabled", source_settings.streaming_output_enabled);
-    obs_data_set_bool(obj, "recording_output_enabled", source_settings.recording_output_enabled);
+    obs_data_set_bool(save_data, "enabled", settings.enabled);
+    obs_data_set_bool(save_data, "streaming_output_enabled", source_settings.streaming_output_enabled);
+    obs_data_set_bool(save_data, "recording_output_enabled", source_settings.recording_output_enabled);
 
-    obs_data_set_int(obj, "caption_line_count", source_settings.format_settings.caption_line_count);
-    obs_data_set_bool(obj, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
-//    obs_data_set_bool(obj, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
+    obs_data_set_int(save_data, "caption_line_count", source_settings.format_settings.caption_line_count);
+    obs_data_set_bool(save_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+//    obs_data_set_bool(save_data, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
 
+    obs_data_set_string(save_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
+    obs_data_set_int(save_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
 
-    string caption_when = mute_setting_to_string(source_settings.caption_source_settings.mute_when, "");
-    obs_data_set_string(obj, "source_caption_when", caption_when.c_str());
-
-    obs_data_set_string(obj, "source_name", source_settings.caption_source_settings.caption_source_name.c_str());
-    obs_data_set_string(obj, "mute_source_name", source_settings.caption_source_settings.mute_source_name.c_str());
-    obs_data_set_string(obj, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
-    obs_data_set_int(obj, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
-
-    obs_data_set_bool(obj, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
-    obs_data_set_double(obj, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
+    obs_data_set_bool(save_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
+    obs_data_set_double(save_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
 
     string banned_words_line;
     if (!source_settings.format_settings.manual_banned_words.empty()) {
 //        info_log("savingggggg %d", settings.format_settings.manual_banned_words.size());
         words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
     }
-    obs_data_set_string(obj, "manual_banned_words", banned_words_line.c_str());
+    obs_data_set_string(save_data, "manual_banned_words", banned_words_line.c_str());
 
-    obs_data_set_obj(save_data, SAVE_ENTRY_NAME, obj);
-    obs_data_release(obj);
+
+//    obs_data_t *scene_collection_sources_obj = obs_data_create();
+    obs_data_array_t *scene_collection_sources_array = obs_data_array_create();
+    // TODO: not sure how to enumerate obj keys, so using array for now ...
+
+    for (auto it = source_settings.caption_source_settings_map.begin(); it != source_settings.caption_source_settings_map.end(); ++it) {
+        obs_data_t *a_scene_source_obj = obs_data_create();
+
+        string scene_collection_name = it->first;
+        CaptionSourceSettings caption_source_settings = it->second;
+
+        obs_data_set_string(a_scene_source_obj, "scene_collection_name", scene_collection_name.c_str());
+
+        string caption_when = mute_setting_to_string(caption_source_settings.mute_when, "");
+        obs_data_set_string(a_scene_source_obj, "source_caption_when", caption_when.c_str());
+
+        obs_data_set_string(a_scene_source_obj, "source_name", caption_source_settings.caption_source_name.c_str());
+        obs_data_set_string(a_scene_source_obj, "mute_source_name", caption_source_settings.mute_source_name.c_str());
+
+        obs_data_array_push_back(scene_collection_sources_array, a_scene_source_obj);
+//        obs_data_set_obj(scene_collection_sources_obj, scene_collection_name.c_str(), a_scene_source_obj);
+        obs_data_release(a_scene_source_obj);
+    }
+
+//    obs_data_set_obj(save_data, "scene_collection_sources", scene_collection_sources_obj);
+//    obs_data_release(scene_collection_sources_obj);
+    obs_data_set_array(save_data, "scene_collection_sources", scene_collection_sources_array);
+    obs_data_array_release(scene_collection_sources_array);
+}
+
+static bool save_plugin_data_to_config(obs_data_t *data) {
+    BPtr<char> module_path = obs_module_get_config_path(obs_current_module(), "");
+    if (!module_path) {
+        error_log("obs_module_config_path failed, couldn't get captions settings dir for save");
+        return false;
+    }
+    os_mkdirs(module_path);
+
+    BPtr<char> config_file_path = obs_module_config_path("cloud_closed_captions_settings.json");
+    if (!config_file_path) {
+        error_log("obs_module_config_path failed, couldn't get captions settings file for save");
+        return false;
+    }
+
+    return obs_data_save_json_safe(data, config_file_path, "tmp", "bak");
+}
+
+static bool save_CaptionPluginSettings_to_config(const CaptionPluginSettings &settings) {
+    obs_data_t *save_data = obs_data_create();
+    set_CaptionPluginSettings_on_data(save_data, settings);
+
+    bool ok = save_plugin_data_to_config(save_data);
+    if (ok)
+        debug_log("google_s2t_caption_plugin saved settings to config file");
+    else
+        debug_log("google_s2t_caption_plugin config file save failed");
+
+    obs_data_release(save_data);
+    return ok;
+}
+
+static obs_data_t *load_plugin_data_from_config() {
+    BPtr<char> config_file_path = obs_module_config_path("cloud_closed_captions_settings.json");
+    if (!config_file_path) {
+        error_log("obs_module_config_path failed, couldn't get captions settings file for load");
+        return nullptr;
+    }
+
+    return obs_data_create_from_json_file_safe(config_file_path, "bak");
+}
+
+static CaptionPluginSettings load_CaptionPluginSettings_from_config() {
+    obs_data_t *loaded_data = load_plugin_data_from_config();
+    if (loaded_data) {
+        CaptionPluginSettings settings = get_CaptionPluginSettings_from_data(loaded_data);
+        obs_data_release(loaded_data);
+        debug_log("google_s2t_caption_plugin loaded settings from config file");
+        return settings;
+    }
+
+    debug_log("google_s2t_caption_plugin no plugin config file found, using default settings");
+    return default_CaptionPluginSettings();
 }
 
 static bool is_stream_live() {

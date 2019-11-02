@@ -68,6 +68,8 @@ void closed_caption_tool_menu_clicked();
 
 void obs_frontent_exiting();
 
+void obs_frontent_scene_collection_changed();
+
 static void obs_event(enum obs_frontend_event event, void *) {
 //    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
 //    info_log("obs event %d", tid);
@@ -83,6 +85,8 @@ static void obs_event(enum obs_frontend_event event, void *) {
         recording_stopped_event();
     } else if (event == OBS_FRONTEND_EVENT_EXIT) {
         obs_frontent_exiting();
+    } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
+        obs_frontent_scene_collection_changed();
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
         printf("studio mode!!!!!!!!!!!!!!!!!!!!\n");
 
@@ -163,6 +167,15 @@ void recording_stopped_event() {
         main_caption_widget->recording_stopped_event();
 }
 
+void obs_frontent_scene_collection_changed() {
+    info_log("obs_frontent_scene_collection_changed");
+
+    if (main_caption_widget) {
+        main_caption_widget->external_state_changed();
+    }
+
+}
+
 void obs_frontent_exiting() {
     info_log("obs_frontent_exiting, stopping captioner");
 
@@ -170,36 +183,38 @@ void obs_frontent_exiting() {
 //        main_caption_widget->stop();
         delete main_caption_widget;
         main_caption_widget = nullptr;
+    }
+
+    if (plugin_manager) {
+        save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
 
         delete plugin_manager;
         plugin_manager = nullptr;
     }
-
+    info_log("obs_frontent_exiting done");
 }
 
-static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void *) {
+static void save_or_load_event_callback(obs_data_t *_, bool saving, void *) {
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    info_log("save_or_load_event_callback %d, %d", saving, tid);
+    info_log("google_s2t_caption_plugin save_or_load_event_callback %d, %d", saving, tid);
 
-    if (saving && plugin_manager) {
-        plugin_manager->save(save_data);
-    }
+    if (saving) {
+        // always save too when main OBS saves
+        if (plugin_manager) {
+            save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
+        }
+    } else {
+        if (!plugin_manager && !main_caption_widget) {
+            info_log("google_s2t_caption_plugin initial load");
+            CaptionPluginSettings settings = load_CaptionPluginSettings_from_config();
 
-    if (!saving) {
-        auto loaded_settings = load_obs_CaptionerSettings(save_data);
-        if (plugin_manager && main_caption_widget) {
-            plugin_manager->update_settings(loaded_settings);
-        } else if (plugin_manager || main_caption_widget) {
-            error_log("only one of plugin_manager and main_caption_widget, wtf, %d %d",
-                      plugin_manager != nullptr, main_caption_widget != nullptr);
-        } else {
-            plugin_manager = new CaptionPluginManager(loaded_settings);
+            plugin_manager = new CaptionPluginManager(settings);
             main_caption_widget = new MainCaptionWidget(*plugin_manager);
             setup_UI();
         }
     }
-
 }
+
 
 bool obs_module_load(void) {
     info_log("google_s2t_caption_plugin %s obs_module_load", VERSION_STRING);
