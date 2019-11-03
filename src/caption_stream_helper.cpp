@@ -37,7 +37,8 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
             50,
             download_start_delay_ms,
             "en-US",
-            0
+            0,
+            ""
     };
 };
 
@@ -128,8 +129,10 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
         obs_data_set_default_string(load_data, "manual_banned_words", "");
         obs_data_set_default_string(load_data, "mute_source_name", "");
         obs_data_set_default_string(load_data, "source_caption_when", "");
+
         obs_data_set_default_string(load_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
         obs_data_set_default_int(load_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
+        obs_data_set_default_string(load_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
 
         obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
         obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
@@ -144,6 +147,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
         source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
         source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
+        source_settings.stream_settings.stream_settings.api_key = obs_data_get_string(load_data, "custom_api_key");
 
         source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(load_data, "caption_timeout_enabled");
         source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(load_data, "caption_timeout_secs");
@@ -194,6 +198,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
     obs_data_set_string(save_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
     obs_data_set_int(save_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
+    obs_data_set_string(save_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
 
     obs_data_set_bool(save_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
     obs_data_set_double(save_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);

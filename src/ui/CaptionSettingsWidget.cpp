@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CaptionSettingsWidget.h"
 #include "../log.c"
 #include <utils.h>
+#include <QLineEdit>
 #include "../storage_utils.h"
 #include "../caption_stream_helper.cpp"
 
@@ -94,6 +95,14 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setupUi(this);
     this->updateUi();
 
+#if ENABLE_CUSTOM_API_KEY
+    this->apiKeyLabel->show();
+    this->apiKeyWidget->show();
+#else
+    this->apiKeyLabel->hide();
+    this->apiKeyWidget->hide();
+#endif
+
     captionWhenComboBox->addItem("When Caption Source is streamed", "own_source");
     captionWhenComboBox->addItem("When Other Source is streamed", "other_mute_source");
 
@@ -120,6 +129,25 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 //                     this, &CaptionSettingsWidget::scene_collection_combo_index_change);
 }
 
+
+void CaptionSettingsWidget::set_show_key(bool set_to_show) {
+    if (set_to_show) {
+        apiKeyLineEdit->setEchoMode(QLineEdit::EchoMode::Password);
+        apiKeyShowPushButton->setText("Show");
+    } else {
+        apiKeyLineEdit->setEchoMode(QLineEdit::EchoMode::Normal);
+        apiKeyShowPushButton->setText("Hide");
+
+    }
+}
+
+void CaptionSettingsWidget::on_apiKeyShowPushButton_clicked() {
+    if (apiKeyLineEdit->echoMode() == QLineEdit::EchoMode::Password) {
+        set_show_key(false);
+    } else {
+        set_show_key(true);
+    }
+}
 
 void CaptionSettingsWidget::on_previewPushButton_clicked() {
     emit preview_requested();
@@ -203,6 +231,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     const int profanity_filter = profanityFilterComboBox->currentData().toInt();
     source_settings.stream_settings.stream_settings.profanity_filter = profanity_filter;
 //    debug_log("profanity_filter: %d", profanity_filter);
+    source_settings.stream_settings.stream_settings.api_key = apiKeyLineEdit->text().toStdString();
 
     source_settings.format_settings.caption_line_count = lineCountSpinBox->value();
 
@@ -249,6 +278,8 @@ void CaptionSettingsWidget::updateUi() {
     combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
     combobox_set_data_int(*profanityFilterComboBox, source_settings.stream_settings.stream_settings.profanity_filter, 0);
 
+    apiKeyLineEdit->setText(QString::fromStdString(source_settings.stream_settings.stream_settings.api_key));
+
     lineCountSpinBox->setValue(source_settings.format_settings.caption_line_count);
     insertLinebreaksCheckBox->setChecked(source_settings.format_settings.caption_insert_newlines);
 
@@ -262,6 +293,8 @@ void CaptionSettingsWidget::updateUi() {
     string banned_words_line;
     words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
     this->bannedWordsPlainTextEdit->setPlainText(QString(banned_words_line.c_str()));
+
+    set_show_key(true);
 }
 
 void CaptionSettingsWidget::set_settings(const CaptionPluginSettings &new_settings) {

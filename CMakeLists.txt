@@ -36,11 +36,23 @@ else ()
     message("using api: google")
 endif ()
 
+set(ENABLE_CUSTOM_API_KEY OFF CACHE BOOL "set API key via settings UI field")
 set(GOOGLE_API_KEY "" CACHE STRING "google api key with speech API enabled")
-if (NOT GOOGLE_API_KEY)
+
+if (GOOGLE_API_KEY AND ENABLE_CUSTOM_API_KEY)
+    message(FATAL_ERROR "both GOOGLE_API_KEY and ENABLE_CUSTOM_API_KEY set, not supported")
+endif ()
+
+if (ENABLE_CUSTOM_API_KEY)
+    message("ENABLE_CUSTOM_API_KEY on, using UI api key")
+    set(PLUGIN_COMPILE_DEFINITIONS ENABLE_CUSTOM_API_KEY=1)
+elseif (GOOGLE_API_KEY)
+    message("using fixed GOOGLE_API_KEY")
+    set(PLUGIN_COMPILE_DEFINITIONS GOOGLE_API_KEY_STR="${GOOGLE_API_KEY}")
+else ()
     message(FATAL_ERROR "no GOOGLE_API_KEY set")
 endif ()
-add_compile_definitions(GOOGLE_API_KEY_STR="${GOOGLE_API_KEY}")
+
 add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
 set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
@@ -103,7 +115,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 
-
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
 
 configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
@@ -118,6 +129,11 @@ add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_SOURCES}
         ${obs_QRC_SOURCES}
         )
+
+if (PLUGIN_COMPILE_DEFINITIONS)
+    #    message("PLUGIN_COMPILE_DEFINITIONS ${PLUGIN_COMPILE_DEFINITIONS}")
+    target_compile_definitions(obs_google_caption_plugin PRIVATE ${PLUGIN_COMPILE_DEFINITIONS})
+endif ()
 
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 

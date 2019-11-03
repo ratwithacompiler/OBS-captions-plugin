@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <json11.cpp>
 using namespace json11;
 
-static CaptionResult* parse_caption_obj(const string &msg_obj) {
+static CaptionResult *parse_caption_obj(const string &msg_obj) {
     bool is_final = false;
     double highest_stability = 0.0;
     string caption_text;
@@ -165,7 +165,7 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     upstream.set_timeout(settings.send_timeout_ms);
 
     string post_req("POST /speech-api/full-duplex/v1/up?key=");
-    post_req.append(GOOGLE_API_KEY_STR);
+    post_req.append(settings.api_key);
 
     post_req.append("&pair=");
     post_req.append(session_pair);
@@ -173,7 +173,7 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
     post_req.append("&lang=");
     post_req.append(settings.language);
 
-    if(settings.profanity_filter)
+    if (settings.profanity_filter)
         post_req.append("&pFilter=1");
     else
         post_req.append("&pFilter=0");

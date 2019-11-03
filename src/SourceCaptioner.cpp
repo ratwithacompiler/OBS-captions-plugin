@@ -210,8 +210,20 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         debug_log("caption_settings_equal: %d, %d", caption_settings_equal, continuous_captions != nullptr);
         if (!continuous_captions || restart_stream) {
             try {
+
+#if ENABLE_CUSTOM_API_KEY
+                ContinuousCaptionStreamSettings settings_copy = settings.stream_settings;
+                debug_log("using ENABLE_CUSTOM_API_KEY %lu", settings_copy.stream_settings.api_key.length());
+#else
+#ifdef GOOGLE_API_KEY_STR
+                ContinuousCaptionStreamSettings settings_copy = settings.stream_settings;
+                settings_copy.stream_settings.api_key = GOOGLE_API_KEY_STR;
+                debug_log("using GOOGLE_API_KEY_STR %lu", settings_copy.stream_settings.api_key.length());
+#endif
+#endif
+
                 auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
-                continuous_captions = std::make_unique<ContinuousCaptions>(settings.stream_settings);
+                continuous_captions = std::make_unique<ContinuousCaptions>(settings_copy);
                 continuous_captions->on_caption_cb_handle.set(caption_cb, true);
             }
             catch (...) {

@@ -47,6 +47,10 @@ private slots:
 
     void on_previewPushButton_clicked();
 
+    void on_apiKeyShowPushButton_clicked();
+
+    void set_show_key(bool set_to_show);
+
     void apply_ui_scene_collection_settings();
 
     void update_source_combo_boxes(const string &scene_collection_name);
