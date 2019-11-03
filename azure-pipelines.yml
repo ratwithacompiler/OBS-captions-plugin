@@ -2,12 +2,9 @@
 
 
 jobs:
-  - job: 'Build_MacOS'
+  - job: 'Build_MacOS_HTTP'
     pool:
       vmImage: 'macos-10.13'
-
-    variables:
-      - group: Build_Vars
 
     steps:
       - script: git submodule update --init --recursive
@@ -33,11 +30,9 @@ jobs:
       - bash: |
           pwd
           set -e
-          cd ./build
           make -j4
-          cd -
         displayName: 'Build'
-        workingDirectory: $(Build.SourcesDirectory)/CI
+        workingDirectory: $(Build.SourcesDirectory)/CI/build
 
       - script: $(Build.SourcesDirectory)/CI/post-install-script-osx.sh
         displayName: 'Post install'
@@ -46,14 +41,11 @@ jobs:
       - task: PublishPipelineArtifact@1
         inputs:
           path: "$(Build.SourcesDirectory)/CI/build/libobs_google_caption_plugin.so"
-          artifact: Closed_Captions_Plugin__Release_MacOS
+          artifact: Closed_Captions_Plugin__Release_MacOS_HTTP
 
-  - job: 'Build_Windows'
+  - job: 'Build_Windows_HTTP'
     pool:
       vmImage: 'vs2017-win2016'
-
-    variables:
-      - group: Build_Vars
 
     steps:
       - script: git submodule update --init --recursive
@@ -82,21 +74,11 @@ jobs:
           msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
           solution: $(Build.SourcesDirectory)\CI\build_64\obs_google_caption_plugin.sln
 
-#      - task: PublishPipelineArtifact@1
-#        inputs:
-#          path: '$(Build.SourcesDirectory)/CI/build_64/RelWithDebInfo/'
-#          artifact: buildresult_plugin_win64
-
       - task: MSBuild@1
         displayName: 'Build 32-bit'
         inputs:
           msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
           solution: $(Build.SourcesDirectory)\CI\build_32\obs_google_caption_plugin.sln
-
-#      - task: PublishPipelineArtifact@1
-#        inputs:
-#          path: '$(Build.SourcesDirectory)/CI/build_32/RelWithDebInfo/'
-#          artifact: buildresult_plugin_win32
 
       - script: $(Build.SourcesDirectory)\CI\post-install-script-win.cmd
         workingDirectory: $(Build.SourcesDirectory)\CI
@@ -105,15 +87,12 @@ jobs:
       - task: PublishPipelineArtifact@1
         inputs:
           path: '$(Build.SourcesDirectory)/CI/release_dir/'
-          artifact: Closed_Captions_Plugin__Release_Windows
+          artifact: Closed_Captions_Plugin__Release_Windows_HTTP
 
 
-  - job: 'Build_Linux'
+  - job: 'Build_Linux_HTTP'
     pool:
       vmImage: 'ubuntu-16.04'
-
-    variables:
-      - group: Build_Vars
 
     steps:
       - script: git submodule update --init --recursive
@@ -141,7 +120,6 @@ jobs:
           set -e
           cd ./build
           make -j4
-          cd -
         displayName: 'Build'
         workingDirectory: $(Build.SourcesDirectory)/CI
 
@@ -149,12 +127,8 @@ jobs:
         displayName: 'Post install'
         workingDirectory: $(Build.SourcesDirectory)/CI
 
-#      - task: PublishPipelineArtifact@1
-#        inputs:
-#          path: "$(Build.SourcesDirectory)/CI/build/"
-#          artifact: buildresult_plugin_linux64
-
       - task: PublishPipelineArtifact@1
         inputs:
           path: "$(Build.SourcesDirectory)/CI/build/libobs_google_caption_plugin.so"
-          artifact: Closed_Captions_Plugin__Release_Linux64
+          artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
+

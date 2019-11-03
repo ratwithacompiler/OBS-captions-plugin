@@ -1,7 +1,14 @@
 #!/bin/bash
 
 set -e
-set -v
+
+if [ -n "$GOOGLE_API_KEY" ] && [ "$GOOGLE_API_KEY" != '$(GOOGLE_API_KEY)' ]; then
+    echo building with hardcoded compiled API key
+    API_OR_UI_KEY_ARG="-DGOOGLE_API_KEY=$GOOGLE_API_KEY"
+else
+    echo building with custom user API key UI
+    API_OR_UI_KEY_ARG="-DENABLE_CUSTOM_API_KEY=ON"
+fi
 
 cd deps
 ./clone_plibsys.sh
@@ -22,13 +29,10 @@ mkdir build
 cd build
 pwd
 
-set +v
 cmake ../../  \
 -DSPEECH_API_GOOGLE_HTTP_OLD=ON \
 -DOBS_SOURCE_DIR=$OBS_ROOT \
 -DOBS_LIB_DIR=$OBS_ROOT/build \
--DGOOGLE_API_KEY="$GOOGLE_API_KEY"
-
-set -v
+$API_OR_UI_KEY_ARG
 
 cd ../

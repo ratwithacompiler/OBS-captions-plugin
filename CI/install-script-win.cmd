@@ -3,6 +3,20 @@ set DepsBaseOBS=%cd%\obs_deps\
 echo DepsBaseOBS %DepsBaseOBS%
 dir
 
+if defined GOOGLE_API_KEY (
+  if "%GOOGLE_API_KEY%" == "$(GOOGLE_API_KEY)" (
+    echo ignoring azure env arg
+  ) else (
+    echo building with hardcoded compiled API key
+    set API_OR_UI_KEY_ARG="-DGOOGLE_API_KEY=%GOOGLE_API_KEY%"
+  )
+)
+
+if not defined API_OR_UI_KEY_ARG (
+    echo building with custom user API key UI
+    set API_OR_UI_KEY_ARG="-DENABLE_CUSTOM_API_KEY=ON"
+)
+
 cd deps
 cmd /C clone_plibsys.cmd
 cd ..
@@ -18,7 +32,7 @@ cmake.exe ../../ ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_64\' ^
 -DQT_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
--DGOOGLE_API_KEY="%GOOGLE_API_KEY%"
+"%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
 REM -DBUILD_64=ON
 
@@ -47,7 +61,7 @@ cmake.exe ../../  ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_32\' ^
 -DQT_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
--DGOOGLE_API_KEY="%GOOGLE_API_KEY%"
+"%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
 REM -DBUILD_32=ON
 
