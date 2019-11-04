@@ -301,8 +301,11 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
 
 void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, const size_t size) {
 //    info_log("audio data");
-    if (continuous_captions) {
-        continuous_captions->queue_audio_data((char *) data, size);
+    {
+        std::lock_guard<recursive_mutex> lock(settings_change_mutex);
+        if (continuous_captions) {
+            continuous_captions->queue_audio_data((char *) data, size);
+        }
     }
     audio_chunk_count++;
 
