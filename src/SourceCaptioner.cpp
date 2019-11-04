@@ -190,6 +190,7 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         }
 
         OBSSource caption_source = obs_get_source_by_name(selected_caption_source_settings->caption_source_name.c_str());
+        obs_source_release(caption_source);
         if (!caption_source) {
             warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
                      selected_caption_source_settings->caption_source_name.c_str());
@@ -199,6 +200,7 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         OBSSource mute_source;
         if (selected_caption_source_settings->mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
             mute_source = obs_get_source_by_name(selected_caption_source_settings->mute_source_name.c_str());
+            obs_source_release(mute_source);
 
             if (!mute_source) {
                 warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
