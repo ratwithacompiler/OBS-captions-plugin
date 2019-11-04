@@ -44,7 +44,6 @@ message(STATUS "SPEECH_API_TARGET_LINK_LIBRARIES_PRIVATE ${SPEECH_API_TARGET_LIN
 list(LENGTH SPEECH_API_SOURCES sources_cnt)
 message("sources count: ${sources_cnt}")
 
-
 if (BUILD_SHARED_LIB)
     add_library(caption_stream
             ${SPEECH_API_SOURCES}
@@ -58,6 +57,25 @@ else ()
             ${caption_stream_HEADERS}
             )
 endif ()
+
+if (SPEECH_API_WINDOWS_STATIC_RUNTIME)
+    message("SPEECH_API_WINDOWS_STATIC_RUNTIME ENABLED")
+    #        set_property(TARGET caption_stream PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    SET(CAPTION_STREAM_WINDOWS_STATIC_RUNTIME ON
+            PARENT_SCOPE)
+
+    foreach (flag_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+
+        message("flag var: ${flag_var}: " ${${flag_var}}"")
+        if (${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+            message("new: ${flag_var}: " ${${flag_var}}"")
+        endif (${flag_var} MATCHES "/MD")
+    endforeach (flag_var)
+endif ()
+
 
 if (SPEECH_API_INCLUDES)
     include_directories(${SPEECH_API_INCLUDES})
@@ -93,7 +111,7 @@ endif ()
 
 if (UNIX AND NOT APPLE)
     target_compile_options(caption_stream PRIVATE "-fPIC")
-endif()
+endif ()
 
 if (DEVMODE)
     add_executable(caption_stream_dev_main

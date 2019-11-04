@@ -79,7 +79,7 @@ endif ()
 
 configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
 
-add_subdirectory(lib)
+add_subdirectory(lib/caption_stream)
 
 add_compile_definitions(BUILD_CAPTIONS=1)
 include_directories(${OBS_SOURCE_DIR}/libobs)
@@ -129,6 +129,22 @@ add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_SOURCES}
         ${obs_QRC_SOURCES}
         )
+
+
+if (CAPTION_STREAM_WINDOWS_STATIC_RUNTIME)
+    message(CAPTION_STREAM_WINDOWS_STATIC_RUNTIME ENABLED)
+    #        set_property(TARGET obs_google_caption_plugin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
+    foreach (flag_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+
+        message("flag var: ${flag_var}: " ${${flag_var}}"")
+        if (${flag_var} MATCHES "/MD")
+            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+            message("new: ${flag_var}: " ${${flag_var}}"")
+        endif (${flag_var} MATCHES "/MD")
+    endforeach (flag_var)
+endif ()
 
 if (PLUGIN_COMPILE_DEFINITIONS)
     #    message("PLUGIN_COMPILE_DEFINITIONS ${PLUGIN_COMPILE_DEFINITIONS}")
