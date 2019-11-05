@@ -15,27 +15,6 @@ if (USE_DEVMODE)
     set(DEVMODE ON)
 endif ()
 
-if (DEVMODE)
-    add_compile_definitions(GOOGLE="www.google.com")
-    add_compile_definitions(PORTUP=80)
-    add_compile_definitions(PORTDOWN=80)
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-    message("CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
-
-    #    add_compile_definitions(GOOGLE="127.0.0.1")
-    #    add_compile_definitions(PORTUP=9125)
-    #    add_compile_definitions(PORTDOWN=9125)
-
-    add_compile_definitions(USE_DEVMODE=1)
-    message("using api: localhost")
-else ()
-    add_compile_definitions(GOOGLE="www.google.com")
-    add_compile_definitions(PORTUP=80)
-    add_compile_definitions(PORTDOWN=80)
-    message("using api: google")
-endif ()
-
 set(ENABLE_CUSTOM_API_KEY OFF CACHE BOOL "set API key via settings UI field")
 set(GOOGLE_API_KEY "" CACHE STRING "google api key with speech API enabled")
 
@@ -80,6 +59,20 @@ endif ()
 configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
 
 add_subdirectory(lib/caption_stream)
+
+if (DEVMODE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    message("CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
+
+#    target_compile_definitions(caption_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    target_compile_definitions(caption_stream PRIVATE GOOGLE="127.0.0.1" PORTUP=9125 PORTDOWN=9125)
+    message("using api: localhost")
+
+    add_compile_definitions(USE_DEVMODE=1)
+else ()
+    target_compile_definitions(caption_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    message("using api: google")
+endif ()
 
 add_compile_definitions(BUILD_CAPTIONS=1)
 include_directories(${OBS_SOURCE_DIR}/libobs)
