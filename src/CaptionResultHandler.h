@@ -88,7 +88,7 @@ struct OutputCaptionResult {
     vector<string> output_lines; //optionally cleaned and filled with history
     string output_line; // joined output_lines
 
-    OutputCaptionResult(
+    explicit OutputCaptionResult(
             const CaptionResult &caption_result
     ) : caption_result(caption_result) {
 

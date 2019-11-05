@@ -20,7 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "SourceCaptioner.h"
 #include "log.c"
-
+#include "caption_output_writer.h"
+#include "caption_transcript_writer.h"
 
 SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start) :
         QObject(),
@@ -314,7 +315,7 @@ void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, 
 void SourceCaptioner::clear_output_timer_cb() {
 //    info_log("clear timer checkkkkkkkkkkkkkkk");
 
-    bool to_stream, to_recording;
+    bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         if (!this->settings.format_settings.caption_timeout_enabled || this->last_caption_cleared)
@@ -332,10 +333,16 @@ void SourceCaptioner::clear_output_timer_cb() {
         this->last_caption_cleared = true;
         to_stream = settings.streaming_output_enabled;
         to_recording = settings.recording_output_enabled;
+        to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
+        to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
     }
 
     auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", "")), false, true);
-    output_caption_text(clearance, to_stream, to_recording, true);
+    output_caption_text(clearance,
+                        to_stream,
+                        to_transcript_streaming,
+                        to_transcript_recording,
+                        true);
     emit caption_result_received(nullptr, false, true, "");
 }
 
@@ -405,7 +412,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
 void SourceCaptioner::process_caption_result(const CaptionResult caption_result, bool interrupted) {
     shared_ptr<OutputCaptionResult> output_result;
     string recent_caption_text;
-    bool to_stream, to_recording;
+    bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
@@ -430,9 +437,16 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
 
         to_stream = settings.streaming_output_enabled;
         to_recording = settings.recording_output_enabled;
+        to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
+        to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
     }
 
-    this->output_caption_text(CaptionOutput(output_result, interrupted, false), to_stream, to_recording, false);
+    this->output_caption_text(CaptionOutput(output_result, interrupted, false),
+                              to_stream,
+                              to_recording,
+                              to_transcript_streaming,
+                              to_transcript_recording,
+                              false);
     emit caption_result_received(output_result, interrupted, false, recent_caption_text);
 }
 
@@ -440,6 +454,8 @@ void SourceCaptioner::output_caption_text(
         const CaptionOutput &output,
         bool to_stream,
         bool to_recoding,
+        bool to_transcript_streaming,
+        bool to_transcript_recording,
         bool is_clearance) {
 
     bool sent_stream = false;
@@ -450,6 +466,15 @@ void SourceCaptioner::output_caption_text(
     bool sent_recording = false;
     if (to_recoding) {
         sent_recording = recording_output.enqueue(output);
+    }
+
+    bool sent_transcript_streaming = false;
+    if (to_transcript_streaming) {
+        sent_transcript_streaming = transcript_streaming_output.enqueue(output);
+    }
+    bool sent_transcript_recording = false;
+    if (to_transcript_recording) {
+        sent_transcript_recording = transcript_recording_output.enqueue(output);
     }
 
 //    debug_log("queuing caption line , stream: %d, recording: %d, '%s'",
@@ -466,25 +491,49 @@ void SourceCaptioner::caption_was_output() {
 
 
 void SourceCaptioner::stream_started_event() {
-    auto control = std::make_shared<CaptionOutputControl>();
-    streaming_output.set_control(control);
-    std::thread th(caption_output_writer_loop, control, true);
+    settings_change_mutex.lock();
+    SourceCaptionerSettings cur_settings = settings;
+    settings_change_mutex.unlock();
+
+    auto control_output = std::make_shared<CaptionOutputControl<int>>(0);
+    streaming_output.set_control(control_output);
+    std::thread th(caption_output_writer_loop, control_output, true);
     th.detach();
+
+    if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.streaming_transcripts_enabled) {
+        auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
+        transcript_streaming_output.set_control(control_transcript);
+        std::thread th2(transcript_writer_loop, control_transcript, true);
+        th2.detach();
+    }
 }
 
 void SourceCaptioner::stream_stopped_event() {
     streaming_output.clear();
+    transcript_streaming_output.clear();
 }
 
 void SourceCaptioner::recording_started_event() {
-    auto control = std::make_shared<CaptionOutputControl>();
-    recording_output.set_control(control);
-    std::thread th(caption_output_writer_loop, control, false);
+    settings_change_mutex.lock();
+    SourceCaptionerSettings cur_settings = settings;
+    settings_change_mutex.unlock();
+
+    auto control_output = std::make_shared<CaptionOutputControl<int>>(0);
+    recording_output.set_control(control_output);
+    std::thread th(caption_output_writer_loop, control_output, false);
     th.detach();
+
+    if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.recording_transcripts_enabled) {
+        auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
+        transcript_recording_output.set_control(control_transcript);
+        std::thread th2(transcript_writer_loop, control_transcript, false);
+        th2.detach();
+    }
 }
 
 void SourceCaptioner::recording_stopped_event() {
     recording_output.clear();
+    transcript_recording_output.clear();
 }
 
 
@@ -492,4 +541,16 @@ SourceCaptioner::~SourceCaptioner() {
     stream_stopped_event();
     recording_stopped_event();
     stop_caption_stream(false);
+}
+
+template<class T>
+void CaptionOutputControl<T>::stop_soon() {
+    debug_log("CaptionOutputControl stop_soon()");
+    stop = true;
+    caption_queue.enqueue(CaptionOutput());
+}
+
+template<class T>
+CaptionOutputControl<T>::~CaptionOutputControl() {
+    debug_log("~CaptionOutputControl");
 }

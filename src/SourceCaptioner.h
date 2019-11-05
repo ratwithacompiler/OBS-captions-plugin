@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ContinuousCaptions.h>
 #include "AudioCaptureSession.h"
 #include "CaptionResultHandler.h"
-#include "caption_output_writer.h"
 
 #include <QObject>
 #include <QTimer>
@@ -62,9 +61,41 @@ struct CaptionSourceSettings {
     }
 };
 
+struct TranscriptOutputSettings {
+    bool enabled;
+    string output_path;
+    bool streaming_transcripts_enabled;
+    bool recording_transcripts_enabled;
+
+    TranscriptOutputSettings(bool enabled, const string &outputPath, bool streamingOutputEnabled, bool recordingOutputEnabled) : enabled(
+            enabled), output_path(outputPath), streaming_transcripts_enabled(streamingOutputEnabled), recording_transcripts_enabled(
+            recordingOutputEnabled) {}
+
+    bool operator==(const TranscriptOutputSettings &rhs) const {
+        return enabled == rhs.enabled &&
+               output_path == rhs.output_path &&
+               streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
+               recording_transcripts_enabled == rhs.recording_transcripts_enabled;
+    }
+
+    bool operator!=(const TranscriptOutputSettings &rhs) const {
+        return !(rhs == *this);
+    }
+
+    void print(const char *line_prefix = "") {
+        printf("%sTranscriptSettings\n", line_prefix);
+        printf("%s  enabled: %d\n", line_prefix, enabled);
+        printf("%s  output_path: %s\n", line_prefix, output_path.c_str());
+        printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
+        printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
+    }
+};
+
 struct SourceCaptionerSettings {
     bool streaming_output_enabled;
     bool recording_output_enabled;
+
+    TranscriptOutputSettings transcript_settings;
 
     std::map<string, CaptionSourceSettings> caption_source_settings_map;
 
@@ -76,18 +107,21 @@ struct SourceCaptionerSettings {
     SourceCaptionerSettings(
             bool streaming_output_enabled,
             bool recording_output_enabled,
-            const CaptionSourceSettings caption_source_settings,
-            const CaptionFormatSettings format_settings,
-            const ContinuousCaptionStreamSettings stream_settings
+            const TranscriptOutputSettings &transcript_settings,
+            const CaptionSourceSettings &caption_source_settings,
+            const CaptionFormatSettings &format_settings,
+            const ContinuousCaptionStreamSettings &stream_settings
     ) :
             streaming_output_enabled(streaming_output_enabled),
             recording_output_enabled(recording_output_enabled),
+            transcript_settings(transcript_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
 
     bool operator==(const SourceCaptionerSettings &rhs) const {
         return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
+               transcript_settings == rhs.transcript_settings &&
                caption_source_settings_map == rhs.caption_source_settings_map &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
@@ -111,6 +145,7 @@ struct SourceCaptionerSettings {
 
         stream_settings.print((string(line_prefix) + "  ").c_str());
         format_settings.print((string(line_prefix) + "  ").c_str());
+        transcript_settings.print((string(line_prefix) + "  ").c_str());
     }
 
     const CaptionSourceSettings *get_caption_source_settings_ptr(const string scene_collection_name) const {
@@ -126,9 +161,38 @@ struct SourceCaptionerSettings {
     }
 };
 
+struct CaptionOutput {
+    shared_ptr<OutputCaptionResult> output_result;
+    bool interrupted;
+    bool is_clearance;
+
+    CaptionOutput(shared_ptr<OutputCaptionResult> output_result, bool interrupted, bool is_clearance) :
+            output_result(output_result),
+            interrupted(interrupted),
+            is_clearance(is_clearance) {};
+
+    CaptionOutput() :
+            interrupted(false),
+            is_clearance(false) {}
+};
+
+template<typename T>
+struct CaptionOutputControl {
+    moodycamel::BlockingConcurrentQueue<CaptionOutput> caption_queue;
+    volatile bool stop = false;
+    T arg;
+
+    CaptionOutputControl(T arg) : arg(arg) {}
+
+    void stop_soon();
+
+    ~CaptionOutputControl();
+};
+
+template<typename T>
 struct OutputWriter {
     std::recursive_mutex control_change_mutex;
-    std::shared_ptr<CaptionOutputControl> control;
+    std::shared_ptr<CaptionOutputControl<T>> control;
 
     void clear() {
         std::lock_guard<recursive_mutex> lock(control_change_mutex);
@@ -138,7 +202,7 @@ struct OutputWriter {
         }
     }
 
-    void set_control(const std::shared_ptr<CaptionOutputControl> &set_control) {
+    void set_control(const std::shared_ptr<CaptionOutputControl<T>> &set_control) {
         std::lock_guard<recursive_mutex> lock(control_change_mutex);
         clear();
         this->control = set_control;
@@ -146,7 +210,7 @@ struct OutputWriter {
 
     bool enqueue(const CaptionOutput &output) {
         std::lock_guard<recursive_mutex> lock(control_change_mutex);
-        if (control) {
+        if (control && !control->stop) {
             control->caption_queue.enqueue(output);
             return true;
         }
@@ -207,8 +271,11 @@ Q_OBJECT
     std::vector<std::shared_ptr<OutputCaptionResult>> results_history; // final ones + last ones before interruptions
     std::shared_ptr<OutputCaptionResult> held_nonfinal_caption_result;
 
-    OutputWriter streaming_output;
-    OutputWriter recording_output;
+    OutputWriter<int> streaming_output;
+    OutputWriter<int> recording_output;
+
+    OutputWriter<TranscriptOutputSettings> transcript_streaming_output;
+    OutputWriter<TranscriptOutputSettings> transcript_recording_output;
 
     int audio_capture_id = 0;
 
@@ -218,6 +285,8 @@ Q_OBJECT
             const CaptionOutput &output,
             bool to_stream,
             bool to_recoding,
+            bool to_transcript_streaming,
+            bool to_transcript_recording,
             bool is_clearance = false
     );
 

@@ -48,6 +48,8 @@ private slots:
     void on_previewPushButton_clicked();
 
     void on_apiKeyShowPushButton_clicked();
+    
+    void on_transcriptFolderPickerPushButton_clicked();
 
     void set_show_key(bool set_to_show);
 

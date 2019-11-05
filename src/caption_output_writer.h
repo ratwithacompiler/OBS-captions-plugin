@@ -7,41 +7,9 @@
 
 #include "thirdparty/cameron314/blockingconcurrentqueue.h"
 #include "log.c"
+#include "SourceCaptioner.h"
 
-
-using steady_time_point = chrono::steady_clock::time_point;
-
-struct CaptionOutput {
-    shared_ptr<OutputCaptionResult> output_result;
-    bool interrupted;
-    bool is_clearance;
-
-    CaptionOutput(shared_ptr<OutputCaptionResult> output_result, bool interrupted, bool is_clearance) :
-            output_result(output_result),
-            interrupted(interrupted),
-            is_clearance(is_clearance) {};
-
-    CaptionOutput() :
-            interrupted(false),
-            is_clearance(false) {}
-};
-
-struct CaptionOutputControl {
-    moodycamel::BlockingConcurrentQueue<CaptionOutput> caption_queue;
-    volatile bool stop = false;
-
-    void stop_soon() {
-        debug_log("CaptionOutputControl stop_soon()");
-        stop = true;
-        caption_queue.enqueue(CaptionOutput());
-    }
-
-    ~CaptionOutputControl() {
-        debug_log("~CaptionOutputControl");
-    }
-};
-
-static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control, bool to_stream) {
+static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> control, bool to_stream) {
     // TODO: minimum_time_between_captions arg to optionally hold next caption if still too soon after previous one
     // just skip in between ones, maybe option to fall behind instead as well?
 
@@ -149,5 +117,6 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl> control,
 
     info_log("caption_output_writer_loop %s done", to_what.c_str());
 }
+
 
 #endif //OBS_GOOGLE_CAPTION_PLUGIN_CAPTION_OUTPUT_WRITER_H

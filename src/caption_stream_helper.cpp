@@ -72,10 +72,20 @@ static CaptionSourceSettings default_CaptionSourceSettings() {
     };
 }
 
+static TranscriptOutputSettings default_TranscriptOutputSettings() {
+    return {
+            false,
+            "",
+            false,
+            false
+    };
+}
+
 static SourceCaptionerSettings default_SourceCaptionerSettings() {
     return SourceCaptionerSettings(
             true,
             false,
+            default_TranscriptOutputSettings(),
             default_CaptionSourceSettings(),
             default_CaptionFormatSettings(),
             default_ContinuousCaptionStreamSettings()
@@ -137,6 +147,12 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
         obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
         obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
 
+        obs_data_set_default_bool(load_data, "transcript_enabled", source_settings.transcript_settings.enabled);
+        obs_data_set_default_bool(load_data, "transcript_for_stream_enabled",
+                                  source_settings.transcript_settings.streaming_transcripts_enabled);
+        obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
+                                  source_settings.transcript_settings.recording_transcripts_enabled);
+        obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
 
         settings.enabled = obs_data_get_bool(load_data, "enabled");
         source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
@@ -182,6 +198,14 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
         enforce_sensible_values(settings);
     }
+
+    source_settings.transcript_settings.enabled = obs_data_get_bool(load_data, "transcript_enabled");
+    source_settings.transcript_settings.streaming_transcripts_enabled =
+            obs_data_get_bool(load_data, "transcript_for_stream_enabled");
+    source_settings.transcript_settings.recording_transcripts_enabled =
+            obs_data_get_bool(load_data, "transcript_for_recording_enabled");
+    source_settings.transcript_settings.output_path = obs_data_get_string(load_data, "transcript_folder_path");
+
     source_settings.print();
     return settings;
 }
@@ -242,6 +266,13 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 //    obs_data_release(scene_collection_sources_obj);
     obs_data_set_array(save_data, "scene_collection_sources", scene_collection_sources_array);
     obs_data_array_release(scene_collection_sources_array);
+
+    obs_data_set_bool(save_data, "transcript_enabled", settings.source_cap_settings.transcript_settings.enabled);
+    obs_data_set_bool(save_data, "transcript_for_stream_enabled",
+                      settings.source_cap_settings.transcript_settings.streaming_transcripts_enabled);
+    obs_data_set_bool(save_data, "transcript_for_recording_enabled",
+                      settings.source_cap_settings.transcript_settings.recording_transcripts_enabled);
+    obs_data_set_string(save_data, "transcript_folder_path", settings.source_cap_settings.transcript_settings.output_path.c_str());
 }
 
 static bool save_plugin_data_to_config(obs_data_t *data) {

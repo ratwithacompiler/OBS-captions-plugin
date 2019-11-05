@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../log.c"
 #include <utils.h>
 #include <QLineEdit>
+#include <QFileDialog>
 #include "../storage_utils.h"
 #include "../caption_stream_helper.cpp"
 
@@ -109,6 +110,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
     setup_combobox_output_target(*outputTargetComboBox);
+    setup_combobox_output_target(*transcriptSaveForComboBox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -251,6 +253,16 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
 //    info_log("acceptt %s, words: %lu", banned_words_line.c_str(), banned_words.size());
 
+    auto &transcript_settings = source_settings.transcript_settings;
+    transcript_settings.enabled = saveTranscriptsCheckBox->isChecked();
+    const int transcript_combobox_val = transcriptSaveForComboBox->currentData().toInt();
+    if (!set_streaming_recording_enabled(transcript_combobox_val,
+                                         transcript_settings.streaming_transcripts_enabled,
+                                         transcript_settings.recording_transcripts_enabled)) {
+        error_log("invalid transcript output target combobox value, wtf: %d", output_combobox_val);
+    }
+    transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
+
     debug_log("accepting changes");
 //    current_settings.print();
     emit settings_accepted(current_settings);
@@ -274,7 +286,6 @@ void CaptionSettingsWidget::updateUi() {
     sceneCollectionNameLabel_2->setText(QString::fromStdString(scene_collection_name));
     update_source_combo_boxes(scene_collection_name);
 
-
     combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
     combobox_set_data_int(*profanityFilterComboBox, source_settings.stream_settings.stream_settings.profanity_filter, 0);
 
@@ -294,6 +305,12 @@ void CaptionSettingsWidget::updateUi() {
     words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
     this->bannedWordsPlainTextEdit->setPlainText(QString(banned_words_line.c_str()));
 
+    saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
+    update_combobox_output_target(*transcriptSaveForComboBox,
+                                  source_settings.transcript_settings.streaming_transcripts_enabled,
+                                  source_settings.transcript_settings.recording_transcripts_enabled);
+    transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
+
     set_show_key(true);
 }
 
@@ -309,5 +326,16 @@ void CaptionSettingsWidget::update_other_source_visibility(CaptionSourceMuteType
     this->muteSourceComboBox->setVisible(be_visible);
     this->muteSourceLabel->setVisible(be_visible);
 
+}
+
+void CaptionSettingsWidget::on_transcriptFolderPickerPushButton_clicked() {
+    QString dir_path = QFileDialog::getExistingDirectory(this,
+                                                         tr("Open Directory"),
+                                                         transcriptFolderPathLineEdit->text(),
+                                                         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    if (dir_path.length()) {
+        transcriptFolderPathLineEdit->setText(dir_path);
+    }
 }
 
