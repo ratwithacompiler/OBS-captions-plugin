@@ -94,6 +94,10 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
           Ui_CaptionSettingsWidget(),
           current_settings(latest_settings) {
     setupUi(this);
+
+    QString with_version = bottomTextBrowser->toPlainText().replace("${VERSION_STRING}", VERSION_STRING);
+    bottomTextBrowser->setPlainText(with_version);
+
     this->updateUi();
 
 #if ENABLE_CUSTOM_API_KEY

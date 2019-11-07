@@ -110,8 +110,8 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
 
-configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
+#configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
+#set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
 
 
 set(obs_QRC src/resources/obs.qrc)

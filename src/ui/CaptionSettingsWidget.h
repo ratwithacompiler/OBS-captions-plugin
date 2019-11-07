@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QWidget>
 #include <CaptionStream.h>
-#include <src/ui/ui_CaptionSettingsWidget_out.h>
+#include <src/ui/ui_CaptionSettingsWidget.h>
 
 #include "../AudioCaptureSession.h"
 #include "../log.c"
