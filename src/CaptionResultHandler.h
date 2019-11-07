@@ -81,7 +81,6 @@ struct CaptionFormatSettings {
 
 
 struct OutputCaptionResult {
-
     CaptionResult caption_result;
     string clean_caption_text;
 
@@ -107,8 +106,10 @@ public:
 
     shared_ptr<OutputCaptionResult> prepare_caption_output(
             const CaptionResult &caption_result,
-            bool fillup_with_previous,
-            bool insert_newlines,
+            const bool fillup_with_previous,
+            const bool insert_newlines,
+            const uint line_length,
+            const uint targeted_line_count,
             const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history);
 
 };

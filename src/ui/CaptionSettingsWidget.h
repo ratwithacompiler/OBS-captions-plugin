@@ -55,7 +55,7 @@ private slots:
 
     void apply_ui_scene_collection_settings();
 
-    void update_source_combo_boxes(const string &scene_collection_name);
+    void update_scene_collection_ui(const string &use_scene_collection_name);
 
 signals:
 

@@ -30,12 +30,24 @@ void CaptionPluginManager::set_settings(const CaptionPluginSettings &new_setting
 void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_settings) {
     // apply settings if they are different
     const SourceCaptionerSettings &source_settings = new_settings.source_cap_settings;
+    string scene_collection_name_relevant = state.external_scene_collection_name;
+    auto scene_col_settings = source_settings.get_caption_source_settings_ptr(scene_collection_name_relevant);
+
     bool is_streaming_relevant = state.external_is_streaming && source_settings.streaming_output_enabled;
     bool is_recording_relevant = state.external_is_recording && source_settings.recording_output_enabled;
     bool is_preview_relevant = state.external_is_preview_open;
-    string scene_collection_name_relevant = state.external_scene_collection_name;
+    bool is_text_output_relevant = false;
 
-    auto cap_source_settings = source_settings.get_caption_source_settings_ptr(scene_collection_name_relevant);
+    if (scene_col_settings) {
+        is_text_output_relevant = ((state.external_is_streaming || state.external_is_recording)
+                                   && scene_col_settings->text_output_settings.enabled
+                                   && !scene_col_settings->text_output_settings.text_source_name.empty());
+    }
+
+    bool equal_settings = new_settings == plugin_settings;
+    bool do_captioning = (new_settings.enabled &&
+                          (is_streaming_relevant || is_recording_relevant || is_preview_relevant || is_text_output_relevant));
+
     info_log("enabled: %d, "
 
              "is_live %d, "
@@ -45,8 +57,13 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
              "is_recording_relevant: %d, "
 
              "is_preview_open %d, "
+             "is_text_output_relevant %d, "
+
              "scene_collection_name: %s, "
-             "source:  %s",
+             "source:  '%s', "
+
+             "equal_settings %d, "
+             "do_captioning %d",
 
              new_settings.enabled,
 
@@ -57,11 +74,15 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
              is_recording_relevant,
 
              state.external_is_preview_open,
-             scene_collection_name_relevant.c_str(),
-             cap_source_settings ? cap_source_settings->caption_source_name.c_str() : "nope ?????");
+             is_text_output_relevant,
 
-    bool equal_settings = new_settings == plugin_settings;
-    bool do_captioning = (is_streaming_relevant || is_recording_relevant || is_preview_relevant) && new_settings.enabled;
+             scene_collection_name_relevant.c_str(),
+             scene_col_settings ? scene_col_settings->caption_source_settings.caption_source_name.c_str() : "nope ?????",
+
+             equal_settings,
+             do_captioning
+    );
+
 
     if (update_count != 0
         && equal_settings
@@ -69,6 +90,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
         && is_streaming_relevant == state.is_captioning_streaming
         && is_recording_relevant == state.is_captioning_recording
         && is_preview_relevant == state.is_captioning_preview
+        && is_text_output_relevant == state.is_captioning_text_output
         && scene_collection_name_relevant == state.captioning_scene_collection_name
             ) {
         info_log("settings unchanged, ignoring");
@@ -81,6 +103,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     state.is_captioning_streaming = is_streaming_relevant;
     state.is_captioning_recording = is_recording_relevant;
     state.is_captioning_preview = is_preview_relevant;
+    state.is_captioning_text_output = is_text_output_relevant;
     state.captioning_scene_collection_name = scene_collection_name_relevant;
 
     if (do_captioning) {

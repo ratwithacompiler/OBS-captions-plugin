@@ -72,6 +72,23 @@ static CaptionSourceSettings default_CaptionSourceSettings() {
     };
 }
 
+static TextOutputSettings default_TextOutputSettings() {
+    return {
+            false,
+            "",
+            60,
+            4
+//            true
+    };
+}
+
+static SceneCollectionSettings default_SceneCollectionSettings() {
+    return {
+            default_CaptionSourceSettings(),
+            default_TextOutputSettings()
+    };
+}
+
 static TranscriptOutputSettings default_TranscriptOutputSettings() {
     return {
             false,
@@ -120,6 +137,60 @@ static string current_scene_collection_name() {
     bfree(scene_collection_name);
 
     return name;
+}
+
+typedef std::tuple<string, string, uint32_t> ObsSourceTup;
+
+static vector<ObsSourceTup> get_obs_sources() {
+    vector<ObsSourceTup> sources;
+
+    auto cb = [](void *param, obs_source_t *source) {
+        auto sources = reinterpret_cast<vector<ObsSourceTup> *>(param);
+        if (!sources) {
+            return false;
+        }
+
+        const char *source_type = obs_source_get_id(source);
+        const char *name = obs_source_get_name(source);
+
+        if (!name || !source_type)
+            return true;
+
+        uint32_t caps = obs_source_get_output_flags(source);
+        sources->push_back(ObsSourceTup(string(name), string(source_type), caps));
+
+//        info_log("source: %s id: %s", name, id);
+        return true;
+    };
+    obs_enum_sources(cb, &sources);
+    return sources;
+}
+
+static vector<string> get_audio_sources() {
+    auto sources = get_obs_sources();
+    vector<string> audio_sources;
+
+    for (auto &a_source : sources) {
+        if (std::get<2>(a_source) & OBS_SOURCE_AUDIO) {
+            audio_sources.push_back(std::get<0>(a_source));
+        }
+    }
+
+    return audio_sources;
+}
+
+static vector<string> get_text_sources() {
+    auto sources = get_obs_sources();
+    vector<string> text_sources;
+
+    for (auto &a_source : sources) {
+        string &source_type = std::get<1>(a_source);
+        if (source_type == "text_gdiplus" || source_type == "text_ft2_source") {
+            text_sources.push_back(std::get<0>(a_source));
+        }
+    }
+
+    return text_sources;
 }
 
 static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *load_data) {
@@ -175,22 +246,52 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
         obs_data_array_t *scene_collection_sources_array = obs_data_get_array(load_data, "scene_collection_sources");
 
-        CaptionSourceSettings default_caption_source_settings = default_CaptionSourceSettings();
+        SceneCollectionSettings default_scene_collection_settings = default_SceneCollectionSettings();
         for (size_t index = 0; index < obs_data_array_count(scene_collection_sources_array); index++) {
             obs_data_t *a_scene_source_obj = obs_data_array_item(scene_collection_sources_array, index);
 
             string scene_collection_name = obs_data_get_string(a_scene_source_obj, "scene_collection_name");
             if (!scene_collection_name.empty()) {
-                CaptionSourceSettings caption_source_settings;
 
-                obs_data_set_default_string(a_scene_source_obj, "source_name", default_caption_source_settings.caption_source_name.c_str());
+                SceneCollectionSettings scene_collection_settings;
+                CaptionSourceSettings &caption_source_settings = scene_collection_settings.caption_source_settings;
+
+                obs_data_set_default_string(a_scene_source_obj, "source_name",
+                                            default_scene_collection_settings.caption_source_settings.caption_source_name.c_str());
+
+                obs_data_set_default_string(a_scene_source_obj, "mute_source_name",
+                                            default_scene_collection_settings.caption_source_settings.mute_source_name.c_str());
+
                 caption_source_settings.caption_source_name = obs_data_get_string(a_scene_source_obj, "source_name");
                 caption_source_settings.mute_source_name = obs_data_get_string(a_scene_source_obj, "mute_source_name");
 
                 string mute_when_str = obs_data_get_string(a_scene_source_obj, "source_caption_when");
                 caption_source_settings.mute_when = string_to_mute_setting(mute_when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
 
-                source_settings.caption_source_settings_map[scene_collection_name] = caption_source_settings;
+                TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
+
+                obs_data_set_default_bool(a_scene_source_obj, "text_output_enabled",
+                                          default_scene_collection_settings.text_output_settings.enabled);
+
+                obs_data_set_default_string(a_scene_source_obj, "text_output_source_name",
+                                            default_scene_collection_settings.text_output_settings.text_source_name.c_str());
+
+                obs_data_set_default_int(a_scene_source_obj, "text_output_line_length",
+                                         default_scene_collection_settings.text_output_settings.line_length);
+
+                obs_data_set_default_int(a_scene_source_obj, "text_output_line_count",
+                                         default_scene_collection_settings.text_output_settings.line_count);
+
+//                obs_data_set_default_bool(a_scene_source_obj, "text_output_insert_newlines",
+//                                          default_scene_collection_settings.text_output_settings.insert_newlines);
+
+                text_output_settings.enabled = obs_data_get_bool(a_scene_source_obj, "text_output_enabled");
+                text_output_settings.text_source_name = obs_data_get_string(a_scene_source_obj, "text_output_source_name");
+                text_output_settings.line_length = obs_data_get_int(a_scene_source_obj, "text_output_line_length");
+                text_output_settings.line_count = obs_data_get_int(a_scene_source_obj, "text_output_line_count");
+//                text_output_settings.insert_newlines = obs_data_get_bool(a_scene_source_obj, "text_output_insert_newlines");
+
+                source_settings.scene_collection_settings_map[scene_collection_name] = scene_collection_settings;
             }
             obs_data_release(a_scene_source_obj);
         }
@@ -243,11 +344,12 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     obs_data_array_t *scene_collection_sources_array = obs_data_array_create();
     // TODO: not sure how to enumerate obj keys, so using array for now ...
 
-    for (auto it = source_settings.caption_source_settings_map.begin(); it != source_settings.caption_source_settings_map.end(); ++it) {
+    for (auto it = source_settings.scene_collection_settings_map.begin(); it != source_settings.scene_collection_settings_map.end(); ++it) {
         obs_data_t *a_scene_source_obj = obs_data_create();
 
         string scene_collection_name = it->first;
-        CaptionSourceSettings caption_source_settings = it->second;
+        SceneCollectionSettings scene_collection_settings = it->second;
+        CaptionSourceSettings &caption_source_settings = scene_collection_settings.caption_source_settings;
 
         obs_data_set_string(a_scene_source_obj, "scene_collection_name", scene_collection_name.c_str());
 
@@ -256,6 +358,13 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
         obs_data_set_string(a_scene_source_obj, "source_name", caption_source_settings.caption_source_name.c_str());
         obs_data_set_string(a_scene_source_obj, "mute_source_name", caption_source_settings.mute_source_name.c_str());
+
+        TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
+        obs_data_set_bool(a_scene_source_obj, "text_output_enabled", text_output_settings.enabled);
+        obs_data_set_string(a_scene_source_obj, "text_output_source_name", text_output_settings.text_source_name.c_str());
+        obs_data_set_int(a_scene_source_obj, "text_output_line_length", text_output_settings.line_length);
+        obs_data_set_int(a_scene_source_obj, "text_output_line_count", text_output_settings.line_count);
+//        obs_data_set_bool(a_scene_source_obj, "text_output_insert_newlines", text_output_settings.insert_newlines);
 
         obs_data_array_push_back(scene_collection_sources_array, a_scene_source_obj);
 //        obs_data_set_obj(scene_collection_sources_obj, scene_collection_name.c_str(), a_scene_source_obj);

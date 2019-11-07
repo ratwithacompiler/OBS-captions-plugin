@@ -24,32 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../storage_utils.h"
 #include "../caption_stream_helper.cpp"
 
-static void update_combobox_with_current_audio_sources(QComboBox &comboBox) {
+static void setup_combobox_texts(QComboBox &comboBox,
+                                 const vector<string> &items
+) {
     while (comboBox.count())
         comboBox.removeItem(0);
 
-    comboBox.addItem("", "");
-
-    auto cb = [](void *param, obs_source_t *source) {
-        auto comboBox = reinterpret_cast<QComboBox *>(param);
-
-//        const char *id = obs_source_get_id(source);
-        const char *name = obs_source_get_name(source);
-
-        if (!name)//|| !id
-            return true;
-
-        QString q_name = name;
-//        QString q_id = id;
-
-        uint32_t caps = obs_source_get_output_flags(source);
-        if (caps & OBS_SOURCE_AUDIO)
-            comboBox->addItem(name);
-
-//        info_log("source: %s id: %s", name, id);
-        return true;
-    };
-    obs_enum_sources(cb, &comboBox);
+    for (auto &a_item : items) {
+        comboBox.addItem(QString::fromStdString(a_item));
+    }
 }
 
 static int update_combobox_with_current_scene_collections(QComboBox &comboBox) {
@@ -122,14 +105,14 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QObject::connect(captionWhenComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::caption_when_index_change);
 
-    QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                     this, &CaptionSettingsWidget::sources_combo_index_change);
-
-    QObject::connect(captionWhenComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                     this, &CaptionSettingsWidget::sources_combo_index_change);
-
-    QObject::connect(muteSourceComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                     this, &CaptionSettingsWidget::sources_combo_index_change);
+//    QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+//                     this, &CaptionSettingsWidget::sources_combo_index_change);
+//
+//    QObject::connect(captionWhenComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+//                     this, &CaptionSettingsWidget::sources_combo_index_change);
+//
+//    QObject::connect(muteSourceComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+//                     this, &CaptionSettingsWidget::sources_combo_index_change);
 
 //    QObject::connect(sceneCollectionComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 //                     this, &CaptionSettingsWidget::scene_collection_combo_index_change);
@@ -138,20 +121,19 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
 void CaptionSettingsWidget::set_show_key(bool set_to_show) {
     if (set_to_show) {
-        apiKeyLineEdit->setEchoMode(QLineEdit::EchoMode::Password);
-        apiKeyShowPushButton->setText("Show");
-    } else {
         apiKeyLineEdit->setEchoMode(QLineEdit::EchoMode::Normal);
         apiKeyShowPushButton->setText("Hide");
-
+    } else {
+        apiKeyLineEdit->setEchoMode(QLineEdit::EchoMode::Password);
+        apiKeyShowPushButton->setText("Show");
     }
 }
 
 void CaptionSettingsWidget::on_apiKeyShowPushButton_clicked() {
     if (apiKeyLineEdit->echoMode() == QLineEdit::EchoMode::Password) {
-        set_show_key(false);
-    } else {
         set_show_key(true);
+    } else {
+        set_show_key(false);
     }
 }
 
@@ -160,7 +142,7 @@ void CaptionSettingsWidget::on_previewPushButton_clicked() {
 }
 
 void CaptionSettingsWidget::sources_combo_index_change(int new_index) {
-    apply_ui_scene_collection_settings();
+//    apply_ui_scene_collection_settings();
 }
 
 void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
@@ -169,7 +151,9 @@ void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
 
     debug_log("apply_ui_scene_collection_settings %s", current_scene_collection_name.c_str());
 
-    CaptionSourceSettings cap_source_settings;
+    SceneCollectionSettings scene_col_settings;
+    CaptionSourceSettings &cap_source_settings = scene_col_settings.caption_source_settings;
+
     cap_source_settings.caption_source_name = sourcesComboBox->currentText().toStdString();
     cap_source_settings.mute_source_name = muteSourceComboBox->currentText().toStdString();
 
@@ -178,45 +162,71 @@ void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
     cap_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
 //    debug_log("accepting when: %d", current_settings.caption_source_settings.mute_when);
 
-    current_settings.source_cap_settings.update_setting(current_scene_collection_name, cap_source_settings);
+    TextOutputSettings &text_output_settings = scene_col_settings.text_output_settings;
+    text_output_settings.enabled = this->textSourceEnableOutputCheckBox->isChecked();
+    text_output_settings.text_source_name = this->textSourceOutputComboBox->currentText().toStdString();
+    text_output_settings.line_count = this->textSourceLineCountSpinBox->value();
+    text_output_settings.line_length = this->textSourceLineLengthSpinBox->value();
+//    text_output_settings.insert_newlines = this->textSourceForceLinebreaksCheckBox->isChecked();
+
+    current_settings.source_cap_settings.update_setting(current_scene_collection_name, scene_col_settings);
 }
 
 void CaptionSettingsWidget::scene_collection_combo_index_change(int new_index) {
 //    string current_scene_collection_name = this->sceneCollectionComboBox->currentText().toStdString();
 //    debug_log("scene_collection_combo_index_change %s", current_scene_collection_name.c_str());
-//    update_source_combo_boxes(current_scene_collection_name);
+//    update_scene_collection_ui(current_scene_collection_name);
 }
 
-void CaptionSettingsWidget::update_source_combo_boxes(const string &use_scene_collection_name) {
+void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_collection_name) {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
 
-    CaptionSourceSettings use_settings = default_CaptionSourceSettings();
+    SceneCollectionSettings use_settings = default_SceneCollectionSettings();
     {
-        const CaptionSourceSettings *specific_settings = source_settings.get_caption_source_settings_ptr(use_scene_collection_name);
+        const SceneCollectionSettings *specific_settings = source_settings.get_caption_source_settings_ptr(use_scene_collection_name);
         if (specific_settings) {
             use_settings = *specific_settings;
-            debug_log("update_source_combo_boxes using specific settings, '%s'", use_scene_collection_name.c_str());
+            debug_log("update_scene_collection_ui using specific settings, '%s'", use_scene_collection_name.c_str());
         } else
-            debug_log("update_source_combo_boxes using default settings, '%s' not found", use_scene_collection_name.c_str());
+            debug_log("update_scene_collection_ui using default settings, '%s' not found", use_scene_collection_name.c_str());
     }
 
+    // audio input sources
+    auto audio_sources = get_audio_sources();
+    audio_sources.insert(audio_sources.begin(), "");
+
     const QSignalBlocker blocker1(sourcesComboBox);
-    update_combobox_with_current_audio_sources(*sourcesComboBox);
+    setup_combobox_texts(*sourcesComboBox, audio_sources);
 
     const QSignalBlocker blocker2(muteSourceComboBox);
-    update_combobox_with_current_audio_sources(*muteSourceComboBox);
+    setup_combobox_texts(*muteSourceComboBox, audio_sources);
 
     const QSignalBlocker blocker3(captionWhenComboBox);
 
-    sourcesComboBox->setCurrentText(QString(use_settings.caption_source_name.c_str()));
-    muteSourceComboBox->setCurrentText(QString(use_settings.mute_source_name.c_str()));
+    sourcesComboBox->setCurrentText(QString::fromStdString(use_settings.caption_source_settings.caption_source_name));
+    muteSourceComboBox->setCurrentText(QString::fromStdString(use_settings.caption_source_settings.mute_source_name));
 
-    debug_log("use_settings.mute_when %d", use_settings.mute_when);
-    string mute_when_str = mute_setting_to_string(use_settings.mute_when, "own_source");
+    debug_log("use_settings.caption_source_settings.mute_when %d", use_settings.caption_source_settings.mute_when);
+    string mute_when_str = mute_setting_to_string(use_settings.caption_source_settings.mute_when, "own_source");
     int when_index = combobox_set_data_str(*captionWhenComboBox, mute_when_str.c_str(), 0);
     debug_log("setting mute_when_str '%s', index %d", mute_when_str.c_str(), when_index);
 
-    this->update_other_source_visibility(use_settings.mute_when);
+    this->update_other_source_visibility(use_settings.caption_source_settings.mute_when);
+
+    // text output source
+    const QSignalBlocker blocker4(textSourceOutputComboBox);
+
+    this->textSourceEnableOutputCheckBox->setChecked(use_settings.text_output_settings.enabled);
+
+    auto text_sources = get_text_sources();
+    text_sources.insert(text_sources.begin(), "");
+    setup_combobox_texts(*textSourceOutputComboBox, text_sources);
+
+    this->textSourceLineLengthSpinBox->setValue(use_settings.text_output_settings.line_length);
+    this->textSourceLineCountSpinBox->setValue(use_settings.text_output_settings.line_count);
+//    this->textSourceForceLinebreaksCheckBox->setChecked(use_settings.text_output_settings.insert_newlines);
+
+    this->textSourceOutputComboBox->setCurrentText(QString::fromStdString(use_settings.text_output_settings.text_source_name));
 }
 
 void CaptionSettingsWidget::caption_when_index_change(int new_index) {
@@ -267,6 +277,8 @@ void CaptionSettingsWidget::accept_current_settings() {
     }
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
 
+    apply_ui_scene_collection_settings();
+
     debug_log("accepting changes");
 //    current_settings.print();
     emit settings_accepted(current_settings);
@@ -283,12 +295,14 @@ void CaptionSettingsWidget::updateUi() {
 //        sceneCollectionComboBox->hide();
 //    }
 //    sceneCollectionComboBox->setCurrentText(QString::fromStdString(scene_collection_name));
-//    update_source_combo_boxes(sceneCollectionComboBox->currentText().toStdString());
+//    update_scene_collection_ui(sceneCollectionComboBox->currentText().toStdString());
 
-    sceneCollectionSelectLabel->hide();
-    sceneCollectionComboBox->hide();
-    sceneCollectionNameLabel_2->setText(QString::fromStdString(scene_collection_name));
-    update_source_combo_boxes(scene_collection_name);
+//    sceneCollectionSelectLabel->hide();
+//    sceneCollectionComboBox->hide();
+
+    sceneCollectionNameLabel_GeneralRight->setText(QString::fromStdString(scene_collection_name));
+    sceneCollectionNameLabel_TextSourceRight->setText(QString::fromStdString(scene_collection_name));
+    update_scene_collection_ui(scene_collection_name);
 
     combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
     combobox_set_data_int(*profanityFilterComboBox, source_settings.stream_settings.stream_settings.profanity_filter, 0);
@@ -318,7 +332,7 @@ void CaptionSettingsWidget::updateUi() {
                                   0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
 
-    set_show_key(true);
+    set_show_key(false);
 }
 
 void CaptionSettingsWidget::set_settings(const CaptionPluginSettings &new_settings) {

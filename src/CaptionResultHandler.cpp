@@ -64,8 +64,10 @@ static void join_strings(const vector<string> &lines, char join_char, string &ou
 
 shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const CaptionResult &caption_result,
-        bool fillup_with_previous,
-        bool insert_newlines,
+        const bool fillup_with_previous,
+        const bool insert_newlines,
+        const uint line_length,
+        const uint targeted_line_count,
         const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history
 ) {
 
@@ -73,9 +75,6 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
 
     try {
 //        debug_log("caption: %s", res.caption_text.c_str());
-
-        const uint targeted_line_count = settings.caption_line_count;
-        const uint line_length = settings.caption_line_length;
         const uint max_length = targeted_line_count * line_length;
 
         string cleaned_line = caption_result.caption_text;

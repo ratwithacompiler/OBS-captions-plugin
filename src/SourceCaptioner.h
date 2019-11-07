@@ -59,6 +59,56 @@ struct CaptionSourceSettings {
     bool operator!=(const CaptionSourceSettings &rhs) const {
         return !(rhs == *this);
     }
+
+    void print(const char *line_prefix = "") {
+        printf("%sCaptionSourceSettings\n", line_prefix);
+        printf("%s  caption_source_name: %s\n", line_prefix, caption_source_name.c_str());
+        printf("%s  mute_when: %d\n", line_prefix, mute_when);
+        printf("%s  mute_source_name: %s\n", line_prefix, mute_source_name.c_str());
+    }
+};
+
+struct TextOutputSettings {
+    bool enabled;
+    string text_source_name;
+    uint line_length;
+    uint line_count;
+//    bool insert_newlines;
+
+    void print(const char *line_prefix = "") {
+        printf("%sTextOutputSettings\n", line_prefix);
+        printf("%s  enabled: %d\n", line_prefix, enabled);
+        printf("%s  text_source_name: %s\n", line_prefix, text_source_name.c_str());
+        printf("%s  line_length: %d\n", line_prefix, line_length);
+        printf("%s  line_count: %d\n", line_prefix, line_count);
+//        printf("%s  insert_newlines: %d\n", line_prefix, insert_newlines);
+    }
+
+    bool operator==(const TextOutputSettings &rhs) const {
+        return enabled == rhs.enabled &&
+               text_source_name == rhs.text_source_name &&
+               line_length == rhs.line_length &&
+               line_count == rhs.line_count;
+//               insert_newlines == rhs.insert_newlines;
+    }
+
+    bool operator!=(const TextOutputSettings &rhs) const {
+        return !(rhs == *this);
+    }
+};
+
+struct SceneCollectionSettings {
+    CaptionSourceSettings caption_source_settings;
+    TextOutputSettings text_output_settings;
+
+    bool operator==(const SceneCollectionSettings &rhs) const {
+        return caption_source_settings == rhs.caption_source_settings &&
+               text_output_settings == rhs.text_output_settings;
+    }
+
+    bool operator!=(const SceneCollectionSettings &rhs) const {
+        return !(rhs == *this);
+    }
 };
 
 struct TranscriptOutputSettings {
@@ -97,7 +147,7 @@ struct SourceCaptionerSettings {
 
     TranscriptOutputSettings transcript_settings;
 
-    std::map<string, CaptionSourceSettings> caption_source_settings_map;
+    std::map<string, SceneCollectionSettings> scene_collection_settings_map;
 
     CaptionFormatSettings format_settings;
     ContinuousCaptionStreamSettings stream_settings;
@@ -122,7 +172,7 @@ struct SourceCaptionerSettings {
         return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
                transcript_settings == rhs.transcript_settings &&
-               caption_source_settings_map == rhs.caption_source_settings_map &&
+               scene_collection_settings_map == rhs.scene_collection_settings_map &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
     }
@@ -136,11 +186,12 @@ struct SourceCaptionerSettings {
         printf("%sSourceCaptionerSettings\n", line_prefix);
         printf("%s  streaming_output_enabled: %d\n", line_prefix, streaming_output_enabled);
         printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
-        printf("%s  Scene Collection Settings: %lu\n", line_prefix, caption_source_settings_map.size());
+        printf("%s  Scene Collection Settings: %lu\n", line_prefix, scene_collection_settings_map.size());
 
-        for (auto it = caption_source_settings_map.begin(); it != caption_source_settings_map.end(); ++it) {
-            printf("%s    Collection: %s, source: %s, mute source: %s \n",
-                   line_prefix, it->first.c_str(), it->second.caption_source_name.c_str(), it->second.mute_source_name.c_str());
+        for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
+            printf("%s   Collection: %s, \n", line_prefix, it->first.c_str());
+            it->second.caption_source_settings.print((string(line_prefix) + "    ").c_str());
+            it->second.text_output_settings.print((string(line_prefix) + "    ").c_str());
         }
 
         stream_settings.print((string(line_prefix) + "  ").c_str());
@@ -148,16 +199,16 @@ struct SourceCaptionerSettings {
         transcript_settings.print((string(line_prefix) + "  ").c_str());
     }
 
-    const CaptionSourceSettings *get_caption_source_settings_ptr(const string scene_collection_name) const {
-        auto it = caption_source_settings_map.find(scene_collection_name);
-        if (it != caption_source_settings_map.end())
+    const SceneCollectionSettings *get_caption_source_settings_ptr(const string scene_collection_name) const {
+        auto it = scene_collection_settings_map.find(scene_collection_name);
+        if (it != scene_collection_settings_map.end())
             return &(it->second);
 
         return nullptr;
     }
 
-    void update_setting(const string scene_collection_name, const CaptionSourceSettings &new_settings) {
-        caption_source_settings_map[scene_collection_name] = new_settings;
+    void update_setting(const string scene_collection_name, const SceneCollectionSettings &new_settings) {
+        scene_collection_settings_map[scene_collection_name] = new_settings;
     }
 };
 
@@ -277,11 +328,13 @@ Q_OBJECT
     OutputWriter<TranscriptOutputSettings> transcript_streaming_output;
     OutputWriter<TranscriptOutputSettings> transcript_recording_output;
 
+    std::tuple<string, string> last_text_source_set;
+
     int audio_capture_id = 0;
 
     void caption_was_output();
 
-    void output_caption_text(
+    void output_caption_writers(
             const CaptionOutput &output,
             bool to_stream,
             bool to_recoding,
@@ -305,6 +358,8 @@ Q_OBJECT
     void process_caption_result(const CaptionResult, bool interrupted);
 
     void process_audio_capture_status_change(const int id, const int new_status);
+
+    void set_text_source_text(const string &text_source_name, const string &caption_text);
 
 private slots:
 

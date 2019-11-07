@@ -171,9 +171,9 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
         return;
 
     string source_name;
-    const CaptionSourceSettings *cap_source_settings = status->settings.get_caption_source_settings_ptr(status->scene_collection_name);
-    if (cap_source_settings)
-        source_name = cap_source_settings->caption_source_name;
+    const SceneCollectionSettings *scene_col_settings = status->settings.get_caption_source_settings_ptr(status->scene_collection_name);
+    if (scene_col_settings)
+        source_name = scene_col_settings->caption_source_settings.caption_source_name;
 
     string status_text;
     captioning_status_string(

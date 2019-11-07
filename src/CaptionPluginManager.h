@@ -19,6 +19,7 @@ struct CaptioningState {
     bool is_captioning_streaming = false;
     bool is_captioning_recording = false;
     bool is_captioning_preview = false;
+    bool is_captioning_text_output = false;
     string captioning_scene_collection_name = "";
 };
 
