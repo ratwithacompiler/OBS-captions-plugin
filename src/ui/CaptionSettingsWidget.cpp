@@ -113,8 +113,8 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
-    setup_combobox_output_target(*outputTargetComboBox);
-    setup_combobox_output_target(*transcriptSaveForComboBox);
+    setup_combobox_output_target(*outputTargetComboBox, true);
+    setup_combobox_output_target(*transcriptSaveForComboBox, false);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -300,7 +300,9 @@ void CaptionSettingsWidget::updateUi() {
 
     enabledCheckBox->setChecked(current_settings.enabled);
     update_combobox_output_target(*outputTargetComboBox,
-                                  source_settings.streaming_output_enabled, source_settings.recording_output_enabled);
+                                  source_settings.streaming_output_enabled,
+                                  source_settings.recording_output_enabled,
+                                  0, true);
 
     this->captionTimeoutEnabledCheckBox->setChecked(source_settings.format_settings.caption_timeout_enabled);
     this->captionTimeoutDoubleSpinBox->setValue(source_settings.format_settings.caption_timeout_seconds);
@@ -312,7 +314,8 @@ void CaptionSettingsWidget::updateUi() {
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
     update_combobox_output_target(*transcriptSaveForComboBox,
                                   source_settings.transcript_settings.streaming_transcripts_enabled,
-                                  source_settings.transcript_settings.recording_transcripts_enabled);
+                                  source_settings.transcript_settings.recording_transcripts_enabled,
+                                  0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
 
     set_show_key(true);

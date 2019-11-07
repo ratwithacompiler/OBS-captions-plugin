@@ -346,13 +346,17 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
     comboBox.addItem("On (Unreliable!)", 1);
 }
 
-static void setup_combobox_output_target(QComboBox &comboBox) {
+static void setup_combobox_output_target(QComboBox &comboBox, bool add_off_option) {
     while (comboBox.count())
         comboBox.removeItem(0);
 
     comboBox.addItem("Streams Only", 0);
     comboBox.addItem("Local Recordings Only", 1);
     comboBox.addItem("Streams & Local Recordings", 2);
+
+    if (add_off_option)
+        comboBox.addItem("Disable Native Output", 3);
+
 }
 
 
@@ -375,17 +379,33 @@ static bool set_streaming_recording_enabled(const int combo_box_data, bool &stre
         return true;
     }
 
+    if (combo_box_data == 3) {
+        streaming_enabled = false;
+        recording_enabled = false;
+        return true;
+    }
+
     return false;
 }
 
-static void update_combobox_output_target(QComboBox &comboBox, bool streaming_enabled, bool recording_enabled) {
-    int index = 0;
+static void update_combobox_output_target(
+        QComboBox &comboBox,
+        bool streaming_enabled,
+        bool recording_enabled,
+        int default_index,
+        bool off_enabled
+) {
+    int index = default_index;
     if (streaming_enabled && !recording_enabled)
         index = 0;
     else if (!streaming_enabled && recording_enabled)
         index = 1;
     else if (streaming_enabled && recording_enabled)
         index = 2;
+    else if (!streaming_enabled && !recording_enabled) {
+        if (off_enabled)
+            index = 3;
+    }
 
     comboBox.setCurrentIndex(index);
 }
