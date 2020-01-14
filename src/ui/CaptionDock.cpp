@@ -40,10 +40,7 @@ void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptioner
         return;
 
 //    debug_log("CaptionDock::handle_source_capture_status_change %d", status->audio_capture_status);
-    string source_name;
-    const SceneCollectionSettings *scene_col_settings = status->settings.get_caption_source_settings_ptr(status->scene_collection_name);
-    if (scene_col_settings)
-        source_name = scene_col_settings->caption_source_settings.caption_source_name;
+    const SceneCollectionSettings &scene_col_settings = status->settings.get_scene_collection_settings(status->scene_collection_name);
 
     string status_text;
     captioning_status_string(
@@ -52,7 +49,7 @@ void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptioner
             status->settings.recording_output_enabled,
             plugin_manager.captioning_state(),
             *status,
-            source_name,
+            scene_col_settings.caption_source_settings.caption_source_name,
             status_text);
 
     this->statusTextLabel->setText(QString::fromStdString(status_text));

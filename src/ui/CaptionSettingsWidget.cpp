@@ -183,12 +183,8 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
 
     SceneCollectionSettings use_settings = default_SceneCollectionSettings();
     {
-        const SceneCollectionSettings *specific_settings = source_settings.get_caption_source_settings_ptr(use_scene_collection_name);
-        if (specific_settings) {
-            use_settings = *specific_settings;
-            debug_log("update_scene_collection_ui using specific settings, '%s'", use_scene_collection_name.c_str());
-        } else
-            debug_log("update_scene_collection_ui using default settings, '%s' not found", use_scene_collection_name.c_str());
+        use_settings = source_settings.get_scene_collection_settings(use_scene_collection_name);
+        debug_log("update_scene_collection_ui using specific settings, '%s'", use_scene_collection_name.c_str());
     }
 
     // audio input sources

@@ -57,11 +57,8 @@ SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, const 
 
     timer.start(1000);
 
-    const SceneCollectionSettings *scene_col_settings = this->settings.get_caption_source_settings_ptr(scene_collection_name);
-    if (scene_col_settings)
-        debug_log("SourceCaptioner, source '%s'", scene_col_settings->caption_source_settings.caption_source_name.c_str());
-    else
-        debug_log("SourceCaptioner, no selected caption source settings found");
+    const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(scene_collection_name);
+    debug_log("SourceCaptioner, source '%s'", scene_col_settings.caption_source_settings.caption_source_name.c_str());
 
     if (start)
         start_caption_stream(settings, scene_collection_name);
@@ -133,6 +130,7 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings, 
 }
 
 bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_settings, const string &scene_collection_name) {
+//    debug_log("start_caption_stream %d", (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
     bool started_ok;
     bool settings_equal;
     bool stream_settings_equal;
@@ -192,39 +190,32 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
 
     bool caption_settings_equal;
     {
-        const SceneCollectionSettings *scene_col_settings = this->settings.get_caption_source_settings_ptr(selected_scene_collection_name);
-        const CaptionSourceSettings *selected_caption_source_settings = nullptr;
-        if (scene_col_settings)
-            selected_caption_source_settings = &scene_col_settings->caption_source_settings;
+        const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
+        const CaptionSourceSettings &selected_caption_source_settings = scene_col_settings.caption_source_settings;
 
-        if (selected_caption_source_settings)
-            debug_log("SourceCaptioner start_caption_stream, source '%s'", selected_caption_source_settings->caption_source_name.c_str());
-        else {
-            warn_log("SourceCaptioner start_caption_stream, no selected caption source settings found");
-            return false;
-        }
+        debug_log("SourceCaptioner start_caption_stream, source '%s'", selected_caption_source_settings.caption_source_name.c_str());
 
-        if (selected_caption_source_settings->caption_source_name.empty()) {
+        if (selected_caption_source_settings.caption_source_name.empty()) {
             warn_log("SourceCaptioner start_caption_stream, empty source given.");
             return false;
         }
 
-        OBSSource caption_source = obs_get_source_by_name(selected_caption_source_settings->caption_source_name.c_str());
+        OBSSource caption_source = obs_get_source_by_name(selected_caption_source_settings.caption_source_name.c_str());
         obs_source_release(caption_source);
         if (!caption_source) {
             warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
-                     selected_caption_source_settings->caption_source_name.c_str());
+                     selected_caption_source_settings.caption_source_name.c_str());
             return false;
         }
 
         OBSSource mute_source;
-        if (selected_caption_source_settings->mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
-            mute_source = obs_get_source_by_name(selected_caption_source_settings->mute_source_name.c_str());
+        if (selected_caption_source_settings.mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
+            mute_source = obs_get_source_by_name(selected_caption_source_settings.mute_source_name.c_str());
             obs_source_release(mute_source);
 
             if (!mute_source) {
                 warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
-                         selected_caption_source_settings->mute_source_name.c_str());
+                         selected_caption_source_settings.mute_source_name.c_str());
                 return false;
             }
         }
@@ -279,19 +270,19 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         }
 
     }
-//    debug_log("started captioning source '%s'", selected_caption_source_settings->caption_source_name.c_str());
+//    debug_log("started captioning source '%s'", selected_caption_source_settings.caption_source_name.c_str());
 //    debug_log("started captioning source tid '%d'", std::hash<std::thread::id>{}(std::this_thread::get_id()));
     return true;
 }
 
 void SourceCaptioner::on_audio_capture_status_change_callback(const int id, const audio_source_capture_status status) {
-    debug_log("capture status change %d %d", status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
+//    debug_log("capture status change %d %d", status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
     emit audio_capture_status_changed(id, status);
 }
 
 
 void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_capture_id, const int new_status) {
-    debug_log("process_audio_capture_status_change %d %d", new_status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
+//    debug_log("process_audio_capture_status_change %d %d", new_status, (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
 
     settings_change_mutex.lock();
 
@@ -356,11 +347,10 @@ void SourceCaptioner::clear_output_timer_cb() {
         to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
         to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
 
-        const SceneCollectionSettings *scene_col_settings = this->settings.get_caption_source_settings_ptr(selected_scene_collection_name);
-        if (scene_col_settings
-            && scene_col_settings->text_output_settings.enabled
-            && !scene_col_settings->text_output_settings.text_source_name.empty()) {
-            text_source_target_name = scene_col_settings->text_output_settings.text_source_name;
+        const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
+        if (scene_col_settings.text_output_settings.enabled
+            && !scene_col_settings.text_output_settings.text_source_name.empty()) {
+            text_source_target_name = scene_col_settings.text_output_settings.text_source_name;
         }
 
     }
@@ -466,17 +456,16 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         if (!native_output_result)
             return;
 
-        const SceneCollectionSettings *scene_col_settings = this->settings.get_caption_source_settings_ptr(selected_scene_collection_name);
-        if (scene_col_settings
-            && scene_col_settings->text_output_settings.enabled
-            && !scene_col_settings->text_output_settings.text_source_name.empty()) {
+        const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
+        if (scene_col_settings.text_output_settings.enabled
+            && !scene_col_settings.text_output_settings.text_source_name.empty()) {
 
-            text_source_target_name = scene_col_settings->text_output_settings.text_source_name;
+            text_source_target_name = scene_col_settings.text_output_settings.text_source_name;
             text_output_result = caption_result_handler->prepare_caption_output(caption_result,
                                                                                 true,
                                                                                 true,
-                                                                                scene_col_settings->text_output_settings.line_length,
-                                                                                scene_col_settings->text_output_settings.line_count,
+                                                                                scene_col_settings.text_output_settings.line_length,
+                                                                                scene_col_settings.text_output_settings.line_count,
                                                                                 results_history);
         }
 
@@ -595,7 +584,7 @@ void SourceCaptioner::recording_stopped_event() {
 }
 
 void SourceCaptioner::set_text_source_text(const string &text_source_name, const string &caption_text) {
-    if (std::get<0>(last_text_source_set) == caption_text && std::get<1>(last_text_source_set) == text_source_name){
+    if (std::get<0>(last_text_source_set) == caption_text && std::get<1>(last_text_source_set) == text_source_name) {
 //        debug_log("ignore duplicate set_text_source_text");
         return;
     }

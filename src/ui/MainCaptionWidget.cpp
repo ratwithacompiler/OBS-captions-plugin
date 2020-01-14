@@ -137,12 +137,15 @@ void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_setting
     new_settings.print();
     caption_settings_widget.hide();
     plugin_manager.update_settings(new_settings);
-
-    //TODO: save here too?
 }
 
 void MainCaptionWidget::external_state_changed() {
-    plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live(), current_scene_collection_name());
+    plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live(), "");
+}
+
+void MainCaptionWidget::scene_collection_changed() {
+//    external_state_changed();
+    caption_settings_widget.hide();
 }
 
 void MainCaptionWidget::stream_started_event() {
@@ -171,9 +174,7 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
         return;
 
     string source_name;
-    const SceneCollectionSettings *scene_col_settings = status->settings.get_caption_source_settings_ptr(status->scene_collection_name);
-    if (scene_col_settings)
-        source_name = scene_col_settings->caption_source_settings.caption_source_name;
+    const SceneCollectionSettings &scene_col_settings = status->settings.get_scene_collection_settings(status->scene_collection_name);
 
     string status_text;
     captioning_status_string(
@@ -182,7 +183,7 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
             status->settings.recording_output_enabled,
             plugin_manager.captioning_state(),
             *status,
-            source_name,
+            scene_col_settings.caption_source_settings.caption_source_name,
             status_text);
 
     this->statusTextLabel->setText(status_text.c_str());

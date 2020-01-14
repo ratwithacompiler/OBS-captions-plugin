@@ -147,7 +147,8 @@ struct SourceCaptionerSettings {
 
     TranscriptOutputSettings transcript_settings;
 
-    std::map<string, SceneCollectionSettings> scene_collection_settings_map;
+//    std::map<string, SceneCollectionSettings> scene_collection_settings_map;
+    SceneCollectionSettings scene_collection_settings;
 
     CaptionFormatSettings format_settings;
     ContinuousCaptionStreamSettings stream_settings;
@@ -172,7 +173,8 @@ struct SourceCaptionerSettings {
         return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
                transcript_settings == rhs.transcript_settings &&
-               scene_collection_settings_map == rhs.scene_collection_settings_map &&
+               // scene_collection_settings_map == rhs.scene_collection_settings_map &&
+               scene_collection_settings == rhs.scene_collection_settings &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
     }
@@ -186,30 +188,42 @@ struct SourceCaptionerSettings {
         printf("%sSourceCaptionerSettings\n", line_prefix);
         printf("%s  streaming_output_enabled: %d\n", line_prefix, streaming_output_enabled);
         printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
-        printf("%s  Scene Collection Settings: %lu\n", line_prefix, scene_collection_settings_map.size());
+        printf("%s  Scene Collection Settings:\n", line_prefix);
+        scene_collection_settings.caption_source_settings.print((string(line_prefix) + "    ").c_str());
+        scene_collection_settings.text_output_settings.print((string(line_prefix) + "    ").c_str());
 
-        for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
-            printf("%s   Collection: %s, \n", line_prefix, it->first.c_str());
-            it->second.caption_source_settings.print((string(line_prefix) + "    ").c_str());
-            it->second.text_output_settings.print((string(line_prefix) + "    ").c_str());
-        }
+//        printf("%s  Scene Collection Settings: %lu\n", line_prefix, scene_collection_settings_map.size());
+//        for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
+//            printf("%s   Collection: %s, \n", line_prefix, it->first.c_str());
+//            it->second.caption_source_settings.print((string(line_prefix) + "    ").c_str());
+//            it->second.text_output_settings.print((string(line_prefix) + "    ").c_str());
+//        }
 
         stream_settings.print((string(line_prefix) + "  ").c_str());
         format_settings.print((string(line_prefix) + "  ").c_str());
         transcript_settings.print((string(line_prefix) + "  ").c_str());
     }
 
-    const SceneCollectionSettings *get_caption_source_settings_ptr(const string scene_collection_name) const {
-        auto it = scene_collection_settings_map.find(scene_collection_name);
-        if (it != scene_collection_settings_map.end())
-            return &(it->second);
-
-        return nullptr;
+    const SceneCollectionSettings &get_scene_collection_settings(const string &scene_collection_name) const {
+        return scene_collection_settings;
     }
 
-    void update_setting(const string scene_collection_name, const SceneCollectionSettings &new_settings) {
-        scene_collection_settings_map[scene_collection_name] = new_settings;
+    void update_setting(const string &scene_collection_name, const SceneCollectionSettings &new_settings) {
+        scene_collection_settings = new_settings;
     }
+
+//    const SceneCollectionSettings *get_scene_collection_settings(const string &scene_collection_name) const {
+//       //TO[do]: insert default if it doesn't exist
+//        auto it = scene_collection_settings_map.find(scene_collection_name);
+//        if (it != scene_collection_settings_map.end())
+//            return &(it->second);
+//
+//        return nullptr;
+//    }
+//
+//    void update_setting(const string &scene_collection_name, const SceneCollectionSettings &new_settings) {
+//        scene_collection_settings_map[scene_collection_name] = new_settings;
+//    }
 };
 
 struct CaptionOutput {

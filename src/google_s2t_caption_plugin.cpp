@@ -71,6 +71,7 @@ void obs_frontent_exiting();
 void obs_frontent_scene_collection_changed();
 
 static void obs_event(enum obs_frontend_event event, void *) {
+//    debug_log("obs_event %d", (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
 //    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
 //    info_log("obs event %d", tid);
     if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
@@ -171,7 +172,7 @@ void obs_frontent_scene_collection_changed() {
     info_log("obs_frontent_scene_collection_changed");
 
     if (main_caption_widget) {
-        main_caption_widget->external_state_changed();
+        main_caption_widget->scene_collection_changed();
     }
 
 }
@@ -194,7 +195,7 @@ void obs_frontent_exiting() {
     info_log("obs_frontent_exiting done");
 }
 
-static void save_or_load_event_callback(obs_data_t *_, bool saving, void *) {
+static void save_or_load_event_callback_config(obs_data_t *_, bool saving, void *) {
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
     info_log("google_s2t_caption_plugin save_or_load_event_callback %d, %d", saving, tid);
 
@@ -216,8 +217,34 @@ static void save_or_load_event_callback(obs_data_t *_, bool saving, void *) {
 }
 
 
+static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void *) {
+    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
+    info_log("save_or_load_event_callback %d, %d", saving, tid);
+
+    if (saving && plugin_manager) {
+        save_CaptionPluginSettings(save_data, plugin_manager->plugin_settings);
+    }
+
+    if (!saving) {
+        auto loaded_settings = load_CaptionPluginSettings(save_data);
+        if (plugin_manager && main_caption_widget) {
+            plugin_manager->update_settings(loaded_settings);
+        } else if (plugin_manager || main_caption_widget) {
+            error_log("only one of plugin_manager and main_caption_widget, wtf, %d %d",
+                      plugin_manager != nullptr, main_caption_widget != nullptr);
+        } else {
+            plugin_manager = new CaptionPluginManager(loaded_settings);
+            main_caption_widget = new MainCaptionWidget(*plugin_manager);
+            setup_UI();
+        }
+    }
+
+}
+
+
 bool obs_module_load(void) {
-    info_log("google_s2t_caption_plugin %s obs_module_load", VERSION_STRING);
+    info_log("google_s2t_caption_plugin %s obs_module_load %d", VERSION_STRING,
+             (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
     qRegisterMetaType<std::string>();
     qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
     qRegisterMetaType<CaptionResult>();

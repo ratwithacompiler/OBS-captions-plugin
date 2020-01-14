@@ -83,6 +83,8 @@ public:
 
     void external_state_changed();
 
+    void scene_collection_changed();
+
     void stream_started_event();
 
     void stream_stopped_event();
