@@ -42,11 +42,11 @@ otool -L libobs_google_caption_plugin_obs24.so | grep -q '@executable_path/../Fr
 
 
 mkdir release
-mkdir release/for_OBS_23
-mkdir release/for_OBS_24_and_above
+#mkdir release/for_Mac_OBS_23
+mkdir release/for_Mac_OBS_24_and_above
 
-cp -vn libobs_google_caption_plugin_obs23.so release/for_OBS_23/libobs_google_caption_plugin.so
-cp -vn libobs_google_caption_plugin_obs24.so release/for_OBS_24_and_above/libobs_google_caption_plugin.so
+#cp -vn libobs_google_caption_plugin_obs23.so release/for_Mac_OBS_23/libobs_google_caption_plugin.so
+cp -vn libobs_google_caption_plugin_obs24.so release/for_Mac_OBS_24_and_above/libobs_google_caption_plugin.so
 
 cd ..
 #------------------
