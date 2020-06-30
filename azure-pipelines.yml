@@ -4,7 +4,7 @@
 jobs:
   - job: 'Build_MacOS_HTTP'
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: 'macOS-10.14'
 
     steps:
       - script: git submodule update --init --recursive
@@ -92,7 +92,7 @@ jobs:
 
   - job: 'Build_Linux_HTTP'
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-18.04'
 
     steps:
       - script: git submodule update --init --recursive
