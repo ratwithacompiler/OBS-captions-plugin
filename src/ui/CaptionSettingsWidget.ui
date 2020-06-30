@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>444</width>
-    <height>956</height>
+    <width>435</width>
+    <height>963</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -351,13 +351,6 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
-           <widget class="QCheckBox" name="insertLinebreaksCheckBox">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
           <item row="9" column="0">
            <widget class="QCheckBox" name="captionTimeoutEnabledCheckBox">
             <property name="text">
@@ -414,6 +407,41 @@ p, li { white-space: pre-wrap; }
               <widget class="QPushButton" name="apiKeyShowPushButton">
                <property name="text">
                 <string>Show</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QWidget" name="widget_7" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="spacing">
+              <number>14</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QCheckBox" name="insertLinebreaksCheckBox">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>(Not Recommended For Twitch)</string>
                </property>
               </widget>
              </item>
