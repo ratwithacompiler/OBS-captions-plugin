@@ -12,7 +12,7 @@ static bool captioning_status_string(
         bool streaming_output_enabled,
         bool recording_output_enabled,
 
-        CaptioningState captioning_state,
+        const CaptioningState &captioning_state,
 
         const SourceCaptionerStatus &status,
         const string &source_name,
