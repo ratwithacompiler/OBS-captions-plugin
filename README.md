@@ -43,16 +43,16 @@ Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other h
 This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
 Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.  
 
-### Installation:
+### Installation (Windows):
 #### Requires OBS 23.2.1 (released June 15th 2019) or newer!
 
 * Close OBS if running
-* Download latest Closed_Captions_Plugin.zip version [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
+* Download latest Closed_Captions_Plugin.zip version for Windows [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
 * Extract the zip
   * it contains a folder named `obs-plugins`
 * Go to your OBS installation folder
   * The default OBS install path is usually `C:\Program Files\obs-studio\` or `C:\Program Files (x86)\obs-studio\`
-* Copy-paste the `obs-plugins` file into the main OBS folder
+* Copy-Paste the `obs-plugins` folder into the main OBS folder
   * The main OBS folder should already contain `obs-plugins` `bin` and `data` folders
 * Windows will ask to confirm the copy and replace, click yes a few times
   * This will just add the plugin files to the existing `obs-plugins` folder
@@ -63,17 +63,40 @@ Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/w
   * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
 * Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
 
-![Installation](https://i.imgur.com/8EknThL.png)
+![Installation Windows](https://i.imgur.com/8EknThL.png)
 
-##### Plugin:
-![Example Image](https://i.imgur.com/ZfKnMoH.png)
+#### Plugin:
+![Example of Plugin in OBS](https://i.imgur.com/ZfKnMoH.png)
+
+### Installation (Mac OS):
+#### Requires OBS 24 or newer!
+
+* Close OBS if running
+* Download latest Closed_Captions_Plugin.zip version for MacOS [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
+* Extract the zip
+  * it contains a file named `libobs_google_caption_plugin.so`
+* Copy-Paste the `libobs_google_caption_plugin.so` file into your OBS `Plugins` folder
+  * To find the `Plugins` folder go to your `Applications`
+  * Right Click `OBS.app`
+  * Select `Show Package Contents`
+  * The `Plugins` folder is under `Contents` 
+  * You may need to enter your password to copy the file into `Plugins`
+* That's it. Start OBS.
+* There should now be a `Cloud Closed Captions` option on the bottom of `Tools` menu
+* Click on `Settings` in the new `Captions Preview` window and select your audio source for captioning under `Caption Source`
+  * Select the OBS source that is only your microphone for best captioning results
+  * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
+* Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
+
+![Installation Mac](https://i.imgur.com/DVZISQI.png)
+
 
 
 #### Settings for more unusual audio setups that don't use a mic only source in OBS (like 2 PC + audio mixer setups):
 
-If your OBS setup does not use a audio source that contains only the microphone but gets a already mixed audio source instead (that has the microphone mixed with other sounds/game/voices already) you can still make it work as long as your streaming PC has access to the microphone by itself as well. Steps:
+If your OBS setup does not use a audio source that's only the microphone but instead gets a already mixed audio source (that has the microphone mixed with other sounds/game/voices already like from a mixer or GoXLR) you can still make it work as long as your streaming PC has access to only the microphone by itself as well. Steps:
 
-* If you don't already have a OBS source that's only your mic:
+* If you don't already have a OBS source that's only your mic then create one:
 	* Create a new Audio Input Capture source in OBS somewhere using the device that's only the microphone, calling it `Microphone only` for example, and mute it (so stream doesn't hear the mic twice)
 * In caption settings set `Caption Source` to the mic only OBS source that's muted
 * Set `Caption When` to `When Other Source is Streamed`
@@ -81,5 +104,4 @@ If your OBS setup does not use a audio source that contains only the microphone 
 
 ![Mixed Source Setup Instructions](https://i.imgur.com/CeWn5xw.png)
 
-This way it will use the `Microphone only` source to get clean mic audio for captioning but it will still only caption it when the other selected source is unmuted and active so it's still safe for the streamer, when the mixed source for stream is muted in OBS the captions also get muted.
-
+This way it will use the `Microphone only` source to get clean mic audio for captioning but it will still only caption it when the other selected source is unmuted and active so it's still safe. When the mixed source for stream is muted in OBS the captions also get muted.
