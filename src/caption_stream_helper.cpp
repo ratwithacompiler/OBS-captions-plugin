@@ -185,7 +185,8 @@ static vector<string> get_text_sources() {
 
     for (auto &a_source : sources) {
         string &source_type = std::get<1>(a_source);
-        if (source_type == "text_gdiplus" || source_type == "text_gdiplus_v2" || source_type == "text_ft2_source") {
+        if (source_type == "text_gdiplus" || source_type == "text_gdiplus_v2"
+            || source_type == "text_ft2_source" || source_type == "text_ft2_source_v2") {
             text_sources.push_back(std::get<0>(a_source));
         }
     }
