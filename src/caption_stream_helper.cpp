@@ -626,44 +626,44 @@ static void setup_combobox_languages(QComboBox &comboBox) {
 //    comboBox.addItem("Chinese, Mandarin (Simplified, China)", "zh");
 }
 
-static bool get_SceneCollectionSettings_map(obs_data_t *load_data,
-                                            std::map<string, SceneCollectionSettings> &scene_collection_settings_map) {
-    obs_data_array_t *scene_collection_sources_array = obs_data_get_array(load_data, "scene_collection_sources");
-
-    for (size_t index = 0; index < obs_data_array_count(scene_collection_sources_array); index++) {
-        obs_data_t *a_scene_source_obj = obs_data_array_item(scene_collection_sources_array, index);
-
-        string scene_collection_name = obs_data_get_string(a_scene_source_obj, "scene_collection_name");
-        if (!scene_collection_name.empty()) {
-            scene_collection_settings_map[scene_collection_name] = get_SceneCollectionSettings_from_data(a_scene_source_obj);
-        }
-        obs_data_release(a_scene_source_obj);
-    }
-    obs_data_array_release(scene_collection_sources_array);
-
-    return true;
-}
-
-static bool set_SceneCollectionSettings_map(obs_data_t *save_data,
-                                            std::map<string, SceneCollectionSettings> &scene_collection_settings_map) {
-    obs_data_array_t *scene_collection_sources_array = obs_data_array_create();
-    // TODO: not sure how to enumerate obj keys, so using array for now ...
-
-    for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
-        obs_data_t *a_scene_source_obj = obs_data_create();
-
-        string scene_collection_name = it->first;
-        SceneCollectionSettings scene_collection_settings = it->second;
-
-        obs_data_set_string(save_data, "scene_collection_name", scene_collection_name.c_str());
-        set_SceneCollectionSettings_on_data(a_scene_source_obj, scene_collection_settings);
-
-        obs_data_array_push_back(scene_collection_sources_array, a_scene_source_obj);
-        obs_data_release(a_scene_source_obj);
-    }
-
-    obs_data_set_array(save_data, "scene_collection_sources", scene_collection_sources_array);
-    obs_data_array_release(scene_collection_sources_array);
-
-    return true;
-}
+//static bool get_SceneCollectionSettings_map(obs_data_t *load_data,
+//                                            std::map<string, SceneCollectionSettings> &scene_collection_settings_map) {
+//    obs_data_array_t *scene_collection_sources_array = obs_data_get_array(load_data, "scene_collection_sources");
+//
+//    for (size_t index = 0; index < obs_data_array_count(scene_collection_sources_array); index++) {
+//        obs_data_t *a_scene_source_obj = obs_data_array_item(scene_collection_sources_array, index);
+//
+//        string scene_collection_name = obs_data_get_string(a_scene_source_obj, "scene_collection_name");
+//        if (!scene_collection_name.empty()) {
+//            scene_collection_settings_map[scene_collection_name] = get_SceneCollectionSettings_from_data(a_scene_source_obj);
+//        }
+//        obs_data_release(a_scene_source_obj);
+//    }
+//    obs_data_array_release(scene_collection_sources_array);
+//
+//    return true;
+//}
+//
+//static bool set_SceneCollectionSettings_map(obs_data_t *save_data,
+//                                            std::map<string, SceneCollectionSettings> &scene_collection_settings_map) {
+//    obs_data_array_t *scene_collection_sources_array = obs_data_array_create();
+//    // TODO: not sure how to enumerate obj keys, so using array for now ...
+//
+//    for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
+//        obs_data_t *a_scene_source_obj = obs_data_create();
+//
+//        string scene_collection_name = it->first;
+//        SceneCollectionSettings scene_collection_settings = it->second;
+//
+//        obs_data_set_string(save_data, "scene_collection_name", scene_collection_name.c_str());
+//        set_SceneCollectionSettings_on_data(a_scene_source_obj, scene_collection_settings);
+//
+//        obs_data_array_push_back(scene_collection_sources_array, a_scene_source_obj);
+//        obs_data_release(a_scene_source_obj);
+//    }
+//
+//    obs_data_set_array(save_data, "scene_collection_sources", scene_collection_sources_array);
+//    obs_data_array_release(scene_collection_sources_array);
+//
+//    return true;
+//}

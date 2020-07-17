@@ -187,7 +187,7 @@ void obs_frontent_exiting() {
     }
 
     if (plugin_manager) {
-        save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
+//        save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
 
         delete plugin_manager;
         plugin_manager = nullptr;
@@ -195,26 +195,26 @@ void obs_frontent_exiting() {
     info_log("obs_frontent_exiting done");
 }
 
-static void save_or_load_event_callback_config(obs_data_t *_, bool saving, void *) {
-    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    info_log("google_s2t_caption_plugin save_or_load_event_callback %d, %d", saving, tid);
-
-    if (saving) {
-        // always save too when main OBS saves
-        if (plugin_manager) {
-            save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
-        }
-    } else {
-        if (!plugin_manager && !main_caption_widget) {
-            info_log("google_s2t_caption_plugin initial load");
-            CaptionPluginSettings settings = load_CaptionPluginSettings_from_config();
-
-            plugin_manager = new CaptionPluginManager(settings);
-            main_caption_widget = new MainCaptionWidget(*plugin_manager);
-            setup_UI();
-        }
-    }
-}
+//static void save_or_load_event_callback_config(obs_data_t *_, bool saving, void *) {
+//    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
+//    info_log("google_s2t_caption_plugin save_or_load_event_callback %d, %d", saving, tid);
+//
+//    if (saving) {
+//        // always save too when main OBS saves
+//        if (plugin_manager) {
+//            save_CaptionPluginSettings_to_config(plugin_manager->plugin_settings);
+//        }
+//    } else {
+//        if (!plugin_manager && !main_caption_widget) {
+//            info_log("google_s2t_caption_plugin initial load");
+//            CaptionPluginSettings settings = load_CaptionPluginSettings_from_config();
+//
+//            plugin_manager = new CaptionPluginManager(settings);
+//            main_caption_widget = new MainCaptionWidget(*plugin_manager);
+//            setup_UI();
+//        }
+//    }
+//}
 
 
 static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void *) {
