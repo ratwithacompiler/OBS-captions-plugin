@@ -452,6 +452,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                                                               settings.format_settings.caption_insert_newlines,
                                                                               settings.format_settings.caption_line_length,
                                                                               settings.format_settings.caption_line_count,
+                                                                              settings.format_settings.capitalization,
                                                                               results_history);
         if (!native_output_result)
             return;
@@ -466,6 +467,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                                                                 true,
                                                                                 scene_col_settings.text_output_settings.line_length,
                                                                                 scene_col_settings.text_output_settings.line_count,
+                                                                                scene_col_settings.text_output_settings.capitalization,
                                                                                 results_history);
         }
 

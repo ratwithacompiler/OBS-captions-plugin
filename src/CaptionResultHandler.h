@@ -24,9 +24,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <CaptionStream.h>
 
+enum CapitalizationType {
+    CAPITALIZATION_NORMAL = 0,
+    CAPITALIZATION_ALL_CAPS = 1,
+    CAPITALIZATION_ALL_LOWERCASE = 2,
+};
+
+
 struct CaptionFormatSettings {
     uint caption_line_length;
     uint caption_line_count;
+    CapitalizationType capitalization;
     bool caption_insert_newlines;
     std::vector<string> default_banned_words;
     std::vector<string> manual_banned_words;
@@ -37,6 +45,7 @@ struct CaptionFormatSettings {
     CaptionFormatSettings(
             uint caption_line_length,
             uint caption_line_count,
+            CapitalizationType capitalization,
             bool caption_insert_newlines,
             std::vector<string> default_banned_words,
             bool caption_timeout_enabled,
@@ -44,6 +53,7 @@ struct CaptionFormatSettings {
     ) :
             caption_line_length(caption_line_length),
             caption_line_count(caption_line_count),
+            capitalization(capitalization),
             caption_insert_newlines(caption_insert_newlines),
             default_banned_words(default_banned_words),
             caption_timeout_enabled(caption_timeout_enabled),
@@ -54,6 +64,7 @@ struct CaptionFormatSettings {
         printf("%sCaptionFormatSettings\n", line_prefix);
         printf("%s  caption_line_length: %d\n", line_prefix, caption_line_length);
         printf("%s  caption_line_count: %d\n", line_prefix, caption_line_count);
+        printf("%s  capitalization: %d\n", line_prefix, capitalization);
         printf("%s  caption_insert_newlines: %d\n", line_prefix, caption_insert_newlines);
         printf("%s  manual_banned_words: %lu\n", line_prefix, manual_banned_words.size());
         for (auto &word : manual_banned_words)
@@ -65,6 +76,7 @@ struct CaptionFormatSettings {
     bool operator==(const CaptionFormatSettings &rhs) const {
         return caption_line_length == rhs.caption_line_length &&
                caption_line_count == rhs.caption_line_count &&
+               capitalization == rhs.capitalization &&
                caption_insert_newlines == rhs.caption_insert_newlines &&
                default_banned_words == rhs.default_banned_words &&
                manual_banned_words == rhs.manual_banned_words &&
@@ -110,6 +122,7 @@ public:
             const bool insert_newlines,
             const uint line_length,
             const uint targeted_line_count,
+            const CapitalizationType capitalization,
             const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history);
 
 };

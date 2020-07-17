@@ -56,6 +56,7 @@ static CaptionFormatSettings default_CaptionFormatSettings() {
     return {
             32,
             3,
+            CAPITALIZATION_NORMAL,
             false,
             {"niger", "nigger", "nigga", "niggas", "fag", "faggot", "chink"}, // default banned words
             true,
@@ -77,7 +78,8 @@ static TextOutputSettings default_TextOutputSettings() {
             false,
             "",
             60,
-            4
+            4,
+            CAPITALIZATION_NORMAL
 //            true
     };
 }
@@ -117,15 +119,23 @@ static CaptionPluginSettings default_CaptionPluginSettings() {
 }
 
 
-static void enforce_sensible_values(CaptionPluginSettings &settings) {
+static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings) {
     SourceCaptionerSettings &source_settings = settings.source_cap_settings;
     if (source_settings.format_settings.caption_line_count <= 0 || source_settings.format_settings.caption_line_count > 4)
         source_settings.format_settings.caption_line_count = 1;
+
+    if (source_settings.format_settings.capitalization < 0 || source_settings.format_settings.capitalization > 2)
+        source_settings.format_settings.capitalization = (CapitalizationType) 0;
 
     // backwards compatibility with old ettings that had off, mild, strict instead off/on.
     // ensure old strict/2 falls back to on/1 not off/0 default.
     if (source_settings.stream_settings.stream_settings.profanity_filter == 2)
         source_settings.stream_settings.stream_settings.profanity_filter = 1;
+}
+
+static void enforce_SceneCollectionSettings_values(SceneCollectionSettings &settings) {
+    if (settings.text_output_settings.capitalization < 0 || settings.text_output_settings.capitalization > 2)
+        settings.text_output_settings.capitalization = (CapitalizationType) 0;
 }
 
 static string current_scene_collection_name() {
@@ -215,6 +225,7 @@ static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t 
     obs_data_set_default_string(load_data, "text_output_source_name", defaults.text_output_settings.text_source_name.c_str());
     obs_data_set_default_int(load_data, "text_output_line_length", defaults.text_output_settings.line_length);
     obs_data_set_default_int(load_data, "text_output_line_count", defaults.text_output_settings.line_count);
+    obs_data_set_default_int(load_data, "text_output_capitalization", defaults.text_output_settings.capitalization);
 
 //    obs_data_set_default_bool(load_data, "text_output_insert_newlines", defaults.text_output_settings.insert_newlines);
 
@@ -222,6 +233,9 @@ static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t 
     text_output_settings.text_source_name = obs_data_get_string(load_data, "text_output_source_name");
     text_output_settings.line_length = obs_data_get_int(load_data, "text_output_line_length");
     text_output_settings.line_count = obs_data_get_int(load_data, "text_output_line_count");
+    text_output_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "text_output_capitalization");
+
+    enforce_SceneCollectionSettings_values(scene_collection_settings);
 //    text_output_settings.insert_newlines = obs_data_get_bool(a_scene_source_obj, "text_output_insert_newlines");
 
     return scene_collection_settings;
@@ -241,6 +255,7 @@ static void set_SceneCollectionSettings_on_data(obs_data_t *save_data, const Sce
     obs_data_set_string(save_data, "text_output_source_name", text_output_settings.text_source_name.c_str());
     obs_data_set_int(save_data, "text_output_line_length", text_output_settings.line_length);
     obs_data_set_int(save_data, "text_output_line_count", text_output_settings.line_count);
+    obs_data_set_int(save_data, "text_output_capitalization", text_output_settings.capitalization);
 //        obs_data_set_bool(a_scene_source_obj, "text_output_insert_newlines", text_output_settings.insert_newlines);
 }
 
@@ -257,6 +272,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
         obs_data_set_default_bool(load_data, "recording_output_enabled", source_settings.recording_output_enabled);
         obs_data_set_default_bool(load_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
         obs_data_set_default_int(load_data, "caption_line_count", source_settings.format_settings.caption_line_count);
+        obs_data_set_default_int(load_data, "caption_capitalization", source_settings.format_settings.capitalization);
         obs_data_set_default_string(load_data, "manual_banned_words", "");
         obs_data_set_default_string(load_data, "mute_source_name", "");
         obs_data_set_default_string(load_data, "source_caption_when", "");
@@ -281,6 +297,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
         source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(load_data, "caption_insert_newlines");
         source_settings.format_settings.caption_line_count = (int) obs_data_get_int(load_data, "caption_line_count");
+        source_settings.format_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "caption_capitalization");
 
         source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
         source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
@@ -296,7 +313,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
         source_settings.scene_collection_settings = get_SceneCollectionSettings_from_data(load_data);
 
-        enforce_sensible_values(settings);
+        enforce_CaptionPluginSettings_values(settings);
     }
 
     source_settings.transcript_settings.enabled = obs_data_get_bool(load_data, "transcript_enabled");
@@ -318,6 +335,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
     obs_data_set_int(save_data, "caption_line_count", source_settings.format_settings.caption_line_count);
     obs_data_set_bool(save_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+    obs_data_set_int(save_data, "caption_capitalization", source_settings.format_settings.capitalization);
 //    obs_data_set_bool(save_data, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
 
     obs_data_set_string(save_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
@@ -434,6 +452,15 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
 
     comboBox.addItem("Off", 0);
     comboBox.addItem("On (Unreliable!)", 1);
+}
+
+static void setup_combobox_capitalization(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("Normal english like.", 0);
+    comboBox.addItem("ALL. CAPS. ", 1);
+    comboBox.addItem("all. lowercase.", 2);
 }
 
 static void setup_combobox_output_target(QComboBox &comboBox, bool add_off_option) {

@@ -96,6 +96,8 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
+    setup_combobox_capitalization(*capitalizationComboBox);
+    setup_combobox_capitalization(*textSourceCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_output_target(*transcriptSaveForComboBox, false);
 
@@ -167,6 +169,7 @@ void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
     text_output_settings.text_source_name = this->textSourceOutputComboBox->currentText().toStdString();
     text_output_settings.line_count = this->textSourceLineCountSpinBox->value();
     text_output_settings.line_length = this->textSourceLineLengthSpinBox->value();
+    text_output_settings.capitalization = (CapitalizationType) this->textSourceCapitalizationComboBox->currentData().toInt();
 //    text_output_settings.insert_newlines = this->textSourceForceLinebreaksCheckBox->isChecked();
 
     current_settings.source_cap_settings.update_setting(current_scene_collection_name, scene_col_settings);
@@ -220,6 +223,7 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
 
     this->textSourceLineLengthSpinBox->setValue(use_settings.text_output_settings.line_length);
     this->textSourceLineCountSpinBox->setValue(use_settings.text_output_settings.line_count);
+    combobox_set_data_int(*textSourceCapitalizationComboBox, use_settings.text_output_settings.capitalization, 0);
 //    this->textSourceForceLinebreaksCheckBox->setChecked(use_settings.text_output_settings.insert_newlines);
 
     this->textSourceOutputComboBox->setCurrentText(QString::fromStdString(use_settings.text_output_settings.text_source_name));
@@ -246,6 +250,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.stream_settings.stream_settings.api_key = apiKeyLineEdit->text().toStdString();
 
     source_settings.format_settings.caption_line_count = lineCountSpinBox->value();
+    source_settings.format_settings.capitalization = (CapitalizationType) capitalizationComboBox->currentData().toInt();
 
     source_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
     current_settings.enabled = enabledCheckBox->isChecked();
@@ -307,6 +312,7 @@ void CaptionSettingsWidget::updateUi() {
 
     lineCountSpinBox->setValue(source_settings.format_settings.caption_line_count);
     insertLinebreaksCheckBox->setChecked(source_settings.format_settings.caption_insert_newlines);
+    combobox_set_data_int(*capitalizationComboBox, source_settings.format_settings.capitalization, 0);
 
     enabledCheckBox->setChecked(current_settings.enabled);
     update_combobox_output_target(*outputTargetComboBox,

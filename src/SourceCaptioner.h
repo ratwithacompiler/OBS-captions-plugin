@@ -73,6 +73,7 @@ struct TextOutputSettings {
     string text_source_name;
     uint line_length;
     uint line_count;
+    CapitalizationType capitalization;
 //    bool insert_newlines;
 
     void print(const char *line_prefix = "") {
@@ -81,6 +82,7 @@ struct TextOutputSettings {
         printf("%s  text_source_name: %s\n", line_prefix, text_source_name.c_str());
         printf("%s  line_length: %d\n", line_prefix, line_length);
         printf("%s  line_count: %d\n", line_prefix, line_count);
+        printf("%s  capitalization: %d\n", line_prefix, capitalization);
 //        printf("%s  insert_newlines: %d\n", line_prefix, insert_newlines);
     }
 
@@ -88,7 +90,8 @@ struct TextOutputSettings {
         return enabled == rhs.enabled &&
                text_source_name == rhs.text_source_name &&
                line_length == rhs.line_length &&
-               line_count == rhs.line_count;
+               line_count == rhs.line_count &&
+               capitalization == rhs.capitalization;
 //               insert_newlines == rhs.insert_newlines;
     }
 

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CaptionResultHandler.h"
 #include "log.h"
 #include <sstream>
+#include <cctype>
 #include <iostream>
 #include <vector>
 #include <utils.h>
@@ -62,12 +63,21 @@ static void join_strings(const vector<string> &lines, char join_char, string &ou
 }
 
 
+static void string_capitalization(string &line, const CapitalizationType capitalization) {
+    if (capitalization == CAPITALIZATION_ALL_CAPS)
+        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
+
+    else if (capitalization == CAPITALIZATION_ALL_LOWERCASE)
+        std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+}
+
 shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const CaptionResult &caption_result,
         const bool fillup_with_previous,
         const bool insert_newlines,
         const uint line_length,
         const uint targeted_line_count,
+        const CapitalizationType capitalization,
         const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history
 ) {
 
@@ -133,8 +143,10 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
                         break;
                 }
             }
+            string_capitalization(filled_line, capitalization);
             split_into_non_wrapped_lines(all_lines, filled_line, line_length);
         } else {
+            string_capitalization(cleaned_line, capitalization);
             split_into_non_wrapped_lines(all_lines, cleaned_line, line_length);
         }
 
@@ -144,6 +156,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         if (!output_result->output_lines.empty()) {
             char join_char = insert_newlines ? '\n' : ' ';
             join_strings(output_result->output_lines, join_char, output_result->output_line);
+//            info_log("hhmm line: %s", output_result->output_line.c_str());
         }
 
 //        debug_log("lines: %lu", output_result->output_lines.size());
