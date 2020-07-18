@@ -4,17 +4,18 @@ Provides closed captioning via Google Cloud Speech Recognition API as a standalo
 It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC, Android and iOS, no Twitch extension required.  
 
 #### Features:
+  * Completely optional for viewers
   * Captions only when the microphone source is unmuted and active to ensure safety
   * Works live and in VODs, no Twitch extension required
-  * Completely optional for viewers
-  * Supports OBS delay
   * Requires no extra tools or website open
   * Supports many common languages with western character sets
+  * Supports OBS delay
+  * Open Caption support via OBS Text Sources for sites that don't support closed captions
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
 * The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the mic is muted for the stream.
-* Video players with caption support like VLC can also show captions on downloaded VODs if enabled.
+* Video players with caption support like MPV can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
 * You can enable and disable the caption preview dock in OBS under `View -> Docks -> Captions` 
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
@@ -38,7 +39,9 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
   
 Does NOT work with Streamlabs OBS (SLOBS).
 
-Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NvEnc and even AMD on MacOS seem fine)
+Does NOT support any languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work.
+
+Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
 
 This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
 Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.  
@@ -66,7 +69,7 @@ Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/w
 ![Installation Windows](https://i.imgur.com/8EknThL.png)
 
 #### Plugin:
-![Example of Plugin in OBS](https://i.imgur.com/ZfKnMoH.png)
+![Example of Plugin in OBS](https://i.imgur.com/Xpp6HCe.png)
 
 ### Installation (Mac OS):
 #### Requires OBS 24 or newer!
@@ -90,6 +93,14 @@ Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/w
 
 ![Installation Mac](https://i.imgur.com/DVZISQI.png)
 
+### Installation (Linux):
+
+Linux support is not well tested yet and requires OBS built with caption support (`-DBUILD_CAPTIONS=ON`).
+
+* Download latest Closed_Captions_Plugin.zip version for Linux [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
+* Put `libobs_google_caption_plugin.so` into your OBS plugins folder
+  * Plugin folder location can vary a lot depending on distribution or installation source.
+  * May also work in `$HOME/.config/obs-studio/plugins`  
 
 
 #### Settings for more unusual audio setups that don't use a mic only source in OBS (like 2 PC + audio mixer setups):
