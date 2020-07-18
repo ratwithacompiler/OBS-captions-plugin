@@ -161,25 +161,29 @@ struct SourceCaptionerSettings {
     SourceCaptionerSettings(
             bool streaming_output_enabled,
             bool recording_output_enabled,
+
             const TranscriptOutputSettings &transcript_settings,
-            const CaptionSourceSettings &caption_source_settings,
+            const SceneCollectionSettings &scene_collection_settings,
             const CaptionFormatSettings &format_settings,
             const ContinuousCaptionStreamSettings &stream_settings
     ) :
             streaming_output_enabled(streaming_output_enabled),
             recording_output_enabled(recording_output_enabled),
+
             transcript_settings(transcript_settings),
+            scene_collection_settings(scene_collection_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
 
     bool operator==(const SourceCaptionerSettings &rhs) const {
         return streaming_output_enabled == rhs.streaming_output_enabled &&
                recording_output_enabled == rhs.recording_output_enabled &&
+
                transcript_settings == rhs.transcript_settings &&
-               // scene_collection_settings_map == rhs.scene_collection_settings_map &&
                scene_collection_settings == rhs.scene_collection_settings &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
+//               scene_collection_settings_map == rhs.scene_collection_settings_map &&
     }
 
 

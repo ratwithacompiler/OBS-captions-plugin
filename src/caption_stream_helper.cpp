@@ -105,7 +105,7 @@ static SourceCaptionerSettings default_SourceCaptionerSettings() {
             true,
             false,
             default_TranscriptOutputSettings(),
-            default_CaptionSourceSettings(),
+            default_SceneCollectionSettings(),
             default_CaptionFormatSettings(),
             default_ContinuousCaptionStreamSettings()
     );
