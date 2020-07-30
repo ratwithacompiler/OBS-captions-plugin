@@ -44,7 +44,10 @@ Does NOT support any languages with foreign character sets like Japanese or Russ
 Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
 
 This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
-Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.  
+Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.
+
+Captions for local recordings currently aren't too useful. They only work with certain file formats (ts, mp4, mov) and only very few video players can correctly play them.
+MPV can play them normally with .ts files, almost no common video players play them in mp4 and mov files.  
 
 ### Installation (Windows):
 #### Requires OBS 23.2.1 (released June 15th 2019) or newer!
