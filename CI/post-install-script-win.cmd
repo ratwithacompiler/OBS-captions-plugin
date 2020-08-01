@@ -3,7 +3,7 @@ REM this just creates zip files with the plugin dll (and the dependency .dlls) i
 dir
 
 
-set OBSPLUGIN=release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\obs-plugins\
+set OBSPLUGIN=release\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\obs-plugins\
 echo plugin path: %OBSPLUGIN%\
 
 mkdir %OBSPLUGIN%\
@@ -18,8 +18,8 @@ copy build_64\RelWithDebInfo\obs_google_caption_plugin.dll %OBSPLUGIN%\64bit\obs
 REM dir %OBSPLUGIN%\32bit
 REM dir %OBSPLUGIN%\64bit
 
-7z a -r release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows.zip %CD%\release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows
-7z a -r release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows_plugins.zip %CD%\release_dir\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\obs-plugins
+7z a -r release\Closed_Captions_Plugin__v${VERSION_STRING}_Windows.zip %CD%\release\Closed_Captions_Plugin__v${VERSION_STRING}_Windows
+7z a -r release\Closed_Captions_Plugin__v${VERSION_STRING}_Windows_plugins.zip %CD%\release\Closed_Captions_Plugin__v${VERSION_STRING}_Windows\obs-plugins
 
 
 dir d:\

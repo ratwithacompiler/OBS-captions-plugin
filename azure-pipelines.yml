@@ -40,7 +40,7 @@ jobs:
 
       - task: PublishPipelineArtifact@1
         inputs:
-          path: "$(Build.SourcesDirectory)/CI/build/release/"
+          path: "$(Build.SourcesDirectory)/CI/release/"
           artifact: Closed_Captions_Plugin__Release_MacOS_HTTP
 
   - job: 'Build_Windows_HTTP'
@@ -86,7 +86,7 @@ jobs:
 
       - task: PublishPipelineArtifact@1
         inputs:
-          path: '$(Build.SourcesDirectory)/CI/release_dir/'
+          path: '$(Build.SourcesDirectory)/CI/release/'
           artifact: Closed_Captions_Plugin__Release_Windows_HTTP
 
 
@@ -129,6 +129,6 @@ jobs:
 
       - task: PublishPipelineArtifact@1
         inputs:
-          path: "$(Build.SourcesDirectory)/CI/build/libobs_google_caption_plugin.so"
+          path: "$(Build.SourcesDirectory)/CI/release/"
           artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
 

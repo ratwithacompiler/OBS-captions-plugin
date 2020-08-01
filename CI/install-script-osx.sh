@@ -39,3 +39,6 @@ cmake ../../  \
 $API_OR_UI_KEY_ARG
 
 cd ../
+
+# copy the cmake processed file with version_string
+cp -v build/CI/post-install-script-osx.sh ./

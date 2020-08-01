@@ -57,6 +57,8 @@ if (NOT OBS_LIB_DIR)
 endif ()
 
 configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
+configure_file(CI/post-install-script-osx.sh CI/post-install-script-osx.sh)
+configure_file(CI/post-install-script-linux.sh CI/post-install-script-linux.sh)
 
 add_subdirectory(lib/caption_stream)
 
