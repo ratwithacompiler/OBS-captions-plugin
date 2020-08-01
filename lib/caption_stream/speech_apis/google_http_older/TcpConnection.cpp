@@ -104,7 +104,7 @@ bool TcpConnection::is_dead() {
 void TcpConnection::close() {
     if (p_socket != nullptr) {
         debug_log("freeing p_socket");
-        p_socket_close(p_socket, nullptr);
+        p_socket_free(p_socket);
         p_socket = nullptr;
     }
 
