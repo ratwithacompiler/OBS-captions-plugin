@@ -441,9 +441,6 @@ void CaptionStream::stop() {
     on_caption_cb_handle.clear();
     stopped = true;
 
-    upstream.close();
-    downstream.close();
-
     string *to_unblock_uploader = new string();
     audio_queue.enqueue(to_unblock_uploader);
 }
