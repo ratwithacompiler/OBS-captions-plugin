@@ -552,7 +552,9 @@ void SourceCaptioner::stream_started_event() {
     if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.streaming_transcripts_enabled) {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_streaming_output.set_control(control_transcript);
-        std::thread th2(transcript_writer_loop, control_transcript, true);
+
+        bool raw = cur_settings.transcript_settings.format == "raw";
+        std::thread th2(transcript_writer_loop, control_transcript, true, raw);
         th2.detach();
     }
 }
@@ -575,7 +577,9 @@ void SourceCaptioner::recording_started_event() {
     if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.recording_transcripts_enabled) {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_recording_output.set_control(control_transcript);
-        std::thread th2(transcript_writer_loop, control_transcript, false);
+
+        bool raw = cur_settings.transcript_settings.format == "raw";
+        std::thread th2(transcript_writer_loop, control_transcript, false, raw);
         th2.detach();
     }
 }

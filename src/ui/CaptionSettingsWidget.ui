@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>435</width>
-    <height>995</height>
+    <width>436</width>
+    <height>993</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -481,6 +481,16 @@ p, li { white-space: pre-wrap; }
          </layout>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Banned Words (space delimited):</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="bannedWordsPlainTextEdit"/>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tab_2">
@@ -551,10 +561,27 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="label_10">
             <property name="text">
-             <string>Transcript Folder</string>
+             <string>Transcript Folder:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_17">
+            <property name="text">
+             <string>Format</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="transcriptFormatComboBox">
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -577,7 +604,11 @@ p, li { white-space: pre-wrap; }
            <number>0</number>
           </property>
           <item>
-           <widget class="QLineEdit" name="transcriptFolderPathLineEdit"/>
+           <widget class="QLineEdit" name="transcriptFolderPathLineEdit">
+            <property name="placeholderText">
+             <string>Transcript Folder</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="transcriptFolderPickerPushButton">
@@ -809,16 +840,6 @@ p, li { white-space: pre-wrap; }
       </layout>
      </widget>
     </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Banned Words (space delimited):</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPlainTextEdit" name="bannedWordsPlainTextEdit"/>
    </item>
    <item>
     <widget class="QWidget" name="widget" native="true">

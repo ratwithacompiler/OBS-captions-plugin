@@ -100,6 +100,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_capitalization(*textSourceCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_output_target(*transcriptSaveForComboBox, false);
+    setup_combobox_transcript_format(*transcriptFormatComboBox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -277,6 +278,7 @@ void CaptionSettingsWidget::accept_current_settings() {
         error_log("invalid transcript output target combobox value, wtf: %d", output_combobox_val);
     }
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
+    transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
 
     apply_ui_scene_collection_settings();
 
@@ -333,6 +335,7 @@ void CaptionSettingsWidget::updateUi() {
                                   source_settings.transcript_settings.recording_transcripts_enabled,
                                   0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
+    combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 1);
 
     set_show_key(false);
 }

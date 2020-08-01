@@ -95,6 +95,7 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
     return {
             false,
             "",
+            "txt",
             false,
             false
     };
@@ -290,6 +291,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
         obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
                                   source_settings.transcript_settings.recording_transcripts_enabled);
         obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
+        obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
 
         settings.enabled = obs_data_get_bool(load_data, "enabled");
         source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
@@ -322,6 +324,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.transcript_settings.recording_transcripts_enabled =
             obs_data_get_bool(load_data, "transcript_for_recording_enabled");
     source_settings.transcript_settings.output_path = obs_data_get_string(load_data, "transcript_folder_path");
+    source_settings.transcript_settings.format = obs_data_get_string(load_data, "transcript_format");
 
     return settings;
 }
@@ -362,6 +365,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     obs_data_set_bool(save_data, "transcript_for_recording_enabled",
                       settings.source_cap_settings.transcript_settings.recording_transcripts_enabled);
     obs_data_set_string(save_data, "transcript_folder_path", settings.source_cap_settings.transcript_settings.output_path.c_str());
+    obs_data_set_string(save_data, "transcript_format", settings.source_cap_settings.transcript_settings.format.c_str());
 }
 
 static CaptionPluginSettings load_CaptionPluginSettings(obs_data_t *load_data) {
@@ -474,6 +478,15 @@ static void setup_combobox_output_target(QComboBox &comboBox, bool add_off_optio
     if (add_off_option)
         comboBox.addItem("Disable Native Output", 3);
 
+}
+
+static void setup_combobox_transcript_format(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("Basic Text", "txt");
+    comboBox.addItem("Raw (For Debug/Tools, Very Spammy)", "raw");
+//    comboBox.addItem("SRT ", "srt");
 }
 
 

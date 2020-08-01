@@ -117,16 +117,19 @@ struct SceneCollectionSettings {
 struct TranscriptOutputSettings {
     bool enabled;
     string output_path;
+    string format;
     bool streaming_transcripts_enabled;
     bool recording_transcripts_enabled;
 
-    TranscriptOutputSettings(bool enabled, const string &outputPath, bool streamingOutputEnabled, bool recordingOutputEnabled) : enabled(
-            enabled), output_path(outputPath), streaming_transcripts_enabled(streamingOutputEnabled), recording_transcripts_enabled(
-            recordingOutputEnabled) {}
+    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format, bool streamingOutputEnabled,
+                             bool recordingOutputEnabled) : enabled(enabled), output_path(outputPath), format(format),
+                                                            streaming_transcripts_enabled(streamingOutputEnabled),
+                                                            recording_transcripts_enabled(recordingOutputEnabled) {}
 
     bool operator==(const TranscriptOutputSettings &rhs) const {
         return enabled == rhs.enabled &&
                output_path == rhs.output_path &&
+               format == rhs.format &&
                streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
                recording_transcripts_enabled == rhs.recording_transcripts_enabled;
     }
@@ -139,6 +142,7 @@ struct TranscriptOutputSettings {
         printf("%sTranscriptSettings\n", line_prefix);
         printf("%s  enabled: %d\n", line_prefix, enabled);
         printf("%s  output_path: %s\n", line_prefix, output_path.c_str());
+        printf("%s  format: %s\n", line_prefix, format.c_str());
         printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
         printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
     }
