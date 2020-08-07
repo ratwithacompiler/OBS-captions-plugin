@@ -617,3 +617,10 @@ template<class T>
 CaptionOutputControl<T>::~CaptionOutputControl() {
     debug_log("~CaptionOutputControl");
 }
+
+bool TranscriptOutputSettings::hasBaseSettings() const{
+    if (!enabled || output_path.empty() || format.empty())
+        return false;
+
+    return true;
+}

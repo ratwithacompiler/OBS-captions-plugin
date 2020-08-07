@@ -138,6 +138,8 @@ struct TranscriptOutputSettings {
         return !(rhs == *this);
     }
 
+    bool hasBaseSettings() const;
+
     void print(const char *line_prefix = "") {
         printf("%sTranscriptSettings\n", line_prefix);
         printf("%s  enabled: %d\n", line_prefix, enabled);
