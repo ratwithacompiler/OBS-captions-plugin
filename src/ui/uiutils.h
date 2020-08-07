@@ -49,6 +49,8 @@ static bool captioning_status_string(
                     target = "Recording";
                 else if (captioning_state.is_captioning_preview)
                     target = "Preview";
+                else if (captioning_state.is_captioning_text_output)
+                    target = "Text Source";
 
                 if (!target.empty())
                     target = " for " + target;
