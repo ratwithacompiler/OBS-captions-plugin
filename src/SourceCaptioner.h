@@ -241,17 +241,13 @@ struct SourceCaptionerSettings {
 
 struct CaptionOutput {
     shared_ptr<OutputCaptionResult> output_result;
-    bool interrupted;
     bool is_clearance;
 
-    CaptionOutput(shared_ptr<OutputCaptionResult> output_result, bool interrupted, bool is_clearance) :
+    CaptionOutput(shared_ptr<OutputCaptionResult> output_result, bool is_clearance) :
             output_result(output_result),
-            interrupted(interrupted),
             is_clearance(is_clearance) {};
 
-    CaptionOutput() :
-            interrupted(false),
-            is_clearance(false) {}
+    CaptionOutput() : is_clearance(false) {}
 };
 
 template<typename T>
@@ -370,7 +366,7 @@ Q_OBJECT
             bool is_clearance = false
     );
 
-    void store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted);
+    void store_result(shared_ptr<OutputCaptionResult> output_result);
 
     void prepare_recent(string &recent_captions_output);
 
@@ -400,7 +396,6 @@ signals:
 
     void caption_result_received(
             shared_ptr<OutputCaptionResult> caption,
-            bool interrupted,
             bool cleared,
             string recent_caption_text);
 

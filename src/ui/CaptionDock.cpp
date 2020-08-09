@@ -58,7 +58,7 @@ void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptioner
 
 void CaptionDock::handle_caption_data_cb(
         shared_ptr<OutputCaptionResult> caption_result,
-        bool interrupted, bool cleared,
+        bool cleared,
         string recent_caption_text
 ) {
     if (cleared) {

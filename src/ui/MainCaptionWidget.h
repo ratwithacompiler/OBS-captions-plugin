@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../CaptionPluginSettings.h"
 #include "../CaptionPluginManager.h"
 
-typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, bool, string> ResultTup;
+typedef std::tuple<std::shared_ptr<OutputCaptionResult>, bool, string> ResultTup;
 
 
 class MainCaptionWidget : public QWidget, Ui_MainCaptionWidget {
@@ -54,7 +54,6 @@ private:
 
     void handle_caption_data_cb(
             shared_ptr<OutputCaptionResult> caption_result,
-            bool interrupted,
             bool cleared,
             string recent_caption_text
     );

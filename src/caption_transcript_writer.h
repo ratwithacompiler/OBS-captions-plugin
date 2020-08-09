@@ -93,17 +93,7 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
             continue;
         }
 
-        if (caption_output.interrupted) {
-            if (held_nonfinal_caption_result) {
-                write_transcript_caption(fs, prefix, started_at_steady, *held_nonfinal_caption_result);
-                if (fs.fail()) {
-                    error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
-                    return;
-                }
-            }
-        }
         held_nonfinal_caption_result = nullptr;
-
         if (caption_output.output_result->caption_result.final) {
             write_transcript_caption(fs, prefix, started_at_steady, *caption_output.output_result);
             if (fs.fail()) {
@@ -140,9 +130,9 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
         }
 
         string prefix;
-        if (caption_output.interrupted && caption_output.output_result->caption_result.final)
+        if (caption_output.output_result->interrupted && caption_output.output_result->caption_result.final)
             prefix = " IF";
-        else if (caption_output.interrupted)
+        else if (caption_output.output_result->interrupted)
             prefix = " I";
         else if (caption_output.output_result->caption_result.final)
             prefix = " F";

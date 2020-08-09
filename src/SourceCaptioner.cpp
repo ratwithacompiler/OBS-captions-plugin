@@ -355,7 +355,7 @@ void SourceCaptioner::clear_output_timer_cb() {
 
     }
 
-    auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", "")), false, true);
+    auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", ""), false), true);
     output_caption_writers(clearance,
                            to_stream,
                            to_transcript_streaming,
@@ -366,25 +366,17 @@ void SourceCaptioner::clear_output_timer_cb() {
         set_text_source_text(text_source_target_name, "");
     }
 
-    emit caption_result_received(nullptr, false, true, "");
+    emit caption_result_received(nullptr, true, "");
 }
 
 
-void SourceCaptioner::store_result(shared_ptr<OutputCaptionResult> output_result, bool interrupted) {
+void SourceCaptioner::store_result(shared_ptr<OutputCaptionResult> output_result) {
     if (!output_result)
         return;
 
-    if (interrupted) {
-        if (held_nonfinal_caption_result) {
-            results_history.push_back(held_nonfinal_caption_result);
-            debug_log("interrupt, saving latest nonfinal result to history, %s",
-                      held_nonfinal_caption_result->clean_caption_text.c_str());
-        }
-    }
-
-    held_nonfinal_caption_result = nullptr;
     if (output_result->caption_result.final) {
         results_history.push_back(output_result);
+        held_nonfinal_caption_result = nullptr;
         debug_log("final, adding to history: %s", output_result->clean_caption_text.c_str());
     } else {
         held_nonfinal_caption_result = output_result;
@@ -453,6 +445,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                                                               settings.format_settings.caption_line_length,
                                                                               settings.format_settings.caption_line_count,
                                                                               settings.format_settings.capitalization,
+                                                                              interrupted,
                                                                               results_history);
         if (!native_output_result)
             return;
@@ -468,10 +461,11 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                                                                 scene_col_settings.text_output_settings.line_length,
                                                                                 scene_col_settings.text_output_settings.line_count,
                                                                                 scene_col_settings.text_output_settings.capitalization,
+                                                                                interrupted,
                                                                                 results_history);
         }
 
-        store_result(native_output_result, interrupted);
+        store_result(native_output_result);
 
 //        info_log("got caption '%s'", native_output_result->clean_caption_text.c_str());
 //        info_log("output line '%s'", output_caption_line.c_str());
@@ -484,7 +478,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
     }
 
-    this->output_caption_writers(CaptionOutput(native_output_result, interrupted, false),
+    this->output_caption_writers(CaptionOutput(native_output_result, false),
                                  to_stream,
                                  to_recording,
                                  to_transcript_streaming,
@@ -495,7 +489,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         set_text_source_text(text_source_target_name, text_output_result->output_line);
     }
 
-    emit caption_result_received(native_output_result, interrupted, false, recent_caption_text);
+    emit caption_result_received(native_output_result, false, recent_caption_text);
 }
 
 

@@ -94,16 +94,16 @@ struct CaptionFormatSettings {
 
 struct OutputCaptionResult {
     CaptionResult caption_result;
+    bool interrupted;
     string clean_caption_text;
 
     vector<string> output_lines; //optionally cleaned and filled with history
     string output_line; // joined output_lines
 
     explicit OutputCaptionResult(
-            const CaptionResult &caption_result
-    ) : caption_result(caption_result) {
-
-    }
+            const CaptionResult &caption_result,
+            const bool interrupted
+    ) : caption_result(caption_result), interrupted(interrupted) {}
 };
 
 
@@ -123,6 +123,7 @@ public:
             const uint line_length,
             const uint targeted_line_count,
             const CapitalizationType capitalization,
+            const bool interrupted,
             const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history);
 
 };

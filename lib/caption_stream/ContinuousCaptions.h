@@ -81,8 +81,7 @@ class ContinuousCaptions {
     std::chrono::steady_clock::time_point prepared_started_at;
 
     ContinuousCaptionStreamSettings settings;
-
-    bool interrupted;
+    std::unique_ptr<CaptionResult> last_caption_result;
 
     void on_caption_text_cb(const CaptionResult &caption_result);
 

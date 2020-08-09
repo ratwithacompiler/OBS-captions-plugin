@@ -78,10 +78,11 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const uint line_length,
         const uint targeted_line_count,
         const CapitalizationType capitalization,
+        const bool interrupted,
         const std::vector<std::shared_ptr<OutputCaptionResult>> &result_history
 ) {
 
-    shared_ptr<OutputCaptionResult> output_result = make_shared<OutputCaptionResult>(caption_result);
+    shared_ptr<OutputCaptionResult> output_result = make_shared<OutputCaptionResult>(caption_result, interrupted);
 
     try {
 //        debug_log("caption: %s", res.caption_text.c_str());

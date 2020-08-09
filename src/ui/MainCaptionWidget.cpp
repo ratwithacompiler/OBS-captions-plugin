@@ -78,9 +78,8 @@ void MainCaptionWidget::update_caption_text_ui() {
         return;
 
     auto latest_caption_result = std::get<0>(*latest_caption_result_tup);
-    bool interrupted = std::get<1>(*latest_caption_result_tup);
-    bool was_cleared = std::get<2>(*latest_caption_result_tup);
-    string latest_caption_text_history = std::get<3>(*latest_caption_result_tup);
+    bool was_cleared = std::get<1>(*latest_caption_result_tup);
+    string latest_caption_text_history = std::get<2>(*latest_caption_result_tup);
 
     if (was_cleared) {
         this->captionLinesPlainTextEdit->clear();
@@ -107,11 +106,10 @@ void MainCaptionWidget::update_caption_text_ui() {
 
 void MainCaptionWidget::handle_caption_data_cb(
         shared_ptr<OutputCaptionResult> caption_result,
-        bool interrupted,
         bool cleared,
         string recent_caption_text) {
 
-    latest_caption_result_tup = std::make_unique<ResultTup>(caption_result, interrupted, cleared, recent_caption_text);
+    latest_caption_result_tup = std::make_unique<ResultTup>(caption_result, cleared, recent_caption_text);
     if (isVisible())
         this->update_caption_text_ui();
 }

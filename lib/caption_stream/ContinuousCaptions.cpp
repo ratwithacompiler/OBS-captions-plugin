@@ -25,8 +25,7 @@ ContinuousCaptions::ContinuousCaptions(
 ) :
         current_stream(nullptr),
         prepared_stream(nullptr),
-        settings(settings),
-        interrupted(false) {
+        settings(settings) {
 
 }
 
@@ -116,6 +115,18 @@ void ContinuousCaptions::cycle_streams() {
         prepared_stream = nullptr;
     }
 
+    if (last_caption_result && !last_caption_result->final) {
+        debug_log("stream interrupted, last result was not final, sending copy of last with fixed final=true");
+        last_caption_result->final = true;
+        {
+            std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
+            if (on_caption_cb_handle.callback_fn) {
+                on_caption_cb_handle.callback_fn(*last_caption_result, true);
+            }
+        }
+    }
+    last_caption_result = nullptr;
+
     caption_text_callback cb = std::bind(&ContinuousCaptions::on_caption_text_cb, this, std::placeholders::_1);
 
     if (prepared_stream) {
@@ -132,7 +143,6 @@ void ContinuousCaptions::cycle_streams() {
         current_started_at = std::chrono::steady_clock::now();
     }
     prepared_stream = nullptr;
-    interrupted = true;
 }
 
 void ContinuousCaptions::on_caption_text_cb(const CaptionResult &caption_result) {
@@ -141,12 +151,14 @@ void ContinuousCaptions::on_caption_text_cb(const CaptionResult &caption_result)
 
     {
         std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
+
+        last_caption_result = std::make_unique<CaptionResult>();
+        *last_caption_result = caption_result;
+
         if (on_caption_cb_handle.callback_fn) {
-            on_caption_cb_handle.callback_fn(caption_result, interrupted);
+            on_caption_cb_handle.callback_fn(caption_result, false);
         }
     }
-
-    interrupted = false;
 }
 
 
