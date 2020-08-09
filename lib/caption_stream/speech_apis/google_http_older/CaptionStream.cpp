@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <json11.cpp>
 using namespace json11;
 
-static CaptionResult *parse_caption_obj(const string &msg_obj) {
+static CaptionResult *parse_caption_obj(const string &msg_obj, std::chrono::steady_clock::time_point start_at) {
     bool is_final = false;
     double highest_stability = 0.0;
     string caption_text;
@@ -84,7 +84,7 @@ static CaptionResult *parse_caption_obj(const string &msg_obj) {
         throw string("no caption text");
 
 //    debug_log("stab: %f, final: %d, index: %d, text: '%s'", highest_stability, is_final, result_index, caption_text.c_str());
-    return new CaptionResult(result_index, is_final, highest_stability, caption_text, msg_obj);
+    return new CaptionResult(result_index, is_final, highest_stability, caption_text, msg_obj, start_at);
 }
 
 
@@ -224,7 +224,6 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
 //        std::this_thread::sleep_for(std::chrono::milliseconds(30));
 
         if (!audio_chunk->empty()) {
-
             std::stringstream stream;
             stream << std::hex << audio_chunk->size() << crlf << *audio_chunk << crlf;
             std::string request(stream.str());
@@ -315,7 +314,11 @@ void CaptionStream::_downstream_run() {
 
 
     int crlf_pos;
-    while (true) {
+
+    bool reset_start = true;
+    std::chrono::steady_clock::time_point start_at=std::chrono::steady_clock::now();
+ 
+   while (true) {
 //        debug_log("rest: '%s'", rest.c_str());
         crlf_pos = read_until_contains(&downstream, rest, "\r\n");
         if (crlf_pos == -1) {
@@ -344,6 +347,7 @@ void CaptionStream::_downstream_run() {
 
         if (needed_bytes) {
 //            debug_log("reading chunk, size: %lu, existing_chunk_byte_cnt: %d, needed %d",
+
 //                      chunk_length, existing_chunk_byte_cnt, needed_bytes);
 
             int read = downstream.receive_at_least(rest, needed_bytes);
@@ -357,6 +361,11 @@ void CaptionStream::_downstream_run() {
         if (is_stopped())
             return;
 
+        if(reset_start){
+           start_at = std::chrono::steady_clock::now();
+           reset_start = false;
+        }
+          
         if (chunk_length) {
             string chunk_data = rest.substr(chunk_data_start, chunk_length);
             if (chunk_data.size() != chunk_length) {
@@ -366,7 +375,7 @@ void CaptionStream::_downstream_run() {
 
 
             try {
-                CaptionResult *result = parse_caption_obj(chunk_data);
+              CaptionResult *result = parse_caption_obj(chunk_data, start_at);
 
                 {
                     std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
@@ -375,7 +384,8 @@ void CaptionStream::_downstream_run() {
                         on_caption_cb_handle.callback_fn(*result);
                     }
                 }
-
+                if (result->final)
+                  reset_start = true; 
                 delete result;
 
             } catch (string &ex) {

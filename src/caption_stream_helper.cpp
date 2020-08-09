@@ -485,8 +485,8 @@ static void setup_combobox_transcript_format(QComboBox &comboBox) {
         comboBox.removeItem(0);
 
     comboBox.addItem("Basic Text", "txt");
+    comboBox.addItem("SubRip (SRT) ", "srt");
     comboBox.addItem("Raw (For Debug/Tools, Very Spammy)", "raw");
-//    comboBox.addItem("SRT ", "srt");
 }
 
 

@@ -28,6 +28,7 @@ struct CaptionResult {
     string caption_text;
     string raw_message;
 
+    std::chrono::steady_clock::time_point start_at;
     std::chrono::steady_clock::time_point created_at;
 
     CaptionResult(){};
@@ -37,13 +38,15 @@ struct CaptionResult {
             bool final,
             double stability,
             string caption_text,
-            string raw_message
-    ) :
+            string raw_message,
+            std::chrono::steady_clock::time_point start_at
+   ) :
             index(index),
             final(final),
             stability(stability),
             caption_text(caption_text),
             raw_message(raw_message),
+            start_at(start_at),
             created_at(std::chrono::steady_clock::now()) {
     }
 };

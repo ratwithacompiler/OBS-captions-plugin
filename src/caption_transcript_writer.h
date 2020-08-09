@@ -42,7 +42,7 @@ QFileInfo find_transcript_filename(const QFileInfo &output_directory,
 }
 
 
-string time_duration_stream(std::chrono::steady_clock::duration diff) {
+string time_duration_stream(bool srt, std::chrono::steady_clock::duration diff) {
     std::ostringstream out;
     int millis_since = std::chrono::duration_cast<std::chrono::milliseconds>(diff).count();
     if (millis_since < 0)
@@ -59,26 +59,34 @@ string time_duration_stream(std::chrono::steady_clock::duration diff) {
     uint secs = millis_since / 1000;
     millis_since = millis_since - (1000 * secs);
 
-    out << std::setw(2) << hours << ":" << std::setw(2) << mins << ":" << std::setw(2) << secs << "." << millis_since;
+    out << std::setw(2) << hours << ":" << std::setw(2) << mins << ":" << std::setw(2) << secs << (srt ? "," : ".") << millis_since;
     return out.str();
 }
 
 void write_transcript_caption(std::fstream &fs,
                               const string &prefix,
                               const std::chrono::steady_clock::time_point &started_at,
-                              const OutputCaptionResult &result) {
+                              const OutputCaptionResult &result, bool srt) {
     if (result.clean_caption_text.empty()) {
         debug_log("write_transcript_caption ignoring empty");
         return;
     }
-    string since_start_str = time_duration_stream(result.caption_result.created_at - started_at);
-    fs << since_start_str << prefix << "    " << result.clean_caption_text << std::endl;
-    cerr << "writing:: " << since_start_str << "    " << result.clean_caption_text << std::endl;
+    string end_since_start_str = time_duration_stream(srt, result.caption_result.created_at - started_at);
+    string start_since_start_str   = time_duration_stream(srt, result.caption_result.start_at - started_at);
+    if (srt) 
+        fs << result.caption_result.index << "\n"
+           << start_since_start_str << " --> " << end_since_start_str << "\n"
+           << (prefix.empty() ? "" : prefix +"\n")
+           << result.clean_caption_text << "\n" << std::endl;
+    else
+        fs << end_since_start_str << prefix << "    " << result.clean_caption_text << std::endl;
+    
+    cerr << "writing:: " << end_since_start_str << "    " << result.clean_caption_text << std::endl;
 
 }
 
 void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady,
-                    shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
+                    shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control, bool srt) {
     std::shared_ptr<OutputCaptionResult> held_nonfinal_caption_result;
     CaptionOutput caption_output;
     string prefix;
@@ -95,7 +103,7 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
 
         if (caption_output.interrupted) {
             if (held_nonfinal_caption_result) {
-                write_transcript_caption(fs, prefix, started_at_steady, *held_nonfinal_caption_result);
+                write_transcript_caption(fs, prefix, started_at_steady, *held_nonfinal_caption_result, srt);
                 if (fs.fail()) {
                     error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
                     return;
@@ -105,7 +113,7 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
         held_nonfinal_caption_result = nullptr;
 
         if (caption_output.output_result->caption_result.final) {
-            write_transcript_caption(fs, prefix, started_at_steady, *caption_output.output_result);
+            write_transcript_caption(fs, prefix, started_at_steady, *caption_output.output_result, srt);
             if (fs.fail()) {
                 error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
                 return;
@@ -116,7 +124,7 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
     }
 
     if (held_nonfinal_caption_result) {
-        write_transcript_caption(fs, prefix, started_at_steady, *held_nonfinal_caption_result);
+        write_transcript_caption(fs, prefix, started_at_steady, *held_nonfinal_caption_result, srt);
         if (fs.fail()) {
             error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
             return;
@@ -147,7 +155,7 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
         else if (caption_output.output_result->caption_result.final)
             prefix = " F";
 
-        write_transcript_caption(fs, prefix, started_at_steady, *caption_output.output_result);
+        write_transcript_caption(fs, prefix, started_at_steady, *caption_output.output_result, false);
         if (fs.fail()) {
             error_log("transcript_writer_loop_raw error, write failed: '%s'", strerror(errno));
             return;
@@ -155,12 +163,12 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
     }
 }
 
-void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control, bool to_stream, bool raw) {
+void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control, bool to_stream, string output_format) {
     auto started_at_sys = std::chrono::system_clock::now();
     auto started_at_steady = std::chrono::steady_clock::now();
 
     string to_what(to_stream ? "streaming" : "recording");
-    info_log("transcript_writer_loop %s starting, raw: %d", to_what.c_str(), raw);
+    info_log("transcript_writer_loop %s starting, output format: %s", to_what.c_str(), output_format);
 
     QFileInfo output_directory(QString::fromStdString(control->arg.output_path));
     if (!output_directory.exists()) {
@@ -174,7 +182,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
     string transcript_file;
     try {
-        auto extension = QString(raw ? ".raw.log" : ".txt");
+        auto extension = QString(output_format == "raw" ? ".raw.log" : (output_format == "srt" ? ".srt" : ".txt"));
         transcript_file = find_transcript_filename(output_directory, QString::fromStdString(to_what), extension, started_at_sys,
                                                    100).absoluteFilePath().toStdString();
 
@@ -193,10 +201,12 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
             return;
         }
 
-        if (raw)
+        if (output_format == "raw")
             write_loop_raw(fs, started_at_steady, control);
-        else
-            write_loop_txt(fs, started_at_steady, control);
+        else if (output_format == "srt")
+                write_loop_txt(fs, started_at_steady, control,true);
+            else 
+                write_loop_txt(fs, started_at_steady, control,false);
     }
     catch (std::exception &ex) {
         error_log("transcript_writer_loop %s error %s", to_what.c_str(), ex.what());
