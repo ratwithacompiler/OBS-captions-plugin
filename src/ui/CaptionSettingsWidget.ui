@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>435</width>
-    <height>993</height>
+    <height>1039</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -261,24 +261,7 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_8">
-            <property name="text">
-             <string>Output To</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="outputTargetComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>250</width>
-              <height>0</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
+          <item row="0" column="0">
            <widget class="QLabel" name="label_6">
             <property name="minimumSize">
              <size>
@@ -291,7 +274,7 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="0" column="1">
            <widget class="QComboBox" name="languageComboBox">
             <property name="minimumSize">
              <size>
@@ -301,15 +284,34 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_7">
+          <item row="1" column="1">
+           <widget class="QLabel" name="languageWarningLabel">
+            <property name="minimumSize">
+             <size>
+              <width>242</width>
+              <height>70</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">border: 1px solid red;</string>
+            </property>
             <property name="text">
-             <string>Profanity Filter</string>
+             <string>WARNING: This language does not support native caption output to streams and recordings. Only Transcripts will work correctly.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QComboBox" name="profanityFilterComboBox">
+          <item row="2" column="0">
+           <widget class="QLabel" name="nativeOutputToLabel">
+            <property name="text">
+             <string>Output To</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="outputTargetComboBox">
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -318,14 +320,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_2">
+          <item row="3" column="0">
+           <widget class="QLabel" name="nativeLineCountLabel">
             <property name="text">
              <string>Lines</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
+          <item row="3" column="1">
            <widget class="QSpinBox" name="lineCountSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -344,35 +346,117 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
-           <widget class="QLabel" name="label_3">
+          <item row="4" column="0">
+           <widget class="QLabel" name="nativeForceLinebreaksLabel">
             <property name="text">
              <string>Force Linebreaks</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="4" column="1">
+           <widget class="QWidget" name="widget_7" native="true">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <property name="spacing">
+              <number>14</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QCheckBox" name="insertLinebreaksCheckBox">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="nativeLinebreaksNotRecommendendLabel">
+               <property name="text">
+                <string>(Not Recommended For Twitch)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="profanitFilterLabel">
+            <property name="text">
+             <string>Profanity Filter</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QComboBox" name="profanityFilterComboBox">
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Capitalization</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="capitalizationComboBox">
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
            <widget class="QCheckBox" name="captionTimeoutEnabledCheckBox">
             <property name="text">
              <string>Caption Timeout</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="1">
+          <item row="7" column="1">
            <widget class="QDoubleSpinBox" name="captionTimeoutDoubleSpinBox">
             <property name="decimals">
              <number>1</number>
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="8" column="0">
            <widget class="QLabel" name="apiKeyLabel">
             <property name="text">
              <string>API Key</string>
             </property>
            </widget>
           </item>
-          <item row="12" column="1">
+          <item row="8" column="1">
            <widget class="QWidget" name="apiKeyWidget" native="true">
             <property name="minimumSize">
              <size>
@@ -411,71 +495,6 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <widget class="QWidget" name="widget_7" native="true">
-            <layout class="QHBoxLayout" name="horizontalLayout_5">
-             <property name="spacing">
-              <number>14</number>
-             </property>
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QCheckBox" name="insertLinebreaksCheckBox">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="label_14">
-               <property name="text">
-                <string>(Not Recommended For Twitch)</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <spacer name="horizontalSpacer_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>10</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="10" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Capitalization</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QComboBox" name="capitalizationComboBox">
-            <property name="minimumSize">
-             <size>
-              <width>250</width>
-              <height>0</height>
-             </size>
-            </property>
            </widget>
           </item>
          </layout>

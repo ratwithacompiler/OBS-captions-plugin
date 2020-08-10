@@ -111,6 +111,9 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QObject::connect(transcriptFormatComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::transcript_format_index_change);
 
+    QObject::connect(languageComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::language_index_change);
+
 //    QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 //                     this, &CaptionSettingsWidget::sources_combo_index_change);
 //
@@ -246,6 +249,22 @@ void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
     srtSettingsWidget->setVisible(isSrt);
 }
 
+void CaptionSettingsWidget::language_index_change(int new_index) {
+    string lang_str = languageComboBox->currentData().toString().toStdString();
+
+    const bool native_output = supports_native_output(lang_str);
+    languageWarningLabel->setVisible(!native_output);
+
+    this->nativeForceLinebreaksLabel->setVisible(native_output);
+    this->nativeLineCountLabel->setVisible(native_output);
+    this->nativeLinebreaksNotRecommendendLabel->setVisible(native_output);
+    this->nativeOutputToLabel->setVisible(native_output);
+
+    this->outputTargetComboBox->setVisible(native_output);
+    this->lineCountSpinBox->setVisible(native_output);
+    this->insertLinebreaksCheckBox->setVisible(native_output);
+}
+
 void CaptionSettingsWidget::accept_current_settings() {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
 
@@ -264,10 +283,16 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
     current_settings.enabled = enabledCheckBox->isChecked();
 
-    const int output_combobox_val = outputTargetComboBox->currentData().toInt();
-    if (!set_streaming_recording_enabled(output_combobox_val,
-                                         source_settings.streaming_output_enabled, source_settings.recording_output_enabled)) {
-        error_log("invalid output target combobox value, wtf: %d", output_combobox_val);
+    const bool native_output = supports_native_output(lang_str);
+    if (native_output) {
+        const int output_combobox_val = outputTargetComboBox->currentData().toInt();
+        if (!set_streaming_recording_enabled(output_combobox_val,
+                                             source_settings.streaming_output_enabled, source_settings.recording_output_enabled)) {
+            error_log("invalid output target combobox value, wtf: %d", output_combobox_val);
+        }
+    } else {
+        source_settings.streaming_output_enabled = false;
+        source_settings.recording_output_enabled = false;
     }
 
     source_settings.format_settings.caption_timeout_enabled = this->captionTimeoutEnabledCheckBox->isChecked();
@@ -283,7 +308,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     if (!set_streaming_recording_enabled(transcript_combobox_val,
                                          transcript_settings.streaming_transcripts_enabled,
                                          transcript_settings.recording_transcripts_enabled)) {
-        error_log("invalid transcript output target combobox value, wtf: %d", output_combobox_val);
+        error_log("invalid transcript output target combobox value, wtf: %d", transcript_combobox_val);
     }
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
     transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
@@ -318,6 +343,7 @@ void CaptionSettingsWidget::updateUi() {
     update_scene_collection_ui(scene_collection_name);
 
     combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
+    language_index_change(0);
     combobox_set_data_int(*profanityFilterComboBox, source_settings.stream_settings.stream_settings.profanity_filter, 0);
 
     apiKeyLineEdit->setText(QString::fromStdString(source_settings.stream_settings.stream_settings.api_key));
@@ -346,6 +372,7 @@ void CaptionSettingsWidget::updateUi() {
                                   0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
     combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 1);
+    transcript_format_index_change(0);
     srtDurationSpinBox->setValue(source_settings.transcript_settings.srt_target_duration_secs);
     srtLineLenghtSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
 

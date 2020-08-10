@@ -43,6 +43,8 @@ private slots:
 
     void transcript_format_index_change(int index);
 
+    void language_index_change(int index);
+
     void sources_combo_index_change(int index);
 
     void scene_collection_combo_index_change(int index);
