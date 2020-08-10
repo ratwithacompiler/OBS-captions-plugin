@@ -64,7 +64,7 @@ static CaptionFormatSettings default_CaptionFormatSettings() {
             false,
             {"niger", "nigger", "nigga", "niggas", "fag", "faggot", "chink"}, // default banned words
             true,
-            25.0,
+            15.0,
     };
 };
 

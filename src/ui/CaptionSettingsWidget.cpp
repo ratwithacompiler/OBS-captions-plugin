@@ -255,14 +255,14 @@ void CaptionSettingsWidget::language_index_change(int new_index) {
     const bool native_output = supports_native_output(lang_str);
     languageWarningLabel->setVisible(!native_output);
 
-    this->nativeForceLinebreaksLabel->setVisible(native_output);
-    this->nativeLineCountLabel->setVisible(native_output);
-    this->nativeLinebreaksNotRecommendendLabel->setVisible(native_output);
-    this->nativeOutputToLabel->setVisible(native_output);
-
-    this->outputTargetComboBox->setVisible(native_output);
-    this->lineCountSpinBox->setVisible(native_output);
-    this->insertLinebreaksCheckBox->setVisible(native_output);
+//    this->nativeForceLinebreaksLabel->setVisible(native_output);
+//    this->nativeLineCountLabel->setVisible(native_output);
+//    this->nativeLinebreaksNotRecommendendLabel->setVisible(native_output);
+//    this->nativeOutputToLabel->setVisible(native_output);
+//
+//    this->outputTargetComboBox->setVisible(native_output);
+//    this->lineCountSpinBox->setVisible(native_output);
+//    this->insertLinebreaksCheckBox->setVisible(native_output);
 }
 
 void CaptionSettingsWidget::accept_current_settings() {
@@ -283,8 +283,11 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
     current_settings.enabled = enabledCheckBox->isChecked();
 
-    const bool native_output = supports_native_output(lang_str);
-    if (native_output) {
+    // just for now as the foreign langs list might have errors or some only partially use non native charsets
+    const bool still_try_foreign_langs = true;
+
+//    const bool native_output = supports_native_output(lang_str);
+    if (still_try_foreign_langs || supports_native_output(lang_str)) {
         const int output_combobox_val = outputTargetComboBox->currentData().toInt();
         if (!set_streaming_recording_enabled(output_combobox_val,
                                              source_settings.streaming_output_enabled, source_settings.recording_output_enabled)) {
