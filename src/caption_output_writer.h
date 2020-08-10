@@ -65,7 +65,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
 
         active_delay_sec = obs_output_get_active_delay(output);
         if (active_delay_sec) {
-            auto since_creation = chrono::steady_clock::now() - caption_output.output_result->caption_result.created_at;
+            auto since_creation = chrono::steady_clock::now() - caption_output.output_result->caption_result.received_at;
             chrono::seconds wanted_delay(active_delay_sec);
 
 //            debug_log("since_creation %f", chrono::duration_cast<std::chrono::duration<double >>(since_creation).count());

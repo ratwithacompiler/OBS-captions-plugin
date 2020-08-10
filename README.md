@@ -11,19 +11,33 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
   * Supports many common languages with western character sets
   * Supports OBS delay
   * Open Caption support via OBS Text Sources for sites that don't support closed captions
+  * Supports saving captions to SRT Subtitle files (.srt)
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
 * The plugin only captions the selected audio source when it's not muted and when it's used on the current active scene to ensure safety and avoid any captioning when the mic is muted for the stream.
-* Video players with caption support like MPV can also show captions on downloaded VODs if enabled.
 * Only tested on `Twitch.tv`, other streaming services with native caption support might work but not very likely.
 * You can enable and disable the caption preview dock in OBS under `View -> Docks -> Captions` 
+* Some video players like MPV can show embedded captions on downloaded VODs but very few support that.
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
+* SRT transcript files are generally recommended for saving captions for local recordings. They are support by many players, websites and tools and are easy to edit.
 
 ![Example Image](https://i.imgur.com/UcPk8gz.png)
 ##### [Example VOD here](https://www.twitch.tv/videos/441407980?t=20s)
 
 ##### Known Issues/Downsides:
+
+Does NOT work with Streamlabs OBS (SLOBS).
+
+Does NOT support any languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work.
+
+Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
+
+This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
+Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.
+
+Embedded Captions in local recordings currently aren't very useful. They only work with certain file formats (ts, mp4, mov) and only very few video players can correctly play them.
+MPV can play them normally with .ts files, almost no common video players play them in mp4 and mov files. Saving transcripts to separate .srt subtitle files is generally much more useful.
 
 Captions should be off by default for most viewers but Twitch does sometimes have them enabled for some viewers for unknown reasons so occasionally some will be confused on how to turn them off and might need it explained.
 
@@ -36,18 +50,6 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
   * If it's already off but viewers still see captions they have to turn it on and off again (appears to be a bug on some iOS versions)
   
 * **On Android** it's `Closed Captions` under the player settings options right beneath the quality selection. The option will only show up once the streamer has talked.
-  
-Does NOT work with Streamlabs OBS (SLOBS).
-
-Does NOT support any languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work.
-
-Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
-
-This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
-Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.
-
-Captions for local recordings currently aren't too useful. They only work with certain file formats (ts, mp4, mov) and only very few video players can correctly play them.
-MPV can play them normally with .ts files, almost no common video players play them in mp4 and mov files.  
 
 ### Installation (Windows):
 #### Requires OBS 23.2.1 (released June 15th 2019) or newer!

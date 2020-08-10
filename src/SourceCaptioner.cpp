@@ -355,7 +355,8 @@ void SourceCaptioner::clear_output_timer_cb() {
 
     }
 
-    auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", ""), false), true);
+    auto now = std::chrono::steady_clock::now();
+    auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", "", now, now), false), true);
     output_caption_writers(clearance,
                            to_stream,
                            to_transcript_streaming,
@@ -547,8 +548,7 @@ void SourceCaptioner::stream_started_event() {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_streaming_output.set_control(control_transcript);
 
-        bool raw = cur_settings.transcript_settings.format == "raw";
-        std::thread th2(transcript_writer_loop, control_transcript, true, raw);
+        std::thread th2(transcript_writer_loop, control_transcript, true, cur_settings.transcript_settings);
         th2.detach();
     }
 }
@@ -572,8 +572,7 @@ void SourceCaptioner::recording_started_event() {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_recording_output.set_control(control_transcript);
 
-        bool raw = cur_settings.transcript_settings.format == "raw";
-        std::thread th2(transcript_writer_loop, control_transcript, false, raw);
+        std::thread th2(transcript_writer_loop, control_transcript, false, cur_settings.transcript_settings);
         th2.detach();
     }
 }

@@ -30,7 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <json11.cpp>
 using namespace json11;
 
-static CaptionResult *parse_caption_obj(const string &msg_obj) {
+static CaptionResult *parse_caption_obj(const string &msg_obj,
+                                        const std::chrono::steady_clock::time_point &first_received_at,
+                                        const std::chrono::steady_clock::time_point &received_at
+) {
     bool is_final = false;
     double highest_stability = 0.0;
     string caption_text;
@@ -84,7 +87,7 @@ static CaptionResult *parse_caption_obj(const string &msg_obj) {
         throw string("no caption text");
 
 //    debug_log("stab: %f, final: %d, index: %d, text: '%s'", highest_stability, is_final, result_index, caption_text.c_str());
-    return new CaptionResult(result_index, is_final, highest_stability, caption_text, msg_obj);
+    return new CaptionResult(result_index, is_final, highest_stability, caption_text, msg_obj, first_received_at, received_at);
 }
 
 
@@ -315,6 +318,8 @@ void CaptionStream::_downstream_run() {
 
 
     int crlf_pos;
+    std::chrono::steady_clock::time_point first_received_at;
+    bool update_first_received_at = true;
     while (true) {
 //        debug_log("rest: '%s'", rest.c_str());
         crlf_pos = read_until_contains(&downstream, rest, "\r\n");
@@ -366,7 +371,12 @@ void CaptionStream::_downstream_run() {
 
 
             try {
-                CaptionResult *result = parse_caption_obj(chunk_data);
+                auto now = std::chrono::steady_clock::now();
+                if (update_first_received_at)
+                    first_received_at = now;
+
+                CaptionResult *result = parse_caption_obj(chunk_data, first_received_at, now);
+                update_first_received_at = result->final;
 
                 {
                     std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);

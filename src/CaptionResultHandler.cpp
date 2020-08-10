@@ -125,7 +125,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
 
                     if (settings.caption_timeout_enabled) {
                         double secs_since_last = std::chrono::duration_cast<std::chrono::duration<double >>
-                                (std::chrono::steady_clock::now() - (*i)->caption_result.created_at).count();
+                                (std::chrono::steady_clock::now() - (*i)->caption_result.received_at).count();
 
                         if (secs_since_last > settings.caption_timeout_seconds) {
 //                            debug_log("not filling, too old %f >= %f", secs_since_last, settings.caption_timeout_seconds);

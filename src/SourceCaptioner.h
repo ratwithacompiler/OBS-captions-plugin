@@ -118,11 +118,18 @@ struct TranscriptOutputSettings {
     bool enabled;
     string output_path;
     string format;
+
+    uint srt_target_duration_secs;
+    uint srt_target_line_length;
+
     bool streaming_transcripts_enabled;
     bool recording_transcripts_enabled;
 
-    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format, bool streamingOutputEnabled,
+    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format,
+                             int srt_target_duration_secs, int srt_target_line_length, bool streamingOutputEnabled,
                              bool recordingOutputEnabled) : enabled(enabled), output_path(outputPath), format(format),
+                                                            srt_target_duration_secs(srt_target_duration_secs),
+                                                            srt_target_line_length(srt_target_line_length),
                                                             streaming_transcripts_enabled(streamingOutputEnabled),
                                                             recording_transcripts_enabled(recordingOutputEnabled) {}
 
@@ -130,6 +137,8 @@ struct TranscriptOutputSettings {
         return enabled == rhs.enabled &&
                output_path == rhs.output_path &&
                format == rhs.format &&
+               srt_target_duration_secs == rhs.srt_target_duration_secs &&
+               srt_target_line_length == rhs.srt_target_line_length &&
                streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
                recording_transcripts_enabled == rhs.recording_transcripts_enabled;
     }
@@ -145,6 +154,8 @@ struct TranscriptOutputSettings {
         printf("%s  enabled: %d\n", line_prefix, enabled);
         printf("%s  output_path: %s\n", line_prefix, output_path.c_str());
         printf("%s  format: %s\n", line_prefix, format.c_str());
+        printf("%s  srt_target_duration_secs: %d\n", line_prefix, srt_target_duration_secs);
+        printf("%s  srt_target_line_length: %d\n", line_prefix, srt_target_line_length);
         printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
         printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
     }

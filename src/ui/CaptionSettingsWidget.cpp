@@ -108,6 +108,9 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QObject::connect(captionWhenComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::caption_when_index_change);
 
+    QObject::connect(transcriptFormatComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::transcript_format_index_change);
+
 //    QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 //                     this, &CaptionSettingsWidget::sources_combo_index_change);
 //
@@ -238,6 +241,11 @@ void CaptionSettingsWidget::caption_when_index_change(int new_index) {
     this->update_other_source_visibility(string_to_mute_setting(val_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE));
 }
 
+void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
+    const bool isSrt = transcriptFormatComboBox->currentData().toString().toStdString() == "srt";
+    srtSettingsWidget->setVisible(isSrt);
+}
+
 void CaptionSettingsWidget::accept_current_settings() {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
 
@@ -279,6 +287,8 @@ void CaptionSettingsWidget::accept_current_settings() {
     }
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
     transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
+    transcript_settings.srt_target_duration_secs = srtDurationSpinBox->value();
+    transcript_settings.srt_target_line_length = srtLineLenghtSpinBox->value();
 
     apply_ui_scene_collection_settings();
 
@@ -336,6 +346,8 @@ void CaptionSettingsWidget::updateUi() {
                                   0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
     combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 1);
+    srtDurationSpinBox->setValue(source_settings.transcript_settings.srt_target_duration_secs);
+    srtLineLenghtSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
 
     set_show_key(false);
 }

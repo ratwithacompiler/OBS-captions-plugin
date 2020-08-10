@@ -45,8 +45,12 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
 
 static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings() {
     return {
-            280,
-            5,
+#ifdef USE_DEVMODE
+            100,
+#else
+        280,
+#endif
+            2,
             10,
             default_CaptionStreamSettings()
     };
@@ -95,7 +99,9 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
     return {
             false,
             "",
-            "txt",
+            "srt",
+            8,
+            44,
             false,
             false
     };
@@ -292,6 +298,10 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
                                   source_settings.transcript_settings.recording_transcripts_enabled);
         obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
         obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
+        obs_data_set_default_int(load_data, "transcript_srt_target_duration_secs",
+                                 source_settings.transcript_settings.srt_target_duration_secs);
+        obs_data_set_default_int(load_data, "transcript_srt_target_line_length",
+                                 source_settings.transcript_settings.srt_target_line_length);
 
         settings.enabled = obs_data_get_bool(load_data, "enabled");
         source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
@@ -325,6 +335,8 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
             obs_data_get_bool(load_data, "transcript_for_recording_enabled");
     source_settings.transcript_settings.output_path = obs_data_get_string(load_data, "transcript_folder_path");
     source_settings.transcript_settings.format = obs_data_get_string(load_data, "transcript_format");
+    source_settings.transcript_settings.srt_target_duration_secs = obs_data_get_int(load_data, "transcript_srt_target_duration_secs");
+    source_settings.transcript_settings.srt_target_line_length = obs_data_get_int(load_data, "transcript_srt_target_line_length");
 
     return settings;
 }
@@ -366,6 +378,8 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                       settings.source_cap_settings.transcript_settings.recording_transcripts_enabled);
     obs_data_set_string(save_data, "transcript_folder_path", settings.source_cap_settings.transcript_settings.output_path.c_str());
     obs_data_set_string(save_data, "transcript_format", settings.source_cap_settings.transcript_settings.format.c_str());
+    obs_data_set_int(save_data, "transcript_srt_target_duration_secs", settings.source_cap_settings.transcript_settings.srt_target_duration_secs);
+    obs_data_set_int(save_data, "transcript_srt_target_line_length", settings.source_cap_settings.transcript_settings.srt_target_line_length);
 }
 
 static CaptionPluginSettings load_CaptionPluginSettings(obs_data_t *load_data) {
@@ -484,9 +498,9 @@ static void setup_combobox_transcript_format(QComboBox &comboBox) {
     while (comboBox.count())
         comboBox.removeItem(0);
 
-    comboBox.addItem("Basic Text", "txt");
-    comboBox.addItem("Raw (For Debug/Tools, Very Spammy)", "raw");
-//    comboBox.addItem("SRT ", "srt");
+    comboBox.addItem("SubRip Subtitle (.srt) ", "srt");
+    comboBox.addItem("Basic Text (.txt)", "txt");
+    comboBox.addItem("Raw (For Debug/Tools, Very Spammy, .log)", "raw");
 }
 
 

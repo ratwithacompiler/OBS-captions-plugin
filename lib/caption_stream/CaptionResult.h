@@ -28,23 +28,27 @@ struct CaptionResult {
     string caption_text;
     string raw_message;
 
-    std::chrono::steady_clock::time_point created_at;
+    std::chrono::steady_clock::time_point first_received_at;
+    std::chrono::steady_clock::time_point received_at;
 
-    CaptionResult(){};
+    CaptionResult() {};
 
     CaptionResult(
             int index,
             bool final,
             double stability,
             string caption_text,
-            string raw_message
+            string raw_message,
+            std::chrono::steady_clock::time_point first_received_at,
+            std::chrono::steady_clock::time_point received_at
     ) :
             index(index),
             final(final),
             stability(stability),
             caption_text(caption_text),
             raw_message(raw_message),
-            created_at(std::chrono::steady_clock::now()) {
+            first_received_at(first_received_at),
+            received_at(received_at) {
     }
 };
 
