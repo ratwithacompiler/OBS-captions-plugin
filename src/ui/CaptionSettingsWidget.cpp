@@ -81,6 +81,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QString with_version = bottomTextBrowser->toPlainText().replace("${VERSION_STRING}", VERSION_STRING);
     bottomTextBrowser->setPlainText(with_version);
 
+    this->verticalLayout->setAlignment(Qt::AlignTop);
     this->updateUi();
 
 #if ENABLE_CUSTOM_API_KEY
