@@ -450,7 +450,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
     try {
         std::fstream fs;
-        fs.open(transcript_file, std::fstream::out | std::fstream::app);
+        fs.open(transcript_file, std::fstream::out | std::fstream::app | std::ios::binary);
         if (fs.fail()) {
             error_log("transcript_writer_loop %s error, couldn't open file", strerror(errno));
             return;
