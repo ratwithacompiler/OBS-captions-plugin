@@ -82,13 +82,12 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * Close OBS if running
 * Download latest Closed_Captions_Plugin.zip version for MacOS [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
 * Extract the zip
-  * it contains a file named `libobs_google_caption_plugin.so`
-* Copy-Paste the `libobs_google_caption_plugin.so` file into your OBS `Plugins` folder
-  * To find the `Plugins` folder go to your `Applications`
-  * Right Click `OBS.app`
-  * Select `Show Package Contents`
-  * The `Plugins` folder is under `Contents` 
-  * You may need to enter your password to copy the file into `Plugins`
+  * it contains a folder named `cloud_captions_plugin`
+* Copy-Paste the `cloud_captions_plugin` folder into your OBS `plugins` folder
+  * Open Finder and in the `Go` menu press `Go to Folder` (or press Cmd+Shift+G)  
+  * Paste `~/Library/Application Support/obs-studio/` and hit enter to go to your `obs-studio` folder 
+  * Your `obs-studio` folder may contain a folder called `plugins` already, if not then create one
+  * Paste the `cloud_captions_plugin` folder into the `plugins` folder 
 * That's it. Start OBS.
 * There should now be a `Cloud Closed Captions` option on the bottom of `Tools` menu
 * Click on `Settings` in the new `Captions Preview` window and select your audio source for captioning under `Caption Source`
@@ -96,7 +95,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
   * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
 * Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
 
-![Installation Mac](https://i.imgur.com/DVZISQI.png)
+![Installation Mac](https://i.imgur.com/nlF3TMr.png)
 
 ### Installation (Linux):
 

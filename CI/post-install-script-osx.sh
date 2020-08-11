@@ -41,11 +41,11 @@ otool -L libobs_google_caption_plugin_obs24.so | grep -q '@executable_path/../Fr
 #------------------
 
 RELEASE_NAME="Closed_Captions_Plugin__v${VERSION_STRING}_MacOS"
-RELEASE_FOLDER="release/$RELEASE_NAME"
+RELEASE_FOLDER="release/$RELEASE_NAME/cloud_captions_plugin/bin"
 
 mkdir -p "$RELEASE_FOLDER"
 
-cp -vn libobs_google_caption_plugin_obs24.so "$RELEASE_FOLDER"/libobs_google_caption_plugin.so
+cp -vn libobs_google_caption_plugin_obs24.so "$RELEASE_FOLDER"/cloud_captions_plugin.so
 
 cd release
 zip -r "$RELEASE_NAME".zip "$RELEASE_NAME"
