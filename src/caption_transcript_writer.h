@@ -54,23 +54,16 @@ static void join_strings(const vector<string> &lines, const string &joiner, stri
     }
 }
 
-
-QFileInfo find_transcript_filename(const QFileInfo &output_directory,
-                                   const QString &prefix,
-                                   const QString &extension,
-                                   const std::chrono::system_clock::time_point &started_at,
-                                   int tries) {
-    // returns filepath like: "output_directory/prefix_date.txt" if it doesn't exist
-    // otherwise tries "output_directory/prefix_date_0.txt", "output_directory/prefix_date_1.txt"up to `tries` attempts
-
-    std::ostringstream oss;
-    time_t started_at_t = std::chrono::system_clock::to_time_t(started_at);
-    oss << std::put_time(std::localtime(&started_at_t), "%Y-%m-%d_%H-%M-%S");
-    auto started_at_str = oss.str();
+QFileInfo find_unused_filename(const QFileInfo &output_directory,
+                               const QString &basename,
+                               const QString &extension,
+                               const int tries) {
+    // returns filepath like: "output_directory/[basename].[extension]" if it doesn't exist
+    // otherwise tries "output_directory/[basename]_1.[extension]" up to `tries` attempts
 
     QString cnt_str("");
     for (int i = 0; i < tries; i++) {
-        auto file_name = QString("%1_transcript_%2%3%4").arg(prefix, QString::fromStdString(started_at_str), cnt_str, extension);
+        auto file_name = QString("%1%2.%3").arg(basename, cnt_str, extension);
 
         QFileInfo file_candidate(QDir(output_directory.absoluteFilePath()).absoluteFilePath(file_name));
         if (!file_candidate.exists())
@@ -80,6 +73,85 @@ QFileInfo find_transcript_filename(const QFileInfo &output_directory,
     }
 
     throw string("nope");
+}
+
+QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_settings,
+                                   const QFileInfo &output_directory,
+                                   const bool is_stream,
+                                   const std::chrono::system_clock::time_point &started_at,
+                                   const int tries,
+                                   bool &out_overwrite) {
+    const string &name_type = is_stream ? transcript_settings.streaming_filename_type : transcript_settings.recording_filename_type;
+    const string &name_custom = is_stream ? transcript_settings.streaming_filename_custom : transcript_settings.recording_filename_custom;
+    const string &name_exists = is_stream ? transcript_settings.streaming_filename_exists
+                                          : transcript_settings.recording_filename_exists;
+    out_overwrite = false;
+    if (name_type == "custom") {
+        // fully user supplied name, don't add any extension
+        if (name_custom.empty())
+            throw string("custom filename chosen but no filename given");
+
+        if (name_exists == "overwrite") {
+            out_overwrite = true;
+        }
+
+        auto file = QFileInfo(QDir(output_directory.absoluteFilePath()).absoluteFilePath(QString::fromStdString(name_custom)));
+        if (!file.exists())
+            return file;
+
+        if (name_exists == "overwrite") {
+            out_overwrite = true;
+            return file;
+        }
+        if (name_exists == "append") {
+            out_overwrite = false;
+            return file;
+        }
+
+        if (name_exists == "skip") {
+            throw string("custom transcript file exists already, skipping: " + file.absoluteFilePath().toStdString());
+        }
+
+        throw string("custom transcript file exists already, invalid exists option: " + name_exists);
+    }
+
+    const string extension = transcript_settings.format == "raw" ? "log" : transcript_settings.format;
+    if (name_type == "datetime") {
+        // "[streaming|recording]_transcript_2020-08-01_00-00-00[_cnt].[ext]"
+
+        std::ostringstream oss;
+        time_t started_at_t = std::chrono::system_clock::to_time_t(started_at);
+        oss << std::put_time(std::localtime(&started_at_t), "%Y-%m-%d_%H-%M-%S");
+        auto started_at_str = oss.str();
+
+        string basename = is_stream ? "streaming_transcript_" : "recording_transcript_";
+        basename = basename + started_at_str;
+        return find_unused_filename(output_directory, QString::fromStdString(basename), QString::fromStdString(extension), tries);
+    }
+
+    if (name_type == "recording" && !is_stream) {
+        // named like recording but with different extension (and optional cnt if it exists)
+
+        OBSOutput output = obs_frontend_get_recording_output();
+        obs_output_release(output);
+        OBSData settings = obs_output_get_settings(output);
+        obs_data_release(settings);
+
+        const string recording_path = obs_data_get_string(settings, "path");
+//        printf("recording path: '%s'\n", recording_path.c_str());
+        if (recording_path.empty())
+            throw string("couldn't get recording path");
+
+        const auto recording_file = QFileInfo(QString::fromStdString(recording_path));
+        const QString basename = recording_file.completeBaseName();
+
+        if (basename.isEmpty())
+            throw string("couldn't get recording basename");
+
+        return find_unused_filename(output_directory, basename, QString::fromStdString(extension), tries);
+    }
+
+    throw string("unsupported name type: " + name_type);
 }
 
 
@@ -436,12 +508,16 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     }
 
     string transcript_file;
+    bool overwrite_file = false;
     try {
-        string extension = "." + (format == "raw" ? "log" : format);
-        transcript_file = find_transcript_filename(output_directory, QString::fromStdString(to_what), QString::fromStdString(extension),
-                                                   started_at_sys, 100).absoluteFilePath().toStdString();
+        transcript_file = find_transcript_filename(transcript_settings, output_directory, to_stream, started_at_sys, 100, overwrite_file)
+                .absoluteFilePath().toStdString();
 
-        info_log("using transcript output file: %s", transcript_file.c_str());
+        info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.c_str(), overwrite_file);
+    }
+    catch (string &err) {
+        error_log("transcript_writer_loop find_transcript_filename error: %s", err.c_str());
+        return;
     }
     catch (...) {
         error_log("transcript_writer_loop %s error, couldn't get an output filepath", to_what.c_str());
@@ -450,7 +526,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
     try {
         std::fstream fs;
-        fs.open(transcript_file, std::fstream::out | std::fstream::app | std::ios::binary);
+        fs.open(transcript_file, std::fstream::out | std::ios::binary | (overwrite_file ? std::fstream::trunc : std::fstream::app));
         if (fs.fail()) {
             error_log("transcript_writer_loop %s error, couldn't open file", strerror(errno));
             return;

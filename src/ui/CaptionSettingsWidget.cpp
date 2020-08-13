@@ -102,6 +102,10 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_output_target(*transcriptSaveForComboBox, false);
     setup_combobox_transcript_format(*transcriptFormatComboBox);
+    setup_combobox_recording_filename(*recordingTranscriptFilenameComboBox);
+    setup_combobox_streaming_filename(*streamingTranscriptFilenameComboBox);
+    setup_combobox_transcript_file_exists(*recordingTranscriptCustomNameExistsCombobox);
+    setup_combobox_transcript_file_exists(*streamingTranscriptCustomNameExistsCombobox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -114,6 +118,12 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
     QObject::connect(languageComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::language_index_change);
+
+    QObject::connect(recordingTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::recording_name_index_change);
+
+    QObject::connect(streamingTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::streaming_name_index_change);
 
 //    QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 //                     this, &CaptionSettingsWidget::sources_combo_index_change);
@@ -248,6 +258,11 @@ void CaptionSettingsWidget::caption_when_index_change(int new_index) {
 void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
     const bool isSrt = transcriptFormatComboBox->currentData().toString().toStdString() == "srt";
     srtSettingsWidget->setVisible(isSrt);
+
+    const auto format = transcriptFormatComboBox->currentData().toString();
+    QString extension = format == "raw" ? "log" : format;
+    update_combobox_recording_filename(*recordingTranscriptFilenameComboBox, extension);
+    update_combobox_streaming_filename(*streamingTranscriptFilenameComboBox, extension);
 }
 
 void CaptionSettingsWidget::language_index_change(int new_index) {
@@ -265,6 +280,21 @@ void CaptionSettingsWidget::language_index_change(int new_index) {
 //    this->lineCountSpinBox->setVisible(native_output);
 //    this->insertLinebreaksCheckBox->setVisible(native_output);
 }
+
+void CaptionSettingsWidget::recording_name_index_change(int new_index) {
+    bool isCustom = this->recordingTranscriptFilenameComboBox->currentData().toString() == "custom";
+
+    recordingTranscriptCustomNameWidget->setVisible(isCustom);
+    recordingTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
+}
+
+void CaptionSettingsWidget::streaming_name_index_change(int new_index) {
+    bool isCustom = this->streamingTranscriptFilenameComboBox->currentData().toString() == "custom";
+
+    streamingTranscriptCustomNameWidget->setVisible(isCustom);
+    streamingTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
+}
+
 
 void CaptionSettingsWidget::accept_current_settings() {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
@@ -319,6 +349,14 @@ void CaptionSettingsWidget::accept_current_settings() {
     transcript_settings.srt_target_duration_secs = srtDurationSpinBox->value();
     transcript_settings.srt_target_line_length = srtLineLenghtSpinBox->value();
 
+    transcript_settings.recording_filename_type = recordingTranscriptFilenameComboBox->currentData().toString().toStdString();
+    transcript_settings.recording_filename_custom = recordingTranscriptCustomNameOverwriteLineEdit->text().toStdString();
+    transcript_settings.recording_filename_exists = recordingTranscriptCustomNameExistsCombobox->currentData().toString().toStdString();
+
+    transcript_settings.streaming_filename_type = streamingTranscriptFilenameComboBox->currentData().toString().toStdString();
+    transcript_settings.streaming_filename_custom = streamingTranscriptCustomNameOverwriteLineEdit->text().toStdString();
+    transcript_settings.streaming_filename_exists = streamingTranscriptCustomNameExistsCombobox->currentData().toString().toStdString();
+
     apply_ui_scene_collection_settings();
 
     debug_log("accepting changes");
@@ -367,7 +405,7 @@ void CaptionSettingsWidget::updateUi() {
 
     string banned_words_line;
     words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
-    this->bannedWordsPlainTextEdit->setPlainText(QString(banned_words_line.c_str()));
+    this->bannedWordsPlainTextEdit->setPlainText(QString::fromStdString(banned_words_line));
 
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
     update_combobox_output_target(*transcriptSaveForComboBox,
@@ -375,10 +413,26 @@ void CaptionSettingsWidget::updateUi() {
                                   source_settings.transcript_settings.recording_transcripts_enabled,
                                   0, false);
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
-    combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 1);
+    combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 0);
     transcript_format_index_change(0);
     srtDurationSpinBox->setValue(source_settings.transcript_settings.srt_target_duration_secs);
     srtLineLenghtSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
+
+    combobox_set_data_str(*recordingTranscriptFilenameComboBox, source_settings.transcript_settings.recording_filename_type.c_str(), 0);
+    combobox_set_data_str(*recordingTranscriptCustomNameExistsCombobox,
+                          source_settings.transcript_settings.recording_filename_exists.c_str(), 0);
+    recordingTranscriptCustomNameOverwriteLineEdit->setText(
+            QString::fromStdString(source_settings.transcript_settings.recording_filename_custom));
+
+
+    combobox_set_data_str(*streamingTranscriptFilenameComboBox, source_settings.transcript_settings.streaming_filename_type.c_str(), 0);
+    combobox_set_data_str(*streamingTranscriptCustomNameExistsCombobox,
+                          source_settings.transcript_settings.streaming_filename_exists.c_str(), 0);
+    streamingTranscriptCustomNameOverwriteLineEdit->setText(
+            QString::fromStdString(source_settings.transcript_settings.streaming_filename_custom));
+
+    recording_name_index_change(0);
+    streaming_name_index_change(0);
 
     set_show_key(false);
 }

@@ -45,6 +45,10 @@ private slots:
 
     void language_index_change(int index);
 
+    void recording_name_index_change(int index);
+
+    void streaming_name_index_change(int index);
+
     void sources_combo_index_change(int index);
 
     void scene_collection_combo_index_change(int index);

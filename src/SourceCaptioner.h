@@ -119,24 +119,42 @@ struct TranscriptOutputSettings {
     string output_path;
     string format;
 
+    string recording_filename_type;
+    string recording_filename_custom;
+    string recording_filename_exists;
+
+    string streaming_filename_type;
+    string streaming_filename_custom;
+    string streaming_filename_exists;
+
     uint srt_target_duration_secs;
     uint srt_target_line_length;
 
     bool streaming_transcripts_enabled;
     bool recording_transcripts_enabled;
 
-    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format,
-                             int srt_target_duration_secs, int srt_target_line_length, bool streamingOutputEnabled,
-                             bool recordingOutputEnabled) : enabled(enabled), output_path(outputPath), format(format),
-                                                            srt_target_duration_secs(srt_target_duration_secs),
-                                                            srt_target_line_length(srt_target_line_length),
-                                                            streaming_transcripts_enabled(streamingOutputEnabled),
-                                                            recording_transcripts_enabled(recordingOutputEnabled) {}
+    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format, const string &recordingFilenameChoice,
+                             const string &recordingFilenameCustom, const string &recordingFilenameExists,
+                             const string &streamingFilenameChoice, const string &streamingFilenameCustom,
+                             const string &streamingFilenameExists, uint srtTargetDurationSecs,
+                             uint srtTargetLineLength, bool streamingTranscriptsEnabled, bool recordingTranscriptsEnabled) :
+            enabled(enabled), output_path(outputPath), format(format), recording_filename_type(recordingFilenameChoice),
+            recording_filename_custom(recordingFilenameCustom), recording_filename_exists(recordingFilenameExists),
+            streaming_filename_type(streamingFilenameChoice), streaming_filename_custom(streamingFilenameCustom),
+            streaming_filename_exists(streamingFilenameExists), srt_target_duration_secs(srtTargetDurationSecs),
+            srt_target_line_length(srtTargetLineLength), streaming_transcripts_enabled(streamingTranscriptsEnabled),
+            recording_transcripts_enabled(recordingTranscriptsEnabled) {}
 
     bool operator==(const TranscriptOutputSettings &rhs) const {
         return enabled == rhs.enabled &&
                output_path == rhs.output_path &&
                format == rhs.format &&
+               recording_filename_type == rhs.recording_filename_type &&
+               recording_filename_custom == rhs.recording_filename_custom &&
+               recording_filename_exists == rhs.recording_filename_exists &&
+               streaming_filename_type == rhs.streaming_filename_type &&
+               streaming_filename_custom == rhs.streaming_filename_custom &&
+               streaming_filename_exists == rhs.streaming_filename_exists &&
                srt_target_duration_secs == rhs.srt_target_duration_secs &&
                srt_target_line_length == rhs.srt_target_line_length &&
                streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
@@ -154,6 +172,15 @@ struct TranscriptOutputSettings {
         printf("%s  enabled: %d\n", line_prefix, enabled);
         printf("%s  output_path: %s\n", line_prefix, output_path.c_str());
         printf("%s  format: %s\n", line_prefix, format.c_str());
+
+        printf("%s  recording_filename_type: %s\n", line_prefix, recording_filename_type.c_str());
+        printf("%s  recording_filename_custom: %s\n", line_prefix, recording_filename_custom.c_str());
+        printf("%s  recording_filename_exists: %s\n", line_prefix, recording_filename_exists.c_str());
+
+        printf("%s  streaming_filename_type: %s\n", line_prefix, streaming_filename_type.c_str());
+        printf("%s  streaming_filename_custom: %s\n", line_prefix, streaming_filename_custom.c_str());
+        printf("%s  streaming_filename_exists: %s\n", line_prefix, streaming_filename_exists.c_str());
+
         printf("%s  srt_target_duration_secs: %d\n", line_prefix, srt_target_duration_secs);
         printf("%s  srt_target_line_length: %d\n", line_prefix, srt_target_line_length);
         printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);

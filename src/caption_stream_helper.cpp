@@ -100,6 +100,15 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
             false,
             "",
             "srt",
+
+            "recording",
+            "",
+            "append",
+
+            "datetime",
+            "",
+            "append",
+
             8,
             44,
             false,
@@ -299,6 +308,22 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
                                   source_settings.transcript_settings.recording_transcripts_enabled);
         obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
         obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
+
+        obs_data_set_default_string(load_data, "transcript_recording_name_type",
+                                    source_settings.transcript_settings.recording_filename_type.c_str());
+        obs_data_set_default_string(load_data, "transcript_recording_name_custom",
+                                    source_settings.transcript_settings.recording_filename_custom.c_str());
+        obs_data_set_default_string(load_data, "transcript_recording_name_exists",
+                                    source_settings.transcript_settings.recording_filename_exists.c_str());
+
+        obs_data_set_default_string(load_data, "transcript_streaming_name_type",
+                                    source_settings.transcript_settings.streaming_filename_type.c_str());
+        obs_data_set_default_string(load_data, "transcript_streaming_name_custom",
+                                    source_settings.transcript_settings.streaming_filename_custom.c_str());
+        obs_data_set_default_string(load_data, "transcript_streaming_name_exists",
+                                    source_settings.transcript_settings.streaming_filename_exists.c_str());
+
+
         obs_data_set_default_int(load_data, "transcript_srt_target_duration_secs",
                                  source_settings.transcript_settings.srt_target_duration_secs);
         obs_data_set_default_int(load_data, "transcript_srt_target_line_length",
@@ -336,6 +361,15 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
             obs_data_get_bool(load_data, "transcript_for_recording_enabled");
     source_settings.transcript_settings.output_path = obs_data_get_string(load_data, "transcript_folder_path");
     source_settings.transcript_settings.format = obs_data_get_string(load_data, "transcript_format");
+
+    source_settings.transcript_settings.recording_filename_type = obs_data_get_string(load_data, "transcript_recording_name_type");
+    source_settings.transcript_settings.recording_filename_custom = obs_data_get_string(load_data, "transcript_recording_name_custom");
+    source_settings.transcript_settings.recording_filename_exists = obs_data_get_string(load_data, "transcript_recording_name_exists");
+
+    source_settings.transcript_settings.streaming_filename_type = obs_data_get_string(load_data, "transcript_streaming_name_type");
+    source_settings.transcript_settings.streaming_filename_custom = obs_data_get_string(load_data, "transcript_streaming_name_custom");
+    source_settings.transcript_settings.streaming_filename_exists = obs_data_get_string(load_data, "transcript_streaming_name_exists");
+
     source_settings.transcript_settings.srt_target_duration_secs = obs_data_get_int(load_data, "transcript_srt_target_duration_secs");
     source_settings.transcript_settings.srt_target_line_length = obs_data_get_int(load_data, "transcript_srt_target_line_length");
 
@@ -379,6 +413,21 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                       settings.source_cap_settings.transcript_settings.recording_transcripts_enabled);
     obs_data_set_string(save_data, "transcript_folder_path", settings.source_cap_settings.transcript_settings.output_path.c_str());
     obs_data_set_string(save_data, "transcript_format", settings.source_cap_settings.transcript_settings.format.c_str());
+
+    obs_data_set_string(save_data, "transcript_recording_name_type",
+                        settings.source_cap_settings.transcript_settings.recording_filename_type.c_str());
+    obs_data_set_string(save_data, "transcript_recording_name_custom",
+                        settings.source_cap_settings.transcript_settings.recording_filename_custom.c_str());
+    obs_data_set_string(save_data, "transcript_recording_name_exists",
+                        settings.source_cap_settings.transcript_settings.recording_filename_exists.c_str());
+
+    obs_data_set_string(save_data, "transcript_streaming_name_type",
+                        settings.source_cap_settings.transcript_settings.streaming_filename_type.c_str());
+    obs_data_set_string(save_data, "transcript_streaming_name_custom",
+                        settings.source_cap_settings.transcript_settings.streaming_filename_custom.c_str());
+    obs_data_set_string(save_data, "transcript_streaming_name_exists",
+                        settings.source_cap_settings.transcript_settings.streaming_filename_exists.c_str());
+
     obs_data_set_int(save_data, "transcript_srt_target_duration_secs",
                      settings.source_cap_settings.transcript_settings.srt_target_duration_secs);
     obs_data_set_int(save_data, "transcript_srt_target_line_length",
@@ -504,6 +553,50 @@ static void setup_combobox_transcript_format(QComboBox &comboBox) {
     comboBox.addItem("SubRip Subtitle (.srt) ", "srt");
     comboBox.addItem("Basic Text (.txt)", "txt");
     comboBox.addItem("Raw (For Debug/Tools, Very Spammy, .log)", "raw");
+}
+
+
+static void setup_combobox_recording_filename(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("[Same As Recording].[srt/txt/log]", "recording");
+    comboBox.addItem("recording_transcript_[datetime].[srt/txt/log]", "datetime");
+    comboBox.addItem("Custom Name", "custom");
+}
+
+static void update_combobox_recording_filename(QComboBox &comboBox, const QString &extension) {
+    for (int i = 0; i < comboBox.count(); i++) {
+        if (comboBox.itemData(i).toString() == "recording")
+            comboBox.setItemText(i, "[Same As Recording]." + extension);
+
+        else if (comboBox.itemData(i).toString() == "datetime")
+            comboBox.setItemText(i, "recording_transcript_[datetime]." + extension);
+    }
+}
+
+static void setup_combobox_streaming_filename(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("streaming_transcript_[datetime].[srt/txt/log]", "datetime");
+    comboBox.addItem("Custom Name", "custom");
+}
+
+static void update_combobox_streaming_filename(QComboBox &comboBox, const QString &extension) {
+    for (int i = 0; i < comboBox.count(); i++) {
+        if (comboBox.itemData(i).toString() == "datetime")
+            comboBox.setItemText(i, "streaming_transcript_[datetime]." + extension);
+    }
+}
+
+static void setup_combobox_transcript_file_exists(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("Overwrite", "overwrite");
+    comboBox.addItem("Append to Existing", "append");
+    comboBox.addItem("Do Nothing", "skip");
 }
 
 
