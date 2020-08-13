@@ -374,7 +374,7 @@ Q_OBJECT
             bool to_recoding,
             bool to_transcript_streaming,
             bool to_transcript_recording,
-            bool is_clearance = false
+            bool is_clearance
     );
 
     void store_result(shared_ptr<OutputCaptionResult> output_result);

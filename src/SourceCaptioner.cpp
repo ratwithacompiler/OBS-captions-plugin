@@ -359,8 +359,9 @@ void SourceCaptioner::clear_output_timer_cb() {
     auto clearance = CaptionOutput(std::make_shared<OutputCaptionResult>(CaptionResult(0, false, 0, "", "", now, now), false), true);
     output_caption_writers(clearance,
                            to_stream,
-                           to_transcript_streaming,
-                           to_transcript_recording,
+                           to_recording,
+                           false,
+                           false,
                            true);
 
     if (!text_source_target_name.empty()) {
