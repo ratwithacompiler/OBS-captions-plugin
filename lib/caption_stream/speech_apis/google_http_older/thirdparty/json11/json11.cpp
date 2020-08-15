@@ -25,6 +25,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <limits>
+#include <cstring>
+#include <sstream>
 
 namespace json11 {
 
@@ -320,6 +322,19 @@ bool Json::operator< (const Json &other) const {
 /* * * * * * * * * * * * * * * * * * * *
  * Parsing
  */
+
+// from https://github.com/rominf/json11/commit/75381d9f50b0ee28ff4b7fe0fbbe005309b83fc4
+double strtod_dot(const char* str) {
+    // It is not correct to use ordinary strtod because it uses the locale and in some locales,
+    // for example, in ru_RU.UTF-8, the floating-point delimiter is "," but not "." as in JSON
+    // grammar.
+    const size_t str_length = strspn(str, "0123456789.eE+-");
+    std::istringstream string_stream(std::string(str, str_length));
+    string_stream.imbue(std::locale("C"));
+    double f = NAN;
+    string_stream >> f;
+    return f;
+}
 
 /* esc(c)
  *
@@ -618,7 +633,7 @@ struct JsonParser final {
                 i++;
         }
 
-        return std::strtod(str.c_str() + start_pos, nullptr);
+        return strtod_dot(str.c_str() + start_pos);
     }
 
     /* expect(str, res)
