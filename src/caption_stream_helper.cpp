@@ -282,77 +282,75 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
     if (!load_data) {
         info_log("no data, using default CaptionPluginSettings");
-    } else {
-        obs_data_set_default_bool(load_data, "enabled", settings.enabled);
+        return settings;
+    }
+    obs_data_set_default_bool(load_data, "enabled", settings.enabled);
 
-        obs_data_set_default_bool(load_data, "streaming_output_enabled", source_settings.streaming_output_enabled);
-        obs_data_set_default_bool(load_data, "recording_output_enabled", source_settings.recording_output_enabled);
-        obs_data_set_default_bool(load_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
-        obs_data_set_default_int(load_data, "caption_line_count", source_settings.format_settings.caption_line_count);
-        obs_data_set_default_int(load_data, "caption_capitalization", source_settings.format_settings.capitalization);
-        obs_data_set_default_string(load_data, "manual_banned_words", "");
-        obs_data_set_default_string(load_data, "mute_source_name", "");
-        obs_data_set_default_string(load_data, "source_caption_when", "");
+    obs_data_set_default_bool(load_data, "streaming_output_enabled", source_settings.streaming_output_enabled);
+    obs_data_set_default_bool(load_data, "recording_output_enabled", source_settings.recording_output_enabled);
+    obs_data_set_default_bool(load_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+    obs_data_set_default_int(load_data, "caption_line_count", source_settings.format_settings.caption_line_count);
+    obs_data_set_default_int(load_data, "caption_capitalization", source_settings.format_settings.capitalization);
+    obs_data_set_default_string(load_data, "manual_banned_words", "");
+    obs_data_set_default_string(load_data, "mute_source_name", "");
+    obs_data_set_default_string(load_data, "source_caption_when", "");
 
-        obs_data_set_default_string(load_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
-        obs_data_set_default_int(load_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
-        obs_data_set_default_string(load_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
+    obs_data_set_default_string(load_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
+    obs_data_set_default_int(load_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
+    obs_data_set_default_string(load_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
 
-        obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
-        obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
+    obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
+    obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
 
-        obs_data_set_default_bool(load_data, "transcript_enabled", source_settings.transcript_settings.enabled);
-        obs_data_set_default_bool(load_data, "transcript_for_stream_enabled",
-                                  source_settings.transcript_settings.streaming_transcripts_enabled);
-        obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
-                                  source_settings.transcript_settings.recording_transcripts_enabled);
-        obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
-        obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
+    obs_data_set_default_bool(load_data, "transcript_enabled", source_settings.transcript_settings.enabled);
+    obs_data_set_default_bool(load_data, "transcript_for_stream_enabled",
+                              source_settings.transcript_settings.streaming_transcripts_enabled);
+    obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
+                              source_settings.transcript_settings.recording_transcripts_enabled);
+    obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
+    obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
 
-        obs_data_set_default_string(load_data, "transcript_recording_name_type",
-                                    source_settings.transcript_settings.recording_filename_type.c_str());
-        obs_data_set_default_string(load_data, "transcript_recording_name_custom",
-                                    source_settings.transcript_settings.recording_filename_custom.c_str());
-        obs_data_set_default_string(load_data, "transcript_recording_name_exists",
-                                    source_settings.transcript_settings.recording_filename_exists.c_str());
+    obs_data_set_default_string(load_data, "transcript_recording_name_type",
+                                source_settings.transcript_settings.recording_filename_type.c_str());
+    obs_data_set_default_string(load_data, "transcript_recording_name_custom",
+                                source_settings.transcript_settings.recording_filename_custom.c_str());
+    obs_data_set_default_string(load_data, "transcript_recording_name_exists",
+                                source_settings.transcript_settings.recording_filename_exists.c_str());
 
-        obs_data_set_default_string(load_data, "transcript_streaming_name_type",
-                                    source_settings.transcript_settings.streaming_filename_type.c_str());
-        obs_data_set_default_string(load_data, "transcript_streaming_name_custom",
-                                    source_settings.transcript_settings.streaming_filename_custom.c_str());
-        obs_data_set_default_string(load_data, "transcript_streaming_name_exists",
-                                    source_settings.transcript_settings.streaming_filename_exists.c_str());
+    obs_data_set_default_string(load_data, "transcript_streaming_name_type",
+                                source_settings.transcript_settings.streaming_filename_type.c_str());
+    obs_data_set_default_string(load_data, "transcript_streaming_name_custom",
+                                source_settings.transcript_settings.streaming_filename_custom.c_str());
+    obs_data_set_default_string(load_data, "transcript_streaming_name_exists",
+                                source_settings.transcript_settings.streaming_filename_exists.c_str());
 
 
-        obs_data_set_default_int(load_data, "transcript_srt_target_duration_secs",
-                                 source_settings.transcript_settings.srt_target_duration_secs);
-        obs_data_set_default_int(load_data, "transcript_srt_target_line_length",
-                                 source_settings.transcript_settings.srt_target_line_length);
+    obs_data_set_default_int(load_data, "transcript_srt_target_duration_secs",
+                             source_settings.transcript_settings.srt_target_duration_secs);
+    obs_data_set_default_int(load_data, "transcript_srt_target_line_length",
+                             source_settings.transcript_settings.srt_target_line_length);
 
-        settings.enabled = obs_data_get_bool(load_data, "enabled");
-        source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
-        source_settings.recording_output_enabled = obs_data_get_bool(load_data, "recording_output_enabled");
+    settings.enabled = obs_data_get_bool(load_data, "enabled");
+    source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
+    source_settings.recording_output_enabled = obs_data_get_bool(load_data, "recording_output_enabled");
 
-        source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(load_data, "caption_insert_newlines");
-        source_settings.format_settings.caption_line_count = (int) obs_data_get_int(load_data, "caption_line_count");
-        source_settings.format_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "caption_capitalization");
+    source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(load_data, "caption_insert_newlines");
+    source_settings.format_settings.caption_line_count = (int) obs_data_get_int(load_data, "caption_line_count");
+    source_settings.format_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "caption_capitalization");
 
-        source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
-        source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
+    source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
+    source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
 #if ENABLE_CUSTOM_API_KEY
-        source_settings.stream_settings.stream_settings.api_key = obs_data_get_string(load_data, "custom_api_key");
+    source_settings.stream_settings.stream_settings.api_key = obs_data_get_string(load_data, "custom_api_key");
 #endif
 
-        source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(load_data, "caption_timeout_enabled");
-        source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(load_data, "caption_timeout_secs");
+    source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(load_data, "caption_timeout_enabled");
+    source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(load_data, "caption_timeout_secs");
 
-        string banned_words_line = obs_data_get_string(load_data, "manual_banned_words");
-        source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
+    string banned_words_line = obs_data_get_string(load_data, "manual_banned_words");
+    source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
 
-        source_settings.scene_collection_settings = get_SceneCollectionSettings_from_data(load_data);
-
-        enforce_CaptionPluginSettings_values(settings);
-    }
+    source_settings.scene_collection_settings = get_SceneCollectionSettings_from_data(load_data);
 
     source_settings.transcript_settings.enabled = obs_data_get_bool(load_data, "transcript_enabled");
     source_settings.transcript_settings.streaming_transcripts_enabled =
@@ -372,6 +370,8 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
     source_settings.transcript_settings.srt_target_duration_secs = obs_data_get_int(load_data, "transcript_srt_target_duration_secs");
     source_settings.transcript_settings.srt_target_line_length = obs_data_get_int(load_data, "transcript_srt_target_line_length");
+
+    enforce_CaptionPluginSettings_values(settings);
 
     return settings;
 }
