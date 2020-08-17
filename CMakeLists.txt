@@ -6,7 +6,7 @@ project(obs_google_caption_plugin)
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
 set(CMAKE_CXX_STANDARD 14)
-set(VERSION_STRING "0.14b")
+set(VERSION_STRING "0.15b")
 
 
 set(DEVMODE OFF)
