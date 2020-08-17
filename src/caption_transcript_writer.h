@@ -118,7 +118,6 @@ QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &tran
                                             const bool is_stream,
                                             const std::chrono::system_clock::time_point &started_at,
                                             const int tries,
-                                            bool &out_overwrite,
                                             const string &extension) {
     // "[streaming|recording]_transcript_2020-08-01_00-00-00[_cnt].[ext]"
 
@@ -134,11 +133,10 @@ QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &tran
 
 QFileInfo find_transcript_filename_recording(const TranscriptOutputSettings &transcript_settings,
                                              const QFileInfo &output_directory,
-                                             const bool is_stream,
                                              const std::chrono::system_clock::time_point &started_at,
                                              const int tries,
-                                             bool &out_overwrite,
-                                             const string &extension) {
+                                             const string &extension,
+                                             const bool try_url) {
     // named like recording but with different extension (and optional cnt if it exists)
 
     OBSOutput output = obs_frontend_get_recording_output();
@@ -146,10 +144,17 @@ QFileInfo find_transcript_filename_recording(const TranscriptOutputSettings &tra
     OBSData settings = obs_output_get_settings(output);
     obs_data_release(settings);
 
-    const string recording_path = obs_data_get_string(settings, "path");
-//        printf("recording path: '%s'\n", recording_path.c_str());
-    if (recording_path.empty())
-        throw string("couldn't get recording path");
+    string recording_path = obs_data_get_string(settings, "path");
+    if (recording_path.empty()) {
+        if (!try_url)
+            throw string("couldn't get recording path");
+
+        recording_path = obs_data_get_string(settings, "url");
+        if (recording_path.empty())
+            throw string("couldn't get recording url");
+
+        info_log("find_transcript_filename_recording no recording path, using url");
+    }
 
     const auto recording_file = QFileInfo(QString::fromStdString(recording_path));
     const QString basename = recording_file.completeBaseName();
@@ -173,13 +178,34 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
         return find_transcript_filename_custom(transcript_settings, output_directory, is_stream, started_at, tries, out_overwrite);
     }
 
-    const string ext = transcript_settings.format == "raw" ? "log" : transcript_settings.format;
+    const string extension = transcript_settings.format == "raw" ? "log" : transcript_settings.format;
     if (name_type == "datetime") {
-        return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, out_overwrite, ext);
+        return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, extension);
     }
 
     if (name_type == "recording" && !is_stream) {
-        return find_transcript_filename_recording(transcript_settings, output_directory, is_stream, started_at, tries, out_overwrite, ext);
+        const int attempts = 1;
+        const int sleep_ms = 1000;
+        const bool fallback_datetime = true;
+
+        for (int i = 0; i < attempts; i++) {
+            if (i) {
+                info_log("transcript_writer_loop find_transcript_filename recording retry, attempt %d, sleeping %dms", i, sleep_ms);
+                std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
+            }
+            try {
+                return find_transcript_filename_recording(transcript_settings, output_directory, started_at, tries, extension, true);
+            }
+            catch (string &err) {
+                error_log("transcript_writer_loop find_transcript_filename recording error, try %d: %s", i, err.c_str());
+            }
+        }
+
+        if (fallback_datetime) {
+            info_log("transcript_writer_loop find_transcript_filename recording failed, falling back to datetime name");
+            return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, extension);
+        }
+        throw string("couldn't get recording basename after multiple tries");
     }
 
     throw string("unsupported name type: " + name_type);
