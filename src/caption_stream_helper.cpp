@@ -551,7 +551,8 @@ static void setup_combobox_transcript_format(QComboBox &comboBox) {
         comboBox.removeItem(0);
 
     comboBox.addItem("SubRip Subtitle (.srt) ", "srt");
-    comboBox.addItem("Basic Text (.txt)", "txt");
+    comboBox.addItem("Text with timestamps (.txt)", "txt");
+    comboBox.addItem("Text only (.txt)", "txt_plain");
     comboBox.addItem("Raw (For Debug/Tools, Very Spammy, .log)", "raw");
 }
 

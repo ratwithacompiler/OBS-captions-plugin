@@ -7,6 +7,19 @@
 
 #include "../CaptionPluginManager.h"
 
+static string transcript_format_extension(const string &format, const string &fallback) {
+    if (format == "raw")
+        return "log";
+
+    if (format == "txt" || format == "srt")
+        return format;
+
+    if (format == "txt_plain")
+        return "txt";
+
+    return fallback;
+}
+
 static bool captioning_status_string(
         bool enabled,
         bool streaming_output_enabled,

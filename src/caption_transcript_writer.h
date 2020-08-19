@@ -14,6 +14,7 @@
 #include <sstream>
 #include <deque>
 #include "SourceCaptioner.h"
+#include "ui/uiutils.h"
 
 using ResultQueue = std::deque<std::shared_ptr<OutputCaptionResult>>;
 
@@ -178,7 +179,7 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
         return find_transcript_filename_custom(transcript_settings, output_directory, is_stream, started_at, tries, out_overwrite);
     }
 
-    const string extension = transcript_settings.format == "raw" ? "log" : transcript_settings.format;
+    const string extension = transcript_format_extension(transcript_settings.format, "");
     if (name_type == "datetime") {
         return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, extension);
     }
@@ -421,7 +422,7 @@ void write_loop_srt(SrtState &settings, std::fstream &fs,
 
         held_nonfinal_result = nullptr;
         if (!relevant_result(settings, caption_output))
-            continue;;
+            continue;
 
         if (caption_output.output_result->caption_result.final) {
             results.push_back(caption_output.output_result);
@@ -450,32 +451,41 @@ void write_loop_srt(SrtState &settings, std::fstream &fs,
 void write_transcript_caption_simple(std::fstream &fs,
                                      const string &prefix,
                                      const std::chrono::steady_clock::time_point &started_at,
-                                     const OutputCaptionResult &result) {
-    int start_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            result.caption_result.first_received_at - started_at).count();
-
-    int end_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            result.caption_result.received_at - started_at).count();
-
-    if (start_offset_ms < 0)
-        start_offset_ms = 0;
-
-    if (end_offset_ms < 0)
-        end_offset_ms = 0;
-
-    const string start_offset_str = time_duration_stream(start_offset_ms);
-    const string end_offset_str = time_duration_stream(end_offset_ms);
-
+                                     const OutputCaptionResult &result,
+                                     const bool add_timestamps) {
     std::ostringstream comb;
-    comb << start_offset_str << "-" << end_offset_str << " " << prefix << "    " << result.clean_caption_text << std::endl;
+    if (add_timestamps) {
+        int start_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                result.caption_result.first_received_at - started_at).count();
+
+        int end_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                result.caption_result.received_at - started_at).count();
+
+        if (start_offset_ms < 0)
+            start_offset_ms = 0;
+
+        if (end_offset_ms < 0)
+            end_offset_ms = 0;
+
+        const string start_offset_str = time_duration_stream(start_offset_ms);
+        const string end_offset_str = time_duration_stream(end_offset_ms);
+        comb << start_offset_str << "-" << end_offset_str << " ";
+    }
+
+    if (!prefix.empty())
+        comb << prefix;
+
+    comb << result.clean_caption_text << std::endl;
     fs_write_string(fs, comb.str());
 }
 
-void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady,
-                    shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
+void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady,
+                    shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
+                    const bool add_timestamps, const bool add_spacer) {
     std::shared_ptr<OutputCaptionResult> held_nonfinal_caption_result;
     CaptionOutput caption_output;
-    string prefix;
+    const string prefix(add_spacer ? "    " : "");
+
     while (!control->stop) {
         control->caption_queue.wait_dequeue(caption_output);
 
@@ -488,8 +498,11 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
         }
 
         held_nonfinal_caption_result = nullptr;
+        if (!relevant_result(settings, caption_output))
+            continue;
+
         if (caption_output.output_result->caption_result.final) {
-            write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result);
+            write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result, add_timestamps);
             if (fs.fail()) {
                 error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
                 return;
@@ -500,7 +513,7 @@ void write_loop_txt(std::fstream &fs, const std::chrono::steady_clock::time_poin
     }
 
     if (held_nonfinal_caption_result) {
-        write_transcript_caption_simple(fs, prefix, started_at_steady, *held_nonfinal_caption_result);
+        write_transcript_caption_simple(fs, prefix, started_at_steady, *held_nonfinal_caption_result, add_timestamps);
         if (fs.fail()) {
             error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
             return;
@@ -525,13 +538,16 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
 
         string prefix;
         if (caption_output.output_result->interrupted && caption_output.output_result->caption_result.final)
-            prefix = " IF";
+            prefix = "IF    ";
         else if (caption_output.output_result->interrupted)
-            prefix = " I";
+            prefix = "I    ";
         else if (caption_output.output_result->caption_result.final)
-            prefix = " F";
+            prefix = "F    ";
+        else
+            prefix = "    ";
 
-        write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result);
+
+        write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result, true);
         if (fs.fail()) {
             error_log("transcript_writer_loop_raw error, write failed: '%s'", strerror(errno));
             return;
@@ -547,7 +563,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     auto started_at_steady = std::chrono::steady_clock::now();
 
     string to_what(to_stream ? "streaming" : "recording");
-    if (format != "txt" && format != "srt" && format != "raw") {
+    if (format != "txt" && format != "txt_plain" && format != "srt" && format != "raw") {
         error_log("transcript_writer_loop %s error, invalid format: %s", to_what.c_str(), format.c_str());
         return;
     }
@@ -589,14 +605,17 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
             return;
         }
 
+        const uint max_duration_secs = transcript_settings.srt_target_duration_secs ? transcript_settings.srt_target_duration_secs : 1;
+        SrtState settings = SrtState{started_at_steady, std::chrono::seconds(max_duration_secs), 1,
+                                     transcript_settings.srt_target_line_length, 1250};
+
         if (format == "raw")
             write_loop_raw(fs, started_at_steady, control);
         else if (format == "txt")
-            write_loop_txt(fs, started_at_steady, control);
+            write_loop_txt(settings, fs, started_at_steady, control, true, true);
+        else if (format == "txt_plain")
+            write_loop_txt(settings, fs, started_at_steady, control, false, false);
         else {
-            const uint max_duration_secs = transcript_settings.srt_target_duration_secs ? transcript_settings.srt_target_duration_secs : 1;
-            SrtState settings = SrtState{started_at_steady, std::chrono::seconds(max_duration_secs), 1,
-                                         transcript_settings.srt_target_line_length, 1250};
             write_loop_srt(settings, fs, control);
         }
 

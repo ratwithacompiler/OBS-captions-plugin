@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QFileDialog>
 #include "../storage_utils.h"
 #include "../caption_stream_helper.cpp"
+#include "uiutils.h"
 
 static void setup_combobox_texts(QComboBox &comboBox,
                                  const vector<string> &items
@@ -259,8 +260,8 @@ void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
     const bool isSrt = transcriptFormatComboBox->currentData().toString().toStdString() == "srt";
     srtSettingsWidget->setVisible(isSrt);
 
-    const auto format = transcriptFormatComboBox->currentData().toString();
-    QString extension = format == "raw" ? "log" : format;
+    const auto format = transcriptFormatComboBox->currentData().toString().toStdString();
+    const QString extension = QString::fromStdString(transcript_format_extension(format, "[ext]"));
     update_combobox_recording_filename(*recordingTranscriptFilenameComboBox, extension);
     update_combobox_streaming_filename(*streamingTranscriptFilenameComboBox, extension);
 }
