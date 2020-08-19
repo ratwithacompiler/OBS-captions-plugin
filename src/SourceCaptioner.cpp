@@ -377,11 +377,15 @@ void SourceCaptioner::store_result(shared_ptr<OutputCaptionResult> output_result
     if (output_result->caption_result.final) {
         results_history.push_back(output_result);
         held_nonfinal_caption_result = nullptr;
-        debug_log("final, adding to history: %s", output_result->clean_caption_text.c_str());
+        debug_log("final, adding to history: %d %s", (int) results_history.size(), output_result->clean_caption_text.c_str());
     } else {
         held_nonfinal_caption_result = output_result;
     }
 
+    if (results_history.size() > HISTORY_ENTRIES_HIGH_WM) {
+        results_history.erase(results_history.begin(), results_history.begin() + HISTORY_ENTRIES_LOW_WM);
+//        debug_log("cleaning result history done %d", (int) results_history.size());
+    }
 }
 
 
