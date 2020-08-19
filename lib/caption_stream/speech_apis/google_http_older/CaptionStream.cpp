@@ -345,9 +345,9 @@ void CaptionStream::_downstream_run() {
 
         uint chunk_data_start = crlf_pos + crlf_len;
         uint existing_chunk_byte_cnt = rest.size() - chunk_data_start;
-        uint needed_bytes = chunk_length - existing_chunk_byte_cnt + crlf_len;
+        int needed_bytes = ((int) chunk_length) - existing_chunk_byte_cnt + crlf_len;
 
-        if (needed_bytes) {
+        if (needed_bytes > 0) {
 //            debug_log("reading chunk, size: %lu, existing_chunk_byte_cnt: %d, needed %d",
 //                      chunk_length, existing_chunk_byte_cnt, needed_bytes);
 
