@@ -393,6 +393,9 @@ Q_OBJECT
 
     int audio_capture_id = 0;
 
+    string last_caption_text;
+    bool last_caption_final = false;
+
     void caption_was_output();
 
     void output_caption_writers(

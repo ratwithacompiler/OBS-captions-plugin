@@ -429,6 +429,12 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
     string recent_caption_text;
     bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
 
+    if (this->last_caption_text == caption_result.caption_text && this->last_caption_final == caption_result.final) {
+        return;
+    }
+    this->last_caption_text = caption_result.caption_text;
+    this->last_caption_final = caption_result.final;
+
     shared_ptr<OutputCaptionResult> text_output_result;
     string text_source_target_name;
     {
