@@ -62,6 +62,13 @@ struct CaptionSourceSettings {
         return !(rhs == *this);
     }
 
+    string active_mute_source_name() const {
+        if (mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE)
+            return mute_source_name;
+
+        return caption_source_name;
+    }
+
     void print(const char *line_prefix = "") {
         printf("%sCaptionSourceSettings\n", line_prefix);
         printf("%s  caption_source_name: %s\n", line_prefix, caption_source_name.c_str());

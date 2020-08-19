@@ -28,7 +28,6 @@ static bool captioning_status_string(
         const CaptioningState &captioning_state,
 
         const SourceCaptionerStatus &status,
-        const string &source_name,
         string &output
 ) {
     debug_log("status %d", status.event_type);
@@ -51,7 +50,12 @@ static bool captioning_status_string(
         } else if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK
                    || status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE) {
 
-            string source_name_use = string("(") + source_name + ")";
+            const string source_name = status.settings.scene_collection_settings.caption_source_settings.caption_source_name;
+            const string mute_source_name = status.settings.scene_collection_settings.caption_source_settings.active_mute_source_name();
+
+            const string source_name_use = "(" + source_name + ")";
+            const string mute_source_name_use = "(" + mute_source_name + ")";
+
             if (status.audio_capture_status == AUDIO_SOURCE_CAPTURING) {
                 string target;
                 if (captioning_state.is_captioning_streaming && captioning_state.is_captioning_recording)
@@ -71,9 +75,9 @@ static bool captioning_status_string(
                 output = "🔴 CC " + source_name_use + target;
 
             } else if (status.audio_capture_status == AUDIO_SOURCE_MUTED)
-                output = "Muted " + source_name_use;
+                output = "Muted " + mute_source_name_use;
             else if (status.audio_capture_status == AUDIO_SOURCE_NOT_STREAMED)
-                output = "Source not streamed " + source_name_use;
+                output = "Source not streamed " + mute_source_name_use;
             else {
                 output = "??";
                 return false;

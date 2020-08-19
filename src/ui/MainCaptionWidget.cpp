@@ -171,9 +171,6 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
     if (!status)
         return;
 
-    string source_name;
-    const SceneCollectionSettings &scene_col_settings = status->settings.get_scene_collection_settings(status->scene_collection_name);
-
     string status_text;
     captioning_status_string(
             plugin_manager.plugin_settings.enabled,
@@ -181,7 +178,6 @@ void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCap
             status->settings.recording_output_enabled,
             plugin_manager.captioning_state(),
             *status,
-            scene_col_settings.caption_source_settings.caption_source_name,
             status_text);
 
     this->statusTextLabel->setText(status_text.c_str());
