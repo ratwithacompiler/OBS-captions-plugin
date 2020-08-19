@@ -134,7 +134,8 @@ void setup_UI() {
 void finished_loading_event() {
     frontend_loading_finished = true;
 
-    info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING, plugin_manager loaded: %d", plugin_manager != nullptr);
+    info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING, plugin_manager loaded: %d, %s",
+             plugin_manager != nullptr, qVersion());
     if (main_caption_widget) {
         main_caption_widget->external_state_changed();
 #ifdef USE_DEVMODE
