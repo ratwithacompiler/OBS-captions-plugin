@@ -211,7 +211,7 @@ p, li { white-space: pre-wrap; }
           <item row="4" column="0">
            <widget class="QLabel" name="muteSourceLabel">
             <property name="text">
-             <string>Other Source</string>
+             <string>Mute Source</string>
             </property>
            </widget>
           </item>

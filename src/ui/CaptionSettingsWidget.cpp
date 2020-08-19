@@ -93,8 +93,8 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     this->apiKeyWidget->hide();
 #endif
 
-    captionWhenComboBox->addItem("When Caption Source is streamed", "own_source");
-    captionWhenComboBox->addItem("When Other Source is streamed", "other_mute_source");
+    captionWhenComboBox->addItem("Caption Source is heard on stream", "own_source");
+    captionWhenComboBox->addItem("Mute Source is heard on stream", "other_mute_source");
 
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
