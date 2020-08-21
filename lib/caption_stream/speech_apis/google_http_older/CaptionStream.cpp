@@ -141,17 +141,17 @@ bool CaptionStream::start(std::shared_ptr<CaptionStream> self) {
 
 
 void CaptionStream::upstream_run(std::shared_ptr<CaptionStream> self) {
-    debug_log("starting upstream_run()");
+    debug_log("starting upstream_run() %s", session_pair.c_str());
     _upstream_run(self);
     stop();
-    debug_log("finished upstream_run()");
+    debug_log("finished upstream_run() %s", session_pair.c_str());
 }
 
 void CaptionStream::downstream_run(std::shared_ptr<CaptionStream> self) {
-    debug_log("starting downstream_run()");
+    debug_log("starting downstream_run() %s", session_pair.c_str());
     _downstream_run();
     stop();
-    debug_log("finished downstream_run()");
+    debug_log("finished downstream_run() %s", session_pair.c_str());
 }
 
 void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
@@ -375,13 +375,16 @@ void CaptionStream::_downstream_run() {
                 if (update_first_received_at)
                     first_received_at = now;
 
+//                debug_log("Caption stream read: %d, %d,  %s", chunk_data_start, chunk_length, chunk_data.c_str());
                 CaptionResult *result = parse_caption_obj(chunk_data, first_received_at, now);
+//                debug_log("Caption stream raw_message: %s", result->raw_message.c_str());
+//                debug_log("Caption stream caption_text: %s", result->caption_text.c_str());
                 update_first_received_at = result->final;
 
                 {
                     std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
                     if (on_caption_cb_handle.callback_fn) {
-////                    debug_log("calling caption cb");
+//                    debug_log("calling caption cb");
                         on_caption_cb_handle.callback_fn(*result);
                     }
                 }
@@ -447,17 +450,18 @@ string *CaptionStream::dequeue_audio_data(const std::int64_t timeout_us) {
 
 
 void CaptionStream::stop() {
-    info_log("stop!!");
+    info_log("stop1! %s", this->session_pair.c_str());
     on_caption_cb_handle.clear();
     stopped = true;
 
     string *to_unblock_uploader = new string();
     audio_queue.enqueue(to_unblock_uploader);
+    info_log("stop2! %s", this->session_pair.c_str());
 }
 
 
 CaptionStream::~CaptionStream() {
-    debug_log("~CaptionStream deconstructor");
+    debug_log("~CaptionStream deconstructor %s", this->session_pair.c_str());
     if (!is_stopped())
         stop();
 
@@ -469,7 +473,7 @@ CaptionStream::~CaptionStream() {
             cleared++;
         }
     }
-    debug_log("~CaptionStream deleting");
+    debug_log("~CaptionStream deleting %s", this->session_pair.c_str());
 
 
     if (upstream_thread) {
@@ -484,7 +488,7 @@ CaptionStream::~CaptionStream() {
         downstream_thread = nullptr;
     }
 
-    debug_log("~CaptionStream deconstructor, deleted left %d in queue", cleared);
+    debug_log("~CaptionStream deconstructor done %s, deleted left %d in queue", this->session_pair.c_str(), cleared);
 
 }
 
