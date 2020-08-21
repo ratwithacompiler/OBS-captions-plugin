@@ -99,7 +99,7 @@ int read_until_contains(TcpConnection *connection, string &buffer, const char *r
     char chunk[BUFFER_SIZE];
     do {
         int read_cnt = connection->receive_at_most(chunk, BUFFER_SIZE);
-        if (read_cnt == -1)
+        if (read_cnt <= 0)
             return -1;
 
         buffer.append(chunk, read_cnt);
@@ -323,7 +323,7 @@ void CaptionStream::_downstream_run() {
     while (true) {
 //        debug_log("rest: '%s'", rest.c_str());
         crlf_pos = read_until_contains(&downstream, rest, "\r\n");
-        if (crlf_pos == -1) {
+        if (crlf_pos <= 0) {
             error_log("downstream read chunksize error, rest: %lu %s", rest.size(), rest.c_str());
             return;
         }
@@ -353,7 +353,7 @@ void CaptionStream::_downstream_run() {
 
             int read = downstream.receive_at_least(rest, needed_bytes);
 //            debug_log("hmm read: %d", read);
-            if (read == -1) {
+            if (read <= 0 || read < needed_bytes) {
                 error_log("downstream read chunk data error");
                 return;
             }

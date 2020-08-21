@@ -64,8 +64,6 @@ public:
 
     int receive_at_least(string &buffer, int bytes);
 
-    int receive_exactly(string &buffer, int bytes);
-
     bool is_connected();
 
     bool is_dead();

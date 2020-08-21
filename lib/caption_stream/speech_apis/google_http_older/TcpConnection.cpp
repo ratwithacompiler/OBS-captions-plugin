@@ -146,28 +146,12 @@ int TcpConnection::receive_at_most(char *buffer, int bytes) {
     return p_socket_receive(p_socket, buffer, bytes, nullptr);
 }
 
-int TcpConnection::receive_exactly(string &buffer, int bytes) {
-    int read = 0;
-    int cur_read = 0;
-    char chunk[READ_BUFFER_SIZE];
-    while (read < bytes) {
-        int needed = bytes - read;
-        if ((cur_read = p_socket_receive(p_socket, chunk, needed, nullptr)) == -1)
-            return -1;
-
-        read += cur_read;
-        buffer.append(chunk, cur_read);
-    }
-
-    return read;
-}
-
 int TcpConnection::receive_at_least(string &buffer, int bytes) {
     int read = 0;
     int cur_read = 0;
     char chunk[READ_BUFFER_SIZE];
     while (read < bytes) {
-        if ((cur_read = p_socket_receive(p_socket, chunk, READ_BUFFER_SIZE, nullptr)) == -1)
+        if ((cur_read = p_socket_receive(p_socket, chunk, READ_BUFFER_SIZE, nullptr)) <= 0)
             return -1;
 
         read += cur_read;
