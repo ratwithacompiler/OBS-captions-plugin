@@ -235,6 +235,7 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
     const QSignalBlocker blocker4(textSourceOutputComboBox);
 
     this->textSourceEnableOutputCheckBox->setChecked(use_settings.text_output_settings.enabled);
+    on_textSourceEnableOutputCheckBox_stateChanged(0);
 
     auto text_sources = get_text_sources();
     text_sources.insert(text_sources.begin(), "");
@@ -258,7 +259,7 @@ void CaptionSettingsWidget::caption_when_index_change(int new_index) {
 
 void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
     const bool isSrt = transcriptFormatComboBox->currentData().toString().toStdString() == "srt";
-    srtSettingsWidget->setVisible(isSrt);
+    transcriptSrtSettingsWidget->setVisible(isSrt);
 
     const auto format = transcriptFormatComboBox->currentData().toString().toStdString();
     const QString extension = QString::fromStdString(transcript_format_extension(format, "[ext]"));
@@ -396,6 +397,7 @@ void CaptionSettingsWidget::updateUi() {
     combobox_set_data_int(*capitalizationComboBox, source_settings.format_settings.capitalization, 0);
 
     enabledCheckBox->setChecked(current_settings.enabled);
+    on_enabledCheckBox_stateChanged(0);
     update_combobox_output_target(*outputTargetComboBox,
                                   source_settings.streaming_output_enabled,
                                   source_settings.recording_output_enabled,
@@ -409,6 +411,7 @@ void CaptionSettingsWidget::updateUi() {
     this->bannedWordsPlainTextEdit->setPlainText(QString::fromStdString(banned_words_line));
 
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
+    on_saveTranscriptsCheckBox_stateChanged(0);
     update_combobox_output_target(*transcriptSaveForComboBox,
                                   source_settings.transcript_settings.streaming_transcripts_enabled,
                                   source_settings.transcript_settings.recording_transcripts_enabled,
@@ -463,3 +466,22 @@ void CaptionSettingsWidget::on_transcriptFolderPickerPushButton_clicked() {
     }
 }
 
+void CaptionSettingsWidget::on_saveTranscriptsCheckBox_stateChanged(int new_state) {
+    const bool disabled = !saveTranscriptsCheckBox->isChecked();
+    this->transcripWidget1->setDisabled(disabled);
+    this->transcripWidget2->setDisabled(disabled);
+    this->transcripWidget3->setDisabled(disabled);
+    this->transcripWidget4->setDisabled(disabled);
+    this->transcriptSrtSettingsWidget->setDisabled(disabled);
+}
+
+void CaptionSettingsWidget::on_textSourceEnableOutputCheckBox_stateChanged(int new_state) {
+    const bool disabled = !textSourceEnableOutputCheckBox->isChecked();
+    this->textSourceWidget1->setDisabled(disabled);
+    this->textSourceWidget2->setDisabled(disabled);
+}
+
+void CaptionSettingsWidget::on_enabledCheckBox_stateChanged(int new_state) {
+//    const bool disabled = !enabledCheckBox->isChecked();
+//    this->tabWidget->setDisabled(disabled);
+}

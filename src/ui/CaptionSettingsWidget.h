@@ -59,6 +59,12 @@ private slots:
     
     void on_transcriptFolderPickerPushButton_clicked();
 
+    void on_saveTranscriptsCheckBox_stateChanged(int new_state);
+
+    void on_enabledCheckBox_stateChanged(int new_state);
+
+    void on_textSourceEnableOutputCheckBox_stateChanged(int new_state);
+
     void set_show_key(bool set_to_show);
 
     void apply_ui_scene_collection_settings();

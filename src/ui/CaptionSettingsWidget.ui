@@ -530,7 +530,14 @@ p, li { white-space: pre-wrap; }
         <number>4</number>
        </property>
        <item>
-        <widget class="QWidget" name="widget_3" native="true">
+        <widget class="QCheckBox" name="saveTranscriptsCheckBox">
+         <property name="text">
+          <string>Save Transcripts</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="transcripWidget1" native="true">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -556,13 +563,6 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QCheckBox" name="saveTranscriptsCheckBox">
-            <property name="text">
-             <string>Save Transcripts</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_9">
             <property name="text">
@@ -608,7 +608,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="widget_4" native="true">
+        <widget class="QWidget" name="transcripWidget2" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <property name="leftMargin">
            <number>0</number>
@@ -640,7 +640,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="frame_9">
+        <widget class="QFrame" name="transcripWidget3">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -725,7 +725,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="frame_8">
+        <widget class="QFrame" name="transcripWidget4">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -810,25 +810,7 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
-        <widget class="QWidget" name="recordingCustomNameQWidget" native="true">
-         <layout class="QGridLayout" name="gridLayout_3">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-         </layout>
-        </widget>
-       </item>
-       <item>
-        <widget class="QWidget" name="srtSettingsWidget" native="true">
+        <widget class="QWidget" name="transcriptSrtSettingsWidget" native="true">
          <layout class="QGridLayout" name="gridLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -952,7 +934,7 @@ p, li { white-space: pre-wrap; }
            <number>6</number>
           </property>
           <item>
-           <widget class="QWidget" name="widget_6" native="true">
+           <widget class="QWidget" name="textSourceWidget1" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <property name="leftMargin">
               <number>0</number>
@@ -1009,7 +991,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QWidget" name="widget_5" native="true">
+           <widget class="QWidget" name="textSourceWidget2" native="true">
             <layout class="QFormLayout" name="formLayout_4">
              <property name="labelAlignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
