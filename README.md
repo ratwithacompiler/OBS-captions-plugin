@@ -103,8 +103,10 @@ Linux support is not well tested yet and requires OBS built with caption support
 
 * Download latest Closed_Captions_Plugin.zip version for Linux [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
 * Put `libobs_google_caption_plugin.so` into your OBS plugins folder
-  * Plugin folder location can vary a lot depending on distribution or installation source.
-  * May also work in `$HOME/.config/obs-studio/plugins`  
+  * Plugin folder location can vary a lot depending on distribution and/or installation source.
+  * Usually also works in `$HOME/.config/obs-studio/plugins`
+    * In that folder it needs to be in the required obs plugin folder structure:
+    * `$HOME/.config/obs-studio/plugins/libobs_google_caption_plugin/bin/64bit/libobs_google_caption_plugin.so`
 
 
 #### Settings for more unusual audio setups that don't use a mic only source in OBS (like 2 PC + audio mixer setups):
