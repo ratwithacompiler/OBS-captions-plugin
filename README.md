@@ -116,9 +116,9 @@ If your OBS setup does not use a audio source that's only the microphone but ins
 * If you don't already have a OBS source that's only your mic then create one:
 	* Create a new Audio Input Capture source in OBS somewhere using the device that's only the microphone, calling it `Microphone only` for example, and mute it (so stream doesn't hear the mic twice)
 * In caption settings set `Caption Source` to the mic only OBS source that's muted
-* Set `Caption When` to `When Other Source is Streamed`
-* Set `Other Source` to your mixed audio OBS source that stream hears
+* Set `Caption When` to `Mute Source is heard on stream`
+* Set `Mute Source` to your mixed audio OBS source that stream hears
 
-![Mixed Source Setup Instructions](https://i.imgur.com/CeWn5xw.png)
+![Mixed Source Setup Instructions](https://i.imgur.com/wuE89ZT.png)
 
 This way it will use the `Microphone only` source to get clean mic audio for captioning but it will still only caption it when the other selected source is unmuted and active so it's still safe. When the mixed source for stream is muted in OBS the captions also get muted.
