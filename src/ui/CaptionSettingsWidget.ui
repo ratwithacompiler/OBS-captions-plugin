@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>435</width>
-    <height>1039</height>
+    <width>428</width>
+    <height>977</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -78,7 +78,7 @@ p, li { white-space: pre-wrap; }
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
@@ -109,7 +109,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="QFrame" name="frame_3">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -200,6 +200,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="3" column="1">
            <widget class="QComboBox" name="captionWhenComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -217,6 +223,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="4" column="1">
            <widget class="QComboBox" name="muteSourceComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -276,6 +288,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="0" column="1">
            <widget class="QComboBox" name="languageComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -312,6 +330,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="2" column="1">
            <widget class="QComboBox" name="outputTargetComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -410,6 +434,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="5" column="1">
            <widget class="QComboBox" name="profanityFilterComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
@@ -427,6 +457,12 @@ p, li { white-space: pre-wrap; }
           </item>
           <item row="6" column="1">
            <widget class="QComboBox" name="capitalizationComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>250</width>
