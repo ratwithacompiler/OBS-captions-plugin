@@ -432,6 +432,8 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                      settings.source_cap_settings.transcript_settings.srt_target_duration_secs);
     obs_data_set_int(save_data, "transcript_srt_target_line_length",
                      settings.source_cap_settings.transcript_settings.srt_target_line_length);
+
+    obs_data_set_string(save_data, "plugin_version", VERSION_STRING);
 }
 
 static CaptionPluginSettings load_CaptionPluginSettings(obs_data_t *load_data) {
