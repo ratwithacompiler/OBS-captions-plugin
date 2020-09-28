@@ -27,6 +27,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define SAVE_ENTRY_NAME "cloud_closed_caption_rat"
 
+static bool get_WordReplacements(obs_data_t *load_data, std::vector<WordReplacement> &word_placements);
+
+static bool set_WordReplacements(obs_data_t *save_data, const std::vector<WordReplacement> &word_placements);
+
 static CaptionStreamSettings default_CaptionStreamSettings() {
     uint download_start_delay_ms = 4000;
     download_start_delay_ms = 40;
@@ -56,13 +60,22 @@ static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings()
     };
 };
 
+static DefaultReplacer makeDefaultReplacer(const vector<WordReplacement> &userReplacements) {
+    return DefaultReplacer({"niger", "nigger", "nigga", "niggas", "\\bfag\\b", "faggot", "chink"},
+                           userReplacements);
+}
+
+static DefaultReplacer emptyDefaultReplacer() {
+    return makeDefaultReplacer(vector<WordReplacement>());
+}
+
 static CaptionFormatSettings default_CaptionFormatSettings() {
     return {
             32,
             3,
             CAPITALIZATION_NORMAL,
             false,
-            {"niger", "nigger", "nigga", "niggas", "fag", "faggot", "chink"}, // default banned words
+            emptyDefaultReplacer(),
             true,
             15.0,
     };
@@ -132,6 +145,13 @@ static CaptionPluginSettings default_CaptionPluginSettings() {
             false,
             default_SourceCaptionerSettings()
     );
+}
+
+static bool isValidWordReplacementTypeString(const string &type) {
+    return (type == "text_case_insensitive"
+            || type == "text_case_sensitive"
+            || type == "regex_case_insensitive"
+            || type == "regex_case_sensitive");
 }
 
 
@@ -347,8 +367,24 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.format_settings.caption_timeout_enabled = obs_data_get_bool(load_data, "caption_timeout_enabled");
     source_settings.format_settings.caption_timeout_seconds = obs_data_get_double(load_data, "caption_timeout_secs");
 
-    string banned_words_line = obs_data_get_string(load_data, "manual_banned_words");
-    source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
+
+    auto word_reps = std::vector<WordReplacement>();
+    get_WordReplacements(load_data, word_reps);
+
+    if (word_reps.empty()) {
+        string old_manual_banned_words = obs_data_get_string(load_data, "manual_banned_words");
+//        printf("manual_banned_words fallback: '%s'\n", old_manual_banned_words.c_str());
+        if (!old_manual_banned_words.empty()) {
+            auto word_replacements = string_to_banned_words(old_manual_banned_words);
+            for (const auto &word: word_replacements) {
+                if (word.empty())
+                    continue;
+//                printf("adding fallback %s\n", word.c_str());
+                word_reps.push_back(WordReplacement("text_case_insensitive", word, ""));
+            }
+        }
+    }
+    source_settings.format_settings.replacer = makeDefaultReplacer(word_reps);
 
     source_settings.scene_collection_settings = get_SceneCollectionSettings_from_data(load_data);
 
@@ -397,12 +433,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     obs_data_set_bool(save_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
     obs_data_set_double(save_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
 
-    string banned_words_line;
-    if (!source_settings.format_settings.manual_banned_words.empty()) {
-//        info_log("savingggggg %d", settings.format_settings.manual_banned_words.size());
-        words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
-    }
-    obs_data_set_string(save_data, "manual_banned_words", banned_words_line.c_str());
+    set_WordReplacements(save_data, source_settings.format_settings.replacer.user_replacements());
 
     set_SceneCollectionSettings_on_data(save_data, source_settings.scene_collection_settings);
 
@@ -435,6 +466,49 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
     obs_data_set_string(save_data, "plugin_version", VERSION_STRING);
 }
+
+static bool get_WordReplacements(obs_data_t *load_data, std::vector<WordReplacement> &word_placements) {
+    obs_data_array_t *words_array = obs_data_get_array(load_data, "word_replacements");
+//    printf("obs_data_array_count(words_array) %d\n", (int) obs_data_array_count(words_array));
+    for (size_t index = 0; index < obs_data_array_count(words_array); index++) {
+        obs_data_t *a_scene_source_obj = obs_data_array_item(words_array, index);
+
+        string type = obs_data_get_string(a_scene_source_obj, "type");
+        string from = obs_data_get_string(a_scene_source_obj, "from");
+        string to = obs_data_get_string(a_scene_source_obj, "to");
+
+        if (!type.empty() && !from.empty()) {
+//            printf("adding %s %s\n", type.c_str(), from.c_str());
+            word_placements.push_back(WordReplacement(type, from, to));
+        };
+
+        obs_data_release(a_scene_source_obj);
+    }
+    obs_data_array_release(words_array);
+
+    return true;
+}
+
+static bool set_WordReplacements(obs_data_t *save_data, const std::vector<WordReplacement> &word_placements) {
+    obs_data_array_t *scene_collection_sources_array = obs_data_array_create();
+
+    for (auto &word: word_placements) {
+        obs_data_t *word_obj = obs_data_create();
+
+        obs_data_set_string(word_obj, "type", word.get_type().c_str());
+        obs_data_set_string(word_obj, "from", word.get_from().c_str());
+        obs_data_set_string(word_obj, "to", word.get_to().c_str());
+
+        obs_data_array_push_back(scene_collection_sources_array, word_obj);
+        obs_data_release(word_obj);
+    }
+
+    obs_data_set_array(save_data, "word_replacements", scene_collection_sources_array);
+    obs_data_array_release(scene_collection_sources_array);
+
+    return true;
+}
+
 
 static CaptionPluginSettings load_CaptionPluginSettings(obs_data_t *load_data) {
     obs_data_t *obj = obs_data_get_obj(load_data, SAVE_ENTRY_NAME);

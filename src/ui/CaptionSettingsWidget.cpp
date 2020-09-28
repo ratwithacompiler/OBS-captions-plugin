@@ -25,6 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../caption_stream_helper.cpp"
 #include "uiutils.h"
 
+#define WORD_REPLACEMENT_TYPE_INDEX 0
+#define WORD_REPLACEMENT_FROM_INDEX 1
+#define WORD_REPLACEMENT_TO_INDEX 2
+#define WORD_REPLACEMENT_DELETE_INDEX 3
+
 static void setup_combobox_texts(QComboBox &comboBox,
                                  const vector<string> &items
 ) {
@@ -71,6 +76,91 @@ static int combobox_set_data_int(QComboBox &combo_box, const int data, int defau
 
     combo_box.setCurrentIndex(index);
     return index;
+}
+
+
+QComboBox *wordReplacementTypeComboBox(const char *default_text) {
+    auto *cb = new QComboBox();
+    cb->addItem("Text", "text_case_insensitive"); //(Ignore Case)
+//    cb->addItem("Text", "text_case_sensitive");
+    cb->addItem("Regex", "regex_case_insensitive"); //(Ignore Case)
+//    cb->addItem("Regex", "regex_case_sensitive");
+    combobox_set_data_str(*cb, default_text, 0);
+
+    return cb;
+}
+
+QPushButton *wordReplacementDeletePushButton(QTableWidget *tableWidget) {
+    auto *button = new QPushButton("X");
+    QObject::connect(button, &QPushButton::clicked, tableWidget, [=]() {
+        int foundAt = -1;
+        for (int row = 0; row < tableWidget->rowCount(); row++) {
+            const QWidget *wid = tableWidget->cellWidget(row, WORD_REPLACEMENT_DELETE_INDEX);
+            if (wid == button) {
+                foundAt = row;
+                break;
+            }
+        }
+
+        if (foundAt != -1) {
+            tableWidget->removeRow(foundAt);
+//            printf("remove index %d\n", foundAt);
+        } else {
+//            printf("cant delete, index not found\n");
+        }
+    });
+    return button;
+}
+
+void setupReplacementTableWidget(QTableWidget *tableWidget, const std::vector<WordReplacement> &replacements) {
+    tableWidget->setRowCount(0);
+
+    int row = 0;
+//    printf("setupReplacementTableWidget %d\n", (int) replacements.size());
+    for (auto &word : replacements) {
+        tableWidget->setRowCount(row + 1);
+
+        tableWidget->setCellWidget(row, WORD_REPLACEMENT_TYPE_INDEX, wordReplacementTypeComboBox(word.get_type().c_str()));
+
+        auto from = new QTableWidgetItem(QString::fromStdString(word.get_from()));
+        tableWidget->setItem(row, WORD_REPLACEMENT_FROM_INDEX, from);
+
+        auto to = new QTableWidgetItem(QString::fromStdString(word.get_to()));
+        tableWidget->setItem(row, WORD_REPLACEMENT_TO_INDEX, to);
+
+        tableWidget->setCellWidget(row, WORD_REPLACEMENT_DELETE_INDEX, wordReplacementDeletePushButton(tableWidget));
+
+        row++;
+    }
+
+}
+
+void getReplacements(QTableWidget *tableWidget, std::vector<WordReplacement> &replacements) {
+    replacements.clear();
+    for (int row = 0; row < tableWidget->rowCount(); row++) {
+        string type;
+        string from;
+        string to;
+
+        QComboBox *typeBox = dynamic_cast<QComboBox *>(tableWidget->cellWidget(row, WORD_REPLACEMENT_TYPE_INDEX));
+        if (typeBox) {
+            auto typeString = typeBox->currentData().toString().toStdString();
+            if (isValidWordReplacementTypeString(typeString))
+                type = typeString;
+        }
+
+        if (QTableWidgetItem *item = tableWidget->item(row, WORD_REPLACEMENT_FROM_INDEX)) {
+            from = item->text().toStdString();
+        }
+
+        if (QTableWidgetItem *item = tableWidget->item(row, WORD_REPLACEMENT_TO_INDEX)) {
+            to = item->text().toStdString();
+        }
+
+        if (!type.empty() && !from.empty()) {
+            replacements.push_back(WordReplacement(type, from, to));
+        }
+    }
 }
 
 CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest_settings)
@@ -137,6 +227,15 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
 //    QObject::connect(sceneCollectionComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
 //                     this, &CaptionSettingsWidget::scene_collection_combo_index_change);
+
+    QStringList labels = {"Type", "Replace This", "With This", ""};
+    this->wordReplacementTableWidget->setHorizontalHeaderLabels(labels);
+    this->wordReplacementTableWidget->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    this->wordReplacementTableWidget->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    this->wordReplacementTableWidget->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
+    this->wordReplacementTableWidget->horizontalHeader()->setSectionResizeMode(3, QHeaderView::Fixed);
+    this->wordReplacementTableWidget->setColumnWidth(0, 80);
+    this->wordReplacementTableWidget->setColumnWidth(3, 25);
 }
 
 
@@ -334,9 +433,9 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.format_settings.caption_timeout_enabled = this->captionTimeoutEnabledCheckBox->isChecked();
     source_settings.format_settings.caption_timeout_seconds = this->captionTimeoutDoubleSpinBox->value();
 
-    string banned_words_line = this->bannedWordsPlainTextEdit->toPlainText().toStdString();
-    source_settings.format_settings.manual_banned_words = string_to_banned_words(banned_words_line);
-//    info_log("acceptt %s, words: %lu", banned_words_line.c_str(), banned_words.size());
+    auto reps = std::vector<WordReplacement>();
+    getReplacements(wordReplacementTableWidget, reps);
+    source_settings.format_settings.replacer = makeDefaultReplacer(reps);
 
     auto &transcript_settings = source_settings.transcript_settings;
     transcript_settings.enabled = saveTranscriptsCheckBox->isChecked();
@@ -365,7 +464,6 @@ void CaptionSettingsWidget::accept_current_settings() {
 //    current_settings.print();
     emit settings_accepted(current_settings);
 }
-
 
 void CaptionSettingsWidget::updateUi() {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
@@ -406,9 +504,7 @@ void CaptionSettingsWidget::updateUi() {
     this->captionTimeoutEnabledCheckBox->setChecked(source_settings.format_settings.caption_timeout_enabled);
     this->captionTimeoutDoubleSpinBox->setValue(source_settings.format_settings.caption_timeout_seconds);
 
-    string banned_words_line;
-    words_to_string(source_settings.format_settings.manual_banned_words, banned_words_line);
-    this->bannedWordsPlainTextEdit->setPlainText(QString::fromStdString(banned_words_line));
+    setupReplacementTableWidget(this->wordReplacementTableWidget, source_settings.format_settings.replacer.user_replacements());
 
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
     on_saveTranscriptsCheckBox_stateChanged(0);
@@ -453,6 +549,15 @@ void CaptionSettingsWidget::update_other_source_visibility(CaptionSourceMuteType
     this->muteSourceComboBox->setVisible(be_visible);
     this->muteSourceLabel->setVisible(be_visible);
 
+}
+
+void CaptionSettingsWidget::on_replacementWordsAddWordPushButton_clicked() {
+    const int row = wordReplacementTableWidget->rowCount();
+    wordReplacementTableWidget->setRowCount(row + 1);
+    wordReplacementTableWidget->setCellWidget(row, WORD_REPLACEMENT_TYPE_INDEX,
+                                              wordReplacementTypeComboBox("text_case_insensitive"));
+    wordReplacementTableWidget->setCellWidget(row, WORD_REPLACEMENT_DELETE_INDEX,
+                                              wordReplacementDeletePushButton(wordReplacementTableWidget));
 }
 
 void CaptionSettingsWidget::on_transcriptFolderPickerPushButton_clicked() {

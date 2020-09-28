@@ -87,27 +87,21 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
     try {
 //        debug_log("caption: %s", res.caption_text.c_str());
         const uint max_length = targeted_line_count * line_length;
-
         string cleaned_line = caption_result.caption_text;
 
-        if (!settings.manual_banned_words.empty()) {
-            string tmp_cleaned;
-            int removed = word_filter(cleaned_line, tmp_cleaned, settings.manual_banned_words);
-            if (removed) {
-                info_log("removed %d manual banned words, %s", removed, cleaned_line.c_str());
-                cleaned_line = tmp_cleaned;
+        if (settings.replacer.has_replacements()) {
+            try {
+                string tmp = settings.replacer.get_replacer().replace(caption_result.caption_text);
+
+                if (caption_result.caption_text != tmp) {
+                    info_log("modified string '%s' -> '%s'", caption_result.caption_text.c_str(), tmp.c_str());
+                    cleaned_line = tmp;
+                }
+            }
+            catch (exception ex) {
+                error_log("string replacement error %s: '%s'", ex.what(), caption_result.caption_text.c_str());
             }
         }
-
-        if (!settings.default_banned_words.empty()) {
-            string tmp_cleaned;
-            int removed = word_filter(cleaned_line, tmp_cleaned, settings.default_banned_words);
-            if (removed) {
-                info_log("removed %d default banned words, %s", removed, cleaned_line.c_str());
-                cleaned_line = tmp_cleaned;
-            }
-        }
-
         output_result->clean_caption_text = cleaned_line;
 
         vector<string> all_lines;

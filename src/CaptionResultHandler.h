@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <CaptionStream.h>
+#include "WordReplacer.h"
 
 enum CapitalizationType {
     CAPITALIZATION_NORMAL = 0,
@@ -31,23 +32,58 @@ enum CapitalizationType {
 };
 
 
+class DefaultReplacer {
+private:
+    Replacer text_replacer;
+    std::vector<string> default_replacements;
+    std::vector<WordReplacement> manual_replacements;
+
+public:
+    const std::vector<WordReplacement> &user_replacements() const {
+        return manual_replacements;
+    }
+
+    bool has_replacements() const {
+        return text_replacer.has_replacements();
+    }
+
+    DefaultReplacer(const vector<string> &defaultReplacements,
+                    const vector<WordReplacement> &manualReplacements
+    ) : default_replacements(defaultReplacements),
+        manual_replacements(manualReplacements),
+        text_replacer(Replacer(combineWordReps(wordRepsFromStrs("regex_case_insensitive", defaultReplacements),
+                                               manualReplacements), true)) {}
+
+    bool operator==(const DefaultReplacer &rhs) const {
+        return manual_replacements == rhs.manual_replacements &&
+               default_replacements == rhs.default_replacements;
+    }
+
+    bool operator!=(const DefaultReplacer &rhs) const {
+        return !(rhs == *this);
+    }
+
+    const Replacer &get_replacer() const {
+        return text_replacer;
+    }
+};
+
 struct CaptionFormatSettings {
     uint caption_line_length;
     uint caption_line_count;
     CapitalizationType capitalization;
     bool caption_insert_newlines;
-    std::vector<string> default_banned_words;
-    std::vector<string> manual_banned_words;
 
     bool caption_timeout_enabled;
     double caption_timeout_seconds;
+    DefaultReplacer replacer;
 
     CaptionFormatSettings(
             uint caption_line_length,
             uint caption_line_count,
             CapitalizationType capitalization,
             bool caption_insert_newlines,
-            std::vector<string> default_banned_words,
+            const DefaultReplacer &replacer,
             bool caption_timeout_enabled,
             double caption_timeout_seconds
     ) :
@@ -55,7 +91,7 @@ struct CaptionFormatSettings {
             caption_line_count(caption_line_count),
             capitalization(capitalization),
             caption_insert_newlines(caption_insert_newlines),
-            default_banned_words(default_banned_words),
+            replacer(replacer),
             caption_timeout_enabled(caption_timeout_enabled),
             caption_timeout_seconds(caption_timeout_seconds) {
     }
@@ -66,9 +102,10 @@ struct CaptionFormatSettings {
         printf("%s  caption_line_count: %d\n", line_prefix, caption_line_count);
         printf("%s  capitalization: %d\n", line_prefix, capitalization);
         printf("%s  caption_insert_newlines: %d\n", line_prefix, caption_insert_newlines);
-        printf("%s  manual_banned_words: %lu\n", line_prefix, manual_banned_words.size());
-        for (auto &word : manual_banned_words)
-            printf("%s        '%s'\n", line_prefix, word.c_str());
+        printf("%s  user_replacements: %lu\n", line_prefix, replacer.user_replacements().size());
+        for (auto &word : replacer.user_replacements())
+            printf("%s        %s '%s' -> '%s'\n",
+                   line_prefix, word.get_type().c_str(), word.get_from().c_str(), word.get_to().c_str());
 
 //        printf("%s-----------\n", line_prefix);
     }
@@ -78,8 +115,7 @@ struct CaptionFormatSettings {
                caption_line_count == rhs.caption_line_count &&
                capitalization == rhs.capitalization &&
                caption_insert_newlines == rhs.caption_insert_newlines &&
-               default_banned_words == rhs.default_banned_words &&
-               manual_banned_words == rhs.manual_banned_words &&
+               replacer == rhs.replacer &&
                caption_timeout_enabled == rhs.caption_timeout_enabled &&
                caption_timeout_seconds == rhs.caption_timeout_seconds;
     }

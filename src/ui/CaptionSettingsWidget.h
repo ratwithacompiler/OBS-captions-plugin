@@ -56,7 +56,9 @@ private slots:
     void on_previewPushButton_clicked();
 
     void on_apiKeyShowPushButton_clicked();
-    
+
+    void on_replacementWordsAddWordPushButton_clicked();
+
     void on_transcriptFolderPickerPushButton_clicked();
 
     void on_saveTranscriptsCheckBox_stateChanged(int new_state);

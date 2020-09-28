@@ -42,36 +42,5 @@ static std::string random_string(const int count) {
 }
 
 
-static int word_filter(const string &input, string &output, const vector<string> &banned_words_lowercase) {
-    if (input.empty())
-        return 0;
-
-    int removed_cnt = 0;
-    istringstream stream(input);
-    string word;
-    while (getline(stream, word, ' ')) {
-//        cout << "word '" << word << "'" << endl;
-
-        if (word.empty()) {
-            output.append(" ");
-            continue;
-        }
-
-        string lower_word(word);
-        std::transform(lower_word.begin(), lower_word.end(), lower_word.begin(), ::tolower);
-
-        if (std::find(banned_words_lowercase.begin(), banned_words_lowercase.end(), lower_word) != banned_words_lowercase.end()) {
-            removed_cnt++;
-//            cout << "AHH banned word '" << word << "'" << endl;
-            continue;
-        }
-
-        output.append(word);
-        if (!stream.eof())
-            output.append(" ");
-    }
-    return removed_cnt;
-}
-
 
 #endif // UTILS_H
