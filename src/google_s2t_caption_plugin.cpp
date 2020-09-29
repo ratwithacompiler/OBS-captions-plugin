@@ -132,6 +132,10 @@ void setup_UI() {
 }
 
 void finished_loading_event() {
+#if  defined(__linux__)
+    auto hmm = obs_output_output_caption_text2;
+#endif
+
     frontend_loading_finished = true;
 
     info_log("OBS_FRONTEND_EVENT_FINISHED_LOADING, plugin_manager loaded: %d, %s",
