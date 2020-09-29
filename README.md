@@ -105,7 +105,7 @@ Linux support is not well tested yet and requires OBS built with caption support
 * Put `libobs_google_caption_plugin.so` into your OBS plugins folder
   * Plugin folder location can vary a lot depending on distribution and/or installation source.
   * Usually also works in `$HOME/.config/obs-studio/plugins`
-    * In that folder it needs to be in the required obs plugin folder structure:
+    * In that folder it needs to be in the required obs plugin folder structure, the final path would be:
     * `$HOME/.config/obs-studio/plugins/libobs_google_caption_plugin/bin/64bit/libobs_google_caption_plugin.so`
 
 
