@@ -31,6 +31,7 @@ class OutputAudioCaptureSession {
     const int id;
     struct audio_convert_info converter;
     audio_t *audio_output = nullptr;
+    const int bytes_per_channel;
 public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;

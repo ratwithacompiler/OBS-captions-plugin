@@ -36,6 +36,7 @@ class SourceAudioCaptureSession {
     audio_source_capture_status capture_status;
     bool use_muting_cb_signal = true;
     const int id;
+    const int bytes_per_channel;
 public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;

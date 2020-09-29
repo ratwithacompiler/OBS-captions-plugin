@@ -27,8 +27,6 @@ static void audio_captured(void *param, size_t mix_idx, struct audio_data *audio
         session->audio_capture_cb(mix_idx, audio);
 }
 
-#define AUDIO_FRAME_SIZE 2
-
 OutputAudioCaptureSession::OutputAudioCaptureSession(
         bool use_streaming_output,
         audio_chunk_data_cb audio_data_cb,
@@ -38,13 +36,18 @@ OutputAudioCaptureSession::OutputAudioCaptureSession(
 ) :
         on_caption_cb_handle(audio_data_cb),
         on_status_cb_handle(status_change_cb),
+        bytes_per_channel(get_audio_bytes_per_channel(resample_to.format)),
         id(id) {
     debug_log("OutputAudioCaptureSession()");
 
     obs_audio_info backend_audio_settings;
     if (!obs_get_audio_info(&backend_audio_settings))
         throw std::string("Failed to get OBS audio info");
+    debug_log("output audio_info %d: %d, %d",
+              use_streaming_output, backend_audio_settings.samples_per_sec, backend_audio_settings.speakers);
 
+    if (!bytes_per_channel)
+        throw std::string("Failed to get frame bytes size per channel");
 
     converter.speakers = resample_to.speakers;
     converter.format = resample_to.format;
@@ -68,8 +71,7 @@ void OutputAudioCaptureSession::audio_capture_cb(size_t mix_idx, const struct au
     if (!audio || !audio->frames)
         return;
 
-    unsigned int size = audio->frames * AUDIO_FRAME_SIZE;
-//    printf("audio_capture_cb %d %d\n", audio->frames, size);
+    unsigned int size = audio->frames * bytes_per_channel;
     {
         std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
         if (on_caption_cb_handle.callback_fn)

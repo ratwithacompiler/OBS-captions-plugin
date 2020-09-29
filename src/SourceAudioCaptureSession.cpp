@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "SourceAudioCaptureSession.h"
 #include "log.c"
 
-#define AUDIO_FRAME_SIZE 2
-
 static void audio_captured(void *param, obs_source_t *source, const struct audio_data *audio, bool muted) {
     auto session = reinterpret_cast<SourceAudioCaptureSession *>(param);
     if (session)
@@ -51,6 +49,7 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
         on_status_cb_handle(status_change_cb),
         muted_handling(muted_handling),
         use_muting_cb_signal(true),
+        bytes_per_channel(get_audio_bytes_per_channel(resample_to.format)),
         id(id) {
     debug_log("SourceAudioCaptureSession()");
 
@@ -60,6 +59,9 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
 
     if (!audio_source)
         throw std::string("No audio capture source");
+
+    if (!bytes_per_channel)
+        throw std::string("Failed to get frame bytes size per channel");
 
     resample_info src = {
             backend_audio_settings.samples_per_sec,
@@ -169,7 +171,7 @@ void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const str
             return;
 
         if (muted_handling == MUTED_SOURCE_REPLACE_WITH_ZERO) {
-            const unsigned int size = audio->frames * AUDIO_FRAME_SIZE;
+            const unsigned int size = audio->frames * bytes_per_channel;
             uint8_t *buffer = new uint8_t[size];
             memset(buffer, 0, size);
 
@@ -195,7 +197,7 @@ void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const str
         warn_log("failed resampling audio data");
         return;
     }
-    unsigned int size = out_frames * AUDIO_FRAME_SIZE;
+    unsigned int size = out_frames * bytes_per_channel;
     {
         std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
         if (on_caption_cb_handle.callback_fn)
