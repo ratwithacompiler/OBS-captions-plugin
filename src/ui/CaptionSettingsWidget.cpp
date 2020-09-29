@@ -186,6 +186,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     bottomTextBrowser->setPlainText(with_version);
 
     this->verticalLayout->setAlignment(Qt::AlignTop);
+    this->errorLabel->hide();
     this->updateUi();
 
 #if ENABLE_CUSTOM_API_KEY
