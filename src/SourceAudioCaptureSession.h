@@ -25,29 +25,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <mutex>
 #include <lib/caption_stream/ThreadsaferCallback.h>
+#include "data.h"
 
-
-enum audio_source_capture_status {
-    AUDIO_SOURCE_CAPTURING = 1,
-    AUDIO_SOURCE_MUTED = 2,
-    AUDIO_SOURCE_NOT_STREAMED = 3,
-};
-
-enum source_capture_config {
-    MUTED_SOURCE_DISCARD_WHEN_MUTED,
-    MUTED_SOURCE_REPLACE_WITH_ZERO,
-    MUTED_SOURCE_STILL_CAPTURE,
-};
-
-
-using std::string;
-typedef std::function<void(const int id, const uint8_t *, const size_t)> audio_chunk_data_cb;
-typedef std::function<void(const int id, const audio_source_capture_status status)> audio_capture_status_change_cb;
-
-#define FRAME_SIZE 2
-
-
-class AudioCaptureSession {
+class SourceAudioCaptureSession {
     OBSSource audio_source;
     OBSSource muting_source;
     source_capture_config muted_handling;
@@ -60,7 +40,7 @@ public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;
 
-    AudioCaptureSession(
+    SourceAudioCaptureSession(
             obs_source_t *audio_source,
             obs_source_t *muting_source,
             audio_chunk_data_cb audio_data_cb,
@@ -73,7 +53,7 @@ public:
 
     void audio_capture_cb(obs_source_t *source, const struct audio_data *audio, bool muted);
 
-    ~AudioCaptureSession();
+    ~SourceAudioCaptureSession();
 
     void state_changed_check(bool always_signal = false);
 

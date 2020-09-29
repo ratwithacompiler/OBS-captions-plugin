@@ -50,7 +50,8 @@ static bool captioning_status_string(
         } else if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK
                    || status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE) {
 
-            const string source_name = status.settings.scene_collection_settings.caption_source_settings.caption_source_name;
+            const string source_name = corrected_streaming_audio_output_capture_source_name(
+                    status.settings.scene_collection_settings.caption_source_settings.caption_source_name);
             const string mute_source_name = status.settings.scene_collection_settings.caption_source_settings.active_mute_source_name();
 
             const string source_name_use = "(" + source_name + ")";

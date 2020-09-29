@@ -68,7 +68,8 @@ SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, const 
 void SourceCaptioner::stop_caption_stream(bool send_signal) {
     if (!send_signal) {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
-        audio_capture_session = nullptr;
+        source_audio_capture_session = nullptr;
+        output_audio_capture_session = nullptr;
         caption_result_handler = nullptr;
         continuous_captions = nullptr;
         audio_capture_id++;
@@ -80,7 +81,8 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
     SourceCaptionerSettings cur_settings = settings;
     string cur_scene_collection_name = this->selected_scene_collection_name;
 
-    audio_capture_session = nullptr;
+    source_audio_capture_session = nullptr;
+    output_audio_capture_session = nullptr;
     caption_result_handler = nullptr;
     continuous_captions = nullptr;
     audio_capture_id++;
@@ -144,7 +146,8 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
         settings = new_settings;
         selected_scene_collection_name = scene_collection_name;
 
-        audio_capture_session = nullptr;
+        source_audio_capture_session = nullptr;
+        output_audio_capture_session = nullptr;
         caption_result_handler = nullptr;
         audio_capture_id++;
 
@@ -153,8 +156,15 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
         if (!started_ok)
             stop_caption_stream(false);
 
-        if (started_ok && audio_capture_session) {
-            audio_cap_status = audio_capture_session->get_current_capture_status();
+        if (started_ok) {
+            if (source_audio_capture_session)
+                audio_cap_status = source_audio_capture_session->get_current_capture_status();
+            else if (output_audio_capture_session)
+                audio_cap_status = AUDIO_SOURCE_CAPTURING;
+            else {
+                stop_caption_stream(false);
+                started_ok = false;
+            }
         }
     }
 
@@ -200,23 +210,33 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             return false;
         }
 
-        OBSSource caption_source = obs_get_source_by_name(selected_caption_source_settings.caption_source_name.c_str());
-        obs_source_release(caption_source);
-        if (!caption_source) {
-            warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
-                     selected_caption_source_settings.caption_source_name.c_str());
-            return false;
-        }
+        const bool use_streaming_output_audio = is_streaming_audio_output_capture_source_name(
+                selected_caption_source_settings.caption_source_name);
+        const bool use_recording_output_audio = is_recording_audio_output_capture_source_name(
+                selected_caption_source_settings.caption_source_name);
+        const bool use_output_audio = use_streaming_output_audio || use_recording_output_audio;
 
+        OBSSource caption_source;
         OBSSource mute_source;
-        if (selected_caption_source_settings.mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
-            mute_source = obs_get_source_by_name(selected_caption_source_settings.mute_source_name.c_str());
-            obs_source_release(mute_source);
 
-            if (!mute_source) {
-                warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
-                         selected_caption_source_settings.mute_source_name.c_str());
+        if (!use_output_audio) {
+            caption_source = obs_get_source_by_name(selected_caption_source_settings.caption_source_name.c_str());
+            obs_source_release(caption_source);
+            if (!caption_source) {
+                warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
+                         selected_caption_source_settings.caption_source_name.c_str());
                 return false;
+            }
+
+            if (selected_caption_source_settings.mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
+                mute_source = obs_get_source_by_name(selected_caption_source_settings.mute_source_name.c_str());
+                obs_source_release(mute_source);
+
+                if (!mute_source) {
+                    warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
+                             selected_caption_source_settings.mute_source_name.c_str());
+                    return false;
+                }
             }
         }
 
@@ -254,11 +274,21 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             auto audio_status_cb = std::bind(&SourceCaptioner::on_audio_capture_status_change_callback, this,
                                              std::placeholders::_1, std::placeholders::_2);
 
-            audio_capture_session = std::make_unique<AudioCaptureSession>(caption_source, mute_source, audio_cb, audio_status_cb,
-                                                                          resample_to,
-                                                                          MUTED_SOURCE_REPLACE_WITH_ZERO,
-                                                                          false,
-                                                                          audio_capture_id);
+            if (use_output_audio) {
+                output_audio_capture_session = std::make_unique<OutputAudioCaptureSession>(use_streaming_output_audio,
+                                                                                           audio_cb, audio_status_cb,
+                                                                                           resample_to,
+                                                                                           audio_capture_id);
+            } else {
+                source_audio_capture_session = std::make_unique<SourceAudioCaptureSession>(caption_source, mute_source, audio_cb,
+                                                                                           audio_status_cb,
+                                                                                           resample_to,
+                                                                                           MUTED_SOURCE_REPLACE_WITH_ZERO,
+                                                                                           false,
+                                                                                           audio_capture_id);
+            }
+
+
         }
         catch (std::string err) {
             warn_log("couldn't create AudioCaptureSession, %s", err.c_str());
@@ -313,7 +343,7 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
 void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, const size_t size) {
 //    info_log("audio data");
     if (continuous_captions) {
-        // safe without locking as continuous_captions only ever gets update when there's no AudioCaptureSession running
+        // safe without locking as continuous_captions only ever gets updated when there's no AudioCaptureSession running
         continuous_captions->queue_audio_data((char *) data, size);
     }
     audio_chunk_count++;

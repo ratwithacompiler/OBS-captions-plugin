@@ -17,25 +17,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <utility>
 
-#include <utility>
-#include <util/platform.h>
-
-#include "AudioCaptureSession.h"
+#include "SourceAudioCaptureSession.h"
 #include "log.c"
 
-static unsigned int capture_count = 0;
+#define AUDIO_FRAME_SIZE 2
 
 static void audio_captured(void *param, obs_source_t *source, const struct audio_data *audio, bool muted) {
-    auto session = reinterpret_cast<AudioCaptureSession *>(param);
-    session->audio_capture_cb(source, audio, muted);
+    auto session = reinterpret_cast<SourceAudioCaptureSession *>(param);
+    if (session)
+        session->audio_capture_cb(source, audio, muted);
 }
 
 static void state_changed_fwder(void *param, calldata_t *calldata) {
-    auto session = reinterpret_cast<AudioCaptureSession *>(param);
-    session->state_changed_check();
+    auto session = reinterpret_cast<SourceAudioCaptureSession *>(param);
+    if (session)
+        session->state_changed_check();
 }
 
-AudioCaptureSession::AudioCaptureSession(
+
+SourceAudioCaptureSession::SourceAudioCaptureSession(
         obs_source_t *audio_source_arg,
         obs_source_t *muting_source_arg,
         audio_chunk_data_cb audio_data_cb,
@@ -52,7 +52,7 @@ AudioCaptureSession::AudioCaptureSession(
         muted_handling(muted_handling),
         use_muting_cb_signal(true),
         id(id) {
-    debug_log("AudioCaptureSession()");
+    debug_log("SourceAudioCaptureSession()");
 
     obs_audio_info backend_audio_settings;
     if (!obs_get_audio_info(&backend_audio_settings))
@@ -105,12 +105,12 @@ AudioCaptureSession::AudioCaptureSession(
         state_changed_check(true);
 }
 
-void AudioCaptureSession::state_changed_check(bool always_signal) {
+void SourceAudioCaptureSession::state_changed_check(bool always_signal) {
     audio_source_capture_status new_status = check_source_status();
     if (!always_signal && new_status == capture_status)
         return;
 
-    debug_log("AudioCaptureSession %d status changed %s %d", id, obs_source_get_name(muting_source), new_status);
+    debug_log("SourceAudioCaptureSession %d status changed %s %d", id, obs_source_get_name(muting_source), new_status);
     capture_status = new_status;
     {
         std::lock_guard<std::recursive_mutex> lock(on_status_cb_handle.mutex);
@@ -127,7 +127,7 @@ void AudioCaptureSession::state_changed_check(bool always_signal) {
 }
 
 
-audio_source_capture_status AudioCaptureSession::check_source_status() {
+audio_source_capture_status SourceAudioCaptureSession::check_source_status() {
     const bool is_muted = obs_source_muted(muting_source);
     const bool is_active = obs_source_active(muting_source);
     const bool is_showing = obs_source_showing(muting_source);
@@ -143,11 +143,11 @@ audio_source_capture_status AudioCaptureSession::check_source_status() {
     return AUDIO_SOURCE_CAPTURING;
 }
 
-void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct audio_data *audio, bool muted) {
-    capture_count++;
-    if (capture_count % 100 == 0) {
+void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct audio_data *audio, bool muted) {
+//    capture_count++;
+//    if (capture_count % 100 == 0) {
 //        printf("audio_capture_cb %d %d\n", capture_count, muted);
-    }
+//    }
     if (!on_caption_cb_handle.callback_fn)
         return;
 
@@ -169,7 +169,7 @@ void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct au
             return;
 
         if (muted_handling == MUTED_SOURCE_REPLACE_WITH_ZERO) {
-            const unsigned int size = audio->frames * FRAME_SIZE;
+            const unsigned int size = audio->frames * AUDIO_FRAME_SIZE;
             uint8_t *buffer = new uint8_t[size];
             memset(buffer, 0, size);
 
@@ -195,7 +195,7 @@ void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct au
         warn_log("failed resampling audio data");
         return;
     }
-    unsigned int size = out_frames * FRAME_SIZE;
+    unsigned int size = out_frames * AUDIO_FRAME_SIZE;
     {
         std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
         if (on_caption_cb_handle.callback_fn)
@@ -203,7 +203,7 @@ void AudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct au
     }
 }
 
-AudioCaptureSession::~AudioCaptureSession() {
+SourceAudioCaptureSession::~SourceAudioCaptureSession() {
     on_caption_cb_handle.clear();
     on_status_cb_handle.clear();
 
@@ -221,9 +221,9 @@ AudioCaptureSession::~AudioCaptureSession() {
 
     audio_resampler_destroy(resampler);
 
-    debug_log("~AudioCaptureSession() deaded");
+    debug_log("SourceAudioCaptureSessionession() deaded");
 }
 
-audio_source_capture_status AudioCaptureSession::get_current_capture_status() {
+audio_source_capture_status SourceAudioCaptureSession::get_current_capture_status() {
     return capture_status;
 }

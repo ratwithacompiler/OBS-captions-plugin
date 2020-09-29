@@ -84,7 +84,8 @@ set(obs_google_caption_plugin_SOURCES
         src/ui/MainCaptionWidget.cpp
         src/ui/CaptionSettingsWidget.cpp
 
-        src/AudioCaptureSession.cpp
+        src/SourceAudioCaptureSession.cpp
+        src/OutputAudioCaptureSession.cpp
         src/SourceCaptioner.cpp
         src/CaptionResultHandler.cpp
 
@@ -94,7 +95,8 @@ set(obs_google_caption_plugin_SOURCES
         )
 
 set(obs_google_caption_plugin_HEADERS
-        src/AudioCaptureSession.h
+        src/SourceAudioCaptureSession.h
+        src/OutputAudioCaptureSession.h
         src/SourceCaptioner.h
         src/CaptionResultHandler.cpp
 

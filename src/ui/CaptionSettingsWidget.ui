@@ -192,7 +192,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QLabel" name="label_5">
+           <widget class="QLabel" name="captionWhenLabel">
             <property name="text">
              <string>Caption When</string>
             </property>

@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <ContinuousCaptions.h>
-#include "AudioCaptureSession.h"
+#include "SourceAudioCaptureSession.h"
+#include "OutputAudioCaptureSession.h"
 #include "CaptionResultHandler.h"
 
 #include <QObject>
@@ -375,7 +376,8 @@ Q_DECLARE_METATYPE(std::shared_ptr<SourceCaptionerStatus>)
 class SourceCaptioner : public QObject {
 Q_OBJECT
 
-    std::unique_ptr<AudioCaptureSession> audio_capture_session;
+    std::unique_ptr<SourceAudioCaptureSession> source_audio_capture_session;
+    std::unique_ptr<OutputAudioCaptureSession> output_audio_capture_session;
     std::unique_ptr<ContinuousCaptions> continuous_captions;
     uint audio_chunk_count = 0;
 
