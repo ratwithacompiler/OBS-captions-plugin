@@ -32,7 +32,7 @@ class SourceAudioCaptureSession {
     OBSSource muting_source;
     source_capture_config muted_handling;
 
-    audio_resampler_t *resampler;
+    audio_resampler_t *resampler = nullptr;
     audio_source_capture_status capture_status;
     bool use_muting_cb_signal = true;
     const int id;

@@ -50,11 +50,12 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
         muted_handling(muted_handling),
         use_muting_cb_signal(true),
         bytes_per_channel(get_audio_bytes_per_channel(resample_to.format)),
+        resampler(nullptr),
         id(id) {
     debug_log("SourceAudioCaptureSession()");
 
-    obs_audio_info backend_audio_settings;
-    if (!obs_get_audio_info(&backend_audio_settings))
+    const struct audio_output_info *obs_audio = audio_output_get_info(obs_get_audio());
+    if (!obs_audio)
         throw std::string("Failed to get OBS audio info");
 
     if (!audio_source)
@@ -63,15 +64,26 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
     if (!bytes_per_channel)
         throw std::string("Failed to get frame bytes size per channel");
 
-    resample_info src = {
-            backend_audio_settings.samples_per_sec,
-            AUDIO_FORMAT_FLOAT_PLANAR,
-            backend_audio_settings.speakers
-    };
+    if (obs_audio->samples_per_sec != resample_to.samples_per_sec
+        || obs_audio->format != resample_to.format
+        || obs_audio->speakers != resample_to.speakers) {
+        resample_info src = {
+                obs_audio->samples_per_sec,
+                obs_audio->format,
+                obs_audio->speakers
+        };
 
-    resampler = audio_resampler_create(&resample_to, &src);
-    if (!resampler)
-        throw std::string("Failed to create audio resampler");
+        info_log("creating new resampler (%d, %d, %d) -> (%d, %d, %d)",
+                 src.samples_per_sec, src.format, src.speakers,
+                 resample_to.samples_per_sec, resample_to.format, resample_to.speakers);
+
+        // All audio data from sources gets resampled to the main OBS audio settings before being given to the
+        // callbacks so it should be safe to assume that the src info for the resampler should never change since
+        // OBS audio settings don't seem to be able to be changed while running and require a OBS restart.
+        resampler = audio_resampler_create(&resample_to, &src);
+        if (!resampler)
+            throw std::string("Failed to create audio resampler");
+    }
 
     const char *name = obs_source_get_name(audio_source);
     info_log("source %s active: %d", name, obs_source_active(audio_source));
@@ -146,19 +158,11 @@ audio_source_capture_status SourceAudioCaptureSession::check_source_status() {
 }
 
 void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const struct audio_data *audio, bool muted) {
-//    capture_count++;
-//    if (capture_count % 100 == 0) {
-//        printf("audio_capture_cb %d %d\n", capture_count, muted);
-//    }
     if (!on_caption_cb_handle.callback_fn)
         return;
 
     if (!audio || !audio->frames)
         return;
-
-    uint8_t *out[MAX_AV_PLANES];
-    uint32_t out_frames;
-    uint64_t ts_offset;
 
     if (muted && !use_muting_cb_signal) {
         muted = false;
@@ -175,7 +179,6 @@ void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const str
             uint8_t *buffer = new uint8_t[size];
             memset(buffer, 0, size);
 
-//            info_log("sending zero data");
             {
                 std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
                 if (on_caption_cb_handle.callback_fn)
@@ -190,18 +193,38 @@ void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const str
             return; // unknown val, capture not allowed explicitliy do nothing
     }
 
-    bool success = audio_resampler_resample(resampler, out, &out_frames, &ts_offset,
-                                            (const uint8_t *const *) audio->data, audio->frames);
+    if (!resampler) {
+        // correct format already, no need to resample;
+        unsigned int size = audio->frames * bytes_per_channel;
+        {
+            std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
+            if (on_caption_cb_handle.callback_fn)
+                on_caption_cb_handle.callback_fn(id, audio->data[0], size);
+        }
+    } else {
+        uint8_t *out[MAX_AV_PLANES];
+        memset(out, 0, sizeof(out));
 
-    if (!success || !out[0]) {
-        warn_log("failed resampling audio data");
-        return;
-    }
-    unsigned int size = out_frames * bytes_per_channel;
-    {
-        std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
-        if (on_caption_cb_handle.callback_fn)
-            on_caption_cb_handle.callback_fn(id, out[0], size);
+        uint32_t out_frames;
+        uint64_t ts_offset;
+
+        // resamplers just write pointers to it's internal buffer to out[] for each channel
+        // so no need to alloc/free any specific buffer here for the audio data.
+        // Cb's are responsible for not keeping pointer beyond cb.
+        bool success = audio_resampler_resample(resampler, out, &out_frames, &ts_offset,
+                                                (const uint8_t *const *) audio->data, audio->frames);
+
+        if (!success || !out[0]) {
+            warn_log("failed resampling audio data");
+            return;
+        }
+
+        unsigned int size = out_frames * bytes_per_channel;
+        {
+            std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
+            if (on_caption_cb_handle.callback_fn)
+                on_caption_cb_handle.callback_fn(id, out[0], size);
+        }
     }
 }
 
