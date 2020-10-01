@@ -18,40 +18,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OBS_GOOGLE_CAPTION_PLUGIN_DATA_H
 #define OBS_GOOGLE_CAPTION_PLUGIN_DATA_H
 
-#define AUDIO_OUTPUT_CAPTURE_STREAMING_SOURCE_NAME "______________________________________audio_output_capture___streaming_source_lets_hope_no_one_ever_names_a_obs_source_list_this"
-#define AUDIO_OUTPUT_CAPTURE_RECORDING_SOURCE_NAME "______________________________________audio_output_capture___recording_source_lets_hope_no_one_ever_names_a_obs_source_list_this"
+#define AUDIO_OUTPUT_CAPTURE_ALL_AUDIO_SOURCE_NAME "______________________________________audio_output_capture___all_audio_source_lets_hope_no_one_ever_names_a_obs_source_list_this_"
 
-static bool is_audio_output_capture_source_name(const std::string &input) {
-    return (
-            input == AUDIO_OUTPUT_CAPTURE_STREAMING_SOURCE_NAME
-            || input == AUDIO_OUTPUT_CAPTURE_RECORDING_SOURCE_NAME
-    );
+#include <string>
+
+static bool is_all_audio_output_capture_source_data(const std::string &data) {
+    return data.find(AUDIO_OUTPUT_CAPTURE_ALL_AUDIO_SOURCE_NAME) == 0;
 }
 
-static bool is_streaming_audio_output_capture_source_name(const std::string &input) {
-    return input == AUDIO_OUTPUT_CAPTURE_STREAMING_SOURCE_NAME;
+static int all_audio_output_capture_source_track_index(const std::string &data) {
+    if (!is_all_audio_output_capture_source_data(data))
+        return -1;
+
+    const std::string rest = data.substr(strlen(AUDIO_OUTPUT_CAPTURE_ALL_AUDIO_SOURCE_NAME));
+    try {
+        return std::stoi(rest, nullptr);
+    }
+    catch (...) {
+        return -1;
+    }
 }
 
-static bool is_recording_audio_output_capture_source_name(const std::string &input) {
-    return input == AUDIO_OUTPUT_CAPTURE_RECORDING_SOURCE_NAME;
+static const std::string all_audio_output_capture_source_name(const int track_index) {
+    return "Stream Audio (Track " + std::to_string(track_index + 1) + ")";
 }
 
-static const char *streaming_audio_output_capture_source_name() {
-    return "All Stream Audio";
+static const std::string all_audio_output_capture_source_data(const int track_index) {
+    return AUDIO_OUTPUT_CAPTURE_ALL_AUDIO_SOURCE_NAME + std::to_string(track_index);
 }
 
-static const char *recording_audio_output_capture_source_name() {
-    return "All Recording Audio";
-}
 
-static const std::string corrected_streaming_audio_output_capture_source_name(const std::string &text) {
-    if (is_streaming_audio_output_capture_source_name(text))
-        return streaming_audio_output_capture_source_name();
+static const std::string corrected_streaming_audio_output_capture_source_name(const std::string &data) {
+    const int track_index = all_audio_output_capture_source_track_index(data);
+    if (track_index >= 0) {
+        return all_audio_output_capture_source_name(track_index);
+    }
 
-    if (is_recording_audio_output_capture_source_name(text))
-        return recording_audio_output_capture_source_name();
-
-    return text;
+    return data;
 }
 
 enum audio_source_capture_status {

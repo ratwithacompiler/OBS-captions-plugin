@@ -32,12 +32,13 @@ class OutputAudioCaptureSession {
     struct audio_convert_info converter;
     audio_t *audio_output = nullptr;
     const int bytes_per_channel;
+    const int track_index;
 public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;
 
     OutputAudioCaptureSession(
-            bool use_streaming_output,
+            int track_index,
             audio_chunk_data_cb audio_data_cb,
             audio_capture_status_change_cb status_change_cb,
             resample_info resample_to,

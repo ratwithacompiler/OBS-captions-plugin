@@ -31,6 +31,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define WORD_REPLACEMENT_TO_INDEX 2
 #define WORD_REPLACEMENT_DELETE_INDEX 3
 
+#define AUDIO_TRACK_COUNT 6
+
+
 static void setup_combobox_texts(QComboBox &comboBox,
                                  const vector<string> &items
 ) {
@@ -276,7 +279,7 @@ void CaptionSettingsWidget::on_previewPushButton_clicked() {
 }
 
 void CaptionSettingsWidget::sources_combo_index_change(int new_index) {
-    bool all_audio_capture_enabled = is_audio_output_capture_source_name(sourcesComboBox->currentData().toString().toStdString());
+    bool all_audio_capture_enabled = is_all_audio_output_capture_source_data(sourcesComboBox->currentData().toString().toStdString());
     captionWhenComboBox->setVisible(!all_audio_capture_enabled);
     captionWhenLabel->setVisible(!all_audio_capture_enabled);
 
@@ -335,8 +338,9 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
     const QSignalBlocker blocker1(sourcesComboBox);
     setup_combobox_texts_data(*sourcesComboBox, audio_sources);
 
-    sourcesComboBox->addItem(streaming_audio_output_capture_source_name(), QString(AUDIO_OUTPUT_CAPTURE_STREAMING_SOURCE_NAME));
-    sourcesComboBox->addItem(recording_audio_output_capture_source_name(), QString(AUDIO_OUTPUT_CAPTURE_RECORDING_SOURCE_NAME));
+    for (int i = 0; i < AUDIO_TRACK_COUNT; i++)
+        sourcesComboBox->addItem(QString::fromStdString(all_audio_output_capture_source_name(i)),
+                                 QString::fromStdString(all_audio_output_capture_source_data(i)));
 
     const QSignalBlocker blocker2(muteSourceComboBox);
     setup_combobox_texts(*muteSourceComboBox, audio_sources);
@@ -567,7 +571,7 @@ void CaptionSettingsWidget::set_settings(const CaptionPluginSettings &new_settin
 }
 
 void CaptionSettingsWidget::update_other_source_visibility(CaptionSourceMuteType mute_state) {
-    bool all_audio_capture_enabled = is_audio_output_capture_source_name(sourcesComboBox->currentData().toString().toStdString());
+    bool all_audio_capture_enabled = is_all_audio_output_capture_source_data(sourcesComboBox->currentData().toString().toStdString());
     bool be_visible = mute_state == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE && !all_audio_capture_enabled;
     this->muteSourceComboBox->setVisible(be_visible);
     this->muteSourceLabel->setVisible(be_visible);

@@ -210,11 +210,7 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             return false;
         }
 
-        const bool use_streaming_output_audio = is_streaming_audio_output_capture_source_name(
-                selected_caption_source_settings.caption_source_name);
-        const bool use_recording_output_audio = is_recording_audio_output_capture_source_name(
-                selected_caption_source_settings.caption_source_name);
-        const bool use_output_audio = use_streaming_output_audio || use_recording_output_audio;
+        const bool use_output_audio = is_all_audio_output_capture_source_data(selected_caption_source_settings.caption_source_name);
 
         OBSSource caption_source;
         OBSSource mute_source;
@@ -275,7 +271,11 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
                                              std::placeholders::_1, std::placeholders::_2);
 
             if (use_output_audio) {
-                output_audio_capture_session = std::make_unique<OutputAudioCaptureSession>(use_streaming_output_audio,
+                int track_index = all_audio_output_capture_source_track_index(selected_caption_source_settings.caption_source_name);
+                if (track_index < 0)
+                    track_index = 0;
+
+                output_audio_capture_session = std::make_unique<OutputAudioCaptureSession>(track_index,
                                                                                            audio_cb, audio_status_cb,
                                                                                            resample_to,
                                                                                            audio_capture_id);
