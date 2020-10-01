@@ -101,6 +101,9 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
             catch (exception ex) {
                 error_log("string replacement error %s: '%s'", ex.what(), caption_result.caption_text.c_str());
             }
+            catch (...) {
+                error_log("string replacement error '%s'", caption_result.caption_text.c_str());
+            }
         }
         output_result->clean_caption_text = cleaned_line;
 

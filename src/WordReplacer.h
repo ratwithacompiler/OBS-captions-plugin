@@ -137,7 +137,7 @@ private:
                     throw string("invalid replacement type: " + rep.type);
                 }
             }
-            catch (exception) {
+            catch (...) {
                 if (!ignore_invalid)
                     throw;
             }
@@ -166,7 +166,7 @@ private:
                     throw string("invalid replacement type: " + rep.type);
                 }
             }
-            catch (exception) {
+            catch (...) {
                 if (!ignore_invalid)
                     throw;
             }

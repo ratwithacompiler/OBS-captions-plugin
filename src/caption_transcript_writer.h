@@ -200,6 +200,9 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
             catch (string &err) {
                 error_log("transcript_writer_loop find_transcript_filename recording error, try %d: %s", i, err.c_str());
             }
+            catch (...) {
+                error_log("transcript_writer_loop find_transcript_filename recording error, try %d", i);
+            }
         }
 
         if (fallback_datetime) {
