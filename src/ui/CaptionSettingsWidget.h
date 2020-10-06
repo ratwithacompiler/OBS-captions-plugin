@@ -39,8 +39,6 @@ Q_OBJECT
 
 private slots:
 
-    void caption_when_index_change(int index);
-
     void transcript_format_index_change(int index);
 
     void language_index_change(int index);
@@ -50,6 +48,8 @@ private slots:
     void streaming_name_index_change(int index);
 
     void sources_combo_index_change(int index);
+
+    void caption_when_index_change(int index);
 
     void scene_collection_combo_index_change(int index);
 
@@ -86,7 +86,7 @@ public:
 
     void updateUi();
 
-    void update_other_source_visibility(CaptionSourceMuteType mute_state);
+    void update_sources_visibilities();
 };
 
 
