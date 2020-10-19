@@ -4,14 +4,16 @@ Provides closed captioning via Google Cloud Speech Recognition API as a standalo
 It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC, Android and iOS, no Twitch extension required.  
 
 #### Features:
-  * Completely optional for viewers
+  * Completely optional for viewers on all platforms
   * Captions only when the microphone source is unmuted and active to ensure safety
   * Works live and in VODs, no Twitch extension required
   * Requires no extra tools or website open
   * Supports many common languages with western character sets
   * Supports OBS delay
   * Open Caption support via OBS Text Sources for sites that don't support closed captions
-  * Supports saving captions to SRT Subtitle files (.srt)
+  * Saving captions transcripts as SRT Subtitle files (.srt)
+  * Text filtering with custom word and phrase removal and replacement
+  * Supports captioning all stream audio instead of just a single source
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
@@ -20,7 +22,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 * You can enable and disable the caption preview dock in OBS under `View -> Docks -> Captions` 
 * Some video players like MPV can show embedded captions on downloaded VODs but very few support that.
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
-* SRT transcript files are generally recommended for saving captions for local recordings. They are support by many players, websites and tools and are easy to edit.
+* SRT transcript files are generally recommended for saving captions for local recordings. They are supported by many video players, websites and tools and are easy to edit.
 
 ![Example Image](https://i.imgur.com/UcPk8gz.png)
 ##### [Example VOD here](https://www.twitch.tv/videos/441407980?t=20s)
@@ -74,7 +76,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 ![Installation Windows](https://i.imgur.com/8EknThL.png)
 
 #### Plugin:
-![Example of Plugin in OBS](https://i.imgur.com/Xpp6HCe.png)
+![Example of Plugin in OBS](https://i.imgur.com/wGzcseX.png)
 
 ### Installation (Mac OS):
 #### Requires OBS 24 or newer!
