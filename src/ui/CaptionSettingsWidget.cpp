@@ -488,7 +488,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
     transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
     transcript_settings.srt_target_duration_secs = srtDurationSpinBox->value();
-    transcript_settings.srt_target_line_length = srtLineLenghtSpinBox->value();
+    transcript_settings.srt_target_line_length = srtLineLengthSpinBox->value();
 
     transcript_settings.recording_filename_type = recordingTranscriptFilenameComboBox->currentData().toString().toStdString();
     transcript_settings.recording_filename_custom = recordingTranscriptCustomNameOverwriteLineEdit->text().toStdString();
@@ -556,7 +556,7 @@ void CaptionSettingsWidget::updateUi() {
     combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 0);
     transcript_format_index_change(0);
     srtDurationSpinBox->setValue(source_settings.transcript_settings.srt_target_duration_secs);
-    srtLineLenghtSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
+    srtLineLengthSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
 
     combobox_set_data_str(*recordingTranscriptFilenameComboBox, source_settings.transcript_settings.recording_filename_type.c_str(), 0);
     combobox_set_data_str(*recordingTranscriptCustomNameExistsCombobox,
