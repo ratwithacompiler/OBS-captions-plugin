@@ -520,8 +520,11 @@ void CaptionSettingsWidget::updateUi() {
 //    sceneCollectionSelectLabel->hide();
 //    sceneCollectionComboBox->hide();
 
-    sceneCollectionNameLabel_GeneralRight->setText(QString::fromStdString(scene_collection_name));
-    sceneCollectionNameLabel_TextSourceRight->setText(QString::fromStdString(scene_collection_name));
+//    sceneCollectionNameLabel_GeneralRight->setText(QString::fromStdString(scene_collection_name));
+//    sceneCollectionNameLabel_TextSourceRight->setText(QString::fromStdString(scene_collection_name));
+    this->generalSceneCollectionWidget->hide();
+    this->textSourceWidget1->hide();
+
     update_scene_collection_ui(scene_collection_name);
 
     combobox_set_data_str(*languageComboBox, source_settings.stream_settings.stream_settings.language.c_str(), 0);
