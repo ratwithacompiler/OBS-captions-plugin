@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>432</width>
-    <height>997</height>
+    <height>971</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -354,14 +354,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="5" column="0">
            <widget class="QLabel" name="profanitFilterLabel">
             <property name="text">
              <string>Profanity Filter</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="5" column="1">
            <widget class="QComboBox" name="profanityFilterComboBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -377,14 +377,37 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Capitalization</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QComboBox" name="capitalizationComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
            <widget class="QLabel" name="apiKeyLabel">
             <property name="text">
              <string>API Key</string>
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
+          <item row="7" column="1">
            <widget class="QWidget" name="apiKeyWidget" native="true">
             <property name="minimumSize">
              <size>
@@ -423,29 +446,6 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Capitalization</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QComboBox" name="capitalizationComboBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>250</width>
-              <height>0</height>
-             </size>
-            </property>
            </widget>
           </item>
          </layout>
@@ -497,14 +497,14 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>4</number>
           </property>
-          <item row="2" column="0">
+          <item row="0" column="0">
            <widget class="QLabel" name="nativeOutputToLabel">
             <property name="text">
              <string>Output To</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="0" column="1">
            <widget class="QComboBox" name="outputTargetComboBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -520,14 +520,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="nativeLineCountLabel">
             <property name="text">
              <string>Lines</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="1" column="1">
            <widget class="QSpinBox" name="lineCountSpinBox">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -546,14 +546,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="nativeForceLinebreaksLabel">
             <property name="text">
              <string>Force Linebreaks</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="2" column="1">
            <widget class="QWidget" name="widget_7" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <property name="spacing">
@@ -601,14 +601,14 @@ p, li { white-space: pre-wrap; }
             </layout>
            </widget>
           </item>
-          <item row="6" column="0">
+          <item row="3" column="0">
            <widget class="QCheckBox" name="captionTimeoutEnabledCheckBox">
             <property name="text">
              <string>Caption Timeout</string>
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
+          <item row="3" column="1">
            <widget class="QDoubleSpinBox" name="captionTimeoutDoubleSpinBox">
             <property name="decimals">
              <number>1</number>
@@ -672,6 +672,9 @@ p, li { white-space: pre-wrap; }
           <property name="formAlignment">
            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
           </property>
+          <property name="verticalSpacing">
+           <number>4</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -684,14 +687,14 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item row="1" column="0">
+          <item row="0" column="0">
            <widget class="QLabel" name="label_9">
             <property name="text">
              <string>Save For</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
+          <item row="0" column="1">
            <widget class="QComboBox" name="transcriptSaveForComboBox">
             <property name="minimumSize">
              <size>
@@ -701,14 +704,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_17">
             <property name="text">
              <string>Format</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
+          <item row="1" column="1">
            <widget class="QComboBox" name="transcriptFormatComboBox">
             <property name="minimumSize">
              <size>
@@ -718,7 +721,7 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="label_10">
             <property name="text">
              <string>Transcript Folder:</string>
@@ -772,6 +775,9 @@ p, li { white-space: pre-wrap; }
           <enum>QFrame::StyledPanel</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
+          <property name="spacing">
+           <number>4</number>
+          </property>
           <property name="leftMargin">
            <number>12</number>
           </property>
@@ -857,6 +863,9 @@ p, li { white-space: pre-wrap; }
           <enum>QFrame::StyledPanel</enum>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>4</number>
+          </property>
           <property name="leftMargin">
            <number>12</number>
           </property>
@@ -944,6 +953,9 @@ p, li { white-space: pre-wrap; }
           </property>
           <property name="bottomMargin">
            <number>0</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>4</number>
           </property>
           <item row="2" column="0">
            <widget class="QLabel" name="label_20">
@@ -1113,12 +1125,21 @@ p, li { white-space: pre-wrap; }
           </item>
           <item>
            <widget class="QWidget" name="textSourceWidget2" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <layout class="QFormLayout" name="formLayout_4">
              <property name="labelAlignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
              </property>
              <property name="formAlignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+             </property>
+             <property name="verticalSpacing">
+              <number>4</number>
              </property>
              <property name="leftMargin">
               <number>0</number>
@@ -1130,7 +1151,7 @@ p, li { white-space: pre-wrap; }
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>10</number>
              </property>
              <item row="0" column="0">
               <widget class="QLabel" name="label_11">
