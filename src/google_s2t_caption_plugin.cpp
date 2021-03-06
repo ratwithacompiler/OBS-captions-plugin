@@ -62,6 +62,10 @@ void recording_started_event();
 
 void recording_stopped_event();
 
+void virtualcam_started_event();
+
+void virtualcam_stopped_event();
+
 void setup_UI();
 
 void closed_caption_tool_menu_clicked();
@@ -84,6 +88,10 @@ static void obs_event(enum obs_frontend_event event, void *) {
         recording_started_event();
     } else if (event == OBS_FRONTEND_EVENT_RECORDING_STOPPED) {
         recording_stopped_event();
+    } else if (event == OBS_FRONTEND_EVENT_VIRTUALCAM_STARTED) {
+        virtualcam_started_event();
+    } else if (event == OBS_FRONTEND_EVENT_VIRTUALCAM_STOPPED) {
+        virtualcam_stopped_event();
     } else if (event == OBS_FRONTEND_EVENT_EXIT) {
         obs_frontent_exiting();
     } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
@@ -165,6 +173,15 @@ void recording_started_event() {
     info_log("recording_started_event");
     if (main_caption_widget)
         main_caption_widget->recording_started_event();
+}
+
+void virtualcam_started_event() {
+    if (main_caption_widget)
+        main_caption_widget->virtualcam_started_event();
+}
+void virtualcam_stopped_event() {
+    if (main_caption_widget)
+        main_caption_widget->virtualcam_stopped_event();
 }
 
 void recording_stopped_event() {

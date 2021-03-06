@@ -137,23 +137,40 @@ struct TranscriptOutputSettings {
     string streaming_filename_custom;
     string streaming_filename_exists;
 
+    string virtualcam_filename_type;
+    string virtualcam_filename_custom;
+    string virtualcam_filename_exists;
+
     uint srt_target_duration_secs;
     uint srt_target_line_length;
 
     bool streaming_transcripts_enabled;
     bool recording_transcripts_enabled;
+    bool virtualcam_transcripts_enabled;
 
-    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format, const string &recordingFilenameChoice,
+
+    TranscriptOutputSettings(bool enabled, const string &outputPath, const string &format, const string &recordingFilenameType,
                              const string &recordingFilenameCustom, const string &recordingFilenameExists,
-                             const string &streamingFilenameChoice, const string &streamingFilenameCustom,
-                             const string &streamingFilenameExists, uint srtTargetDurationSecs,
-                             uint srtTargetLineLength, bool streamingTranscriptsEnabled, bool recordingTranscriptsEnabled) :
-            enabled(enabled), output_path(outputPath), format(format), recording_filename_type(recordingFilenameChoice),
-            recording_filename_custom(recordingFilenameCustom), recording_filename_exists(recordingFilenameExists),
-            streaming_filename_type(streamingFilenameChoice), streaming_filename_custom(streamingFilenameCustom),
-            streaming_filename_exists(streamingFilenameExists), srt_target_duration_secs(srtTargetDurationSecs),
-            srt_target_line_length(srtTargetLineLength), streaming_transcripts_enabled(streamingTranscriptsEnabled),
-            recording_transcripts_enabled(recordingTranscriptsEnabled) {}
+                             const string &streamingFilenameType, const string &streamingFilenameCustom,
+                             const string &streamingFilenameExists, const string &virtualcamFilenameType,
+                             const string &virtualcamFilenameCustom, const string &virtualcamFilenameExists, uint srtTargetDurationSecs,
+                             uint srtTargetLineLength, bool streamingTranscriptsEnabled, bool recordingTranscriptsEnabled,
+                             bool virtualcamTranscriptsEnabled) : enabled(enabled), output_path(outputPath), format(format),
+                                                                  recording_filename_type(recordingFilenameType),
+                                                                  recording_filename_custom(recordingFilenameCustom),
+                                                                  recording_filename_exists(recordingFilenameExists),
+                                                                  streaming_filename_type(streamingFilenameType),
+                                                                  streaming_filename_custom(streamingFilenameCustom),
+                                                                  streaming_filename_exists(streamingFilenameExists),
+                                                                  virtualcam_filename_type(virtualcamFilenameType),
+                                                                  virtualcam_filename_custom(virtualcamFilenameCustom),
+                                                                  virtualcam_filename_exists(virtualcamFilenameExists),
+                                                                  srt_target_duration_secs(srtTargetDurationSecs),
+                                                                  srt_target_line_length(srtTargetLineLength),
+                                                                  streaming_transcripts_enabled(streamingTranscriptsEnabled),
+                                                                  recording_transcripts_enabled(recordingTranscriptsEnabled),
+                                                                  virtualcam_transcripts_enabled(virtualcamTranscriptsEnabled) {}
+
 
     bool operator==(const TranscriptOutputSettings &rhs) const {
         return enabled == rhs.enabled &&
@@ -165,10 +182,14 @@ struct TranscriptOutputSettings {
                streaming_filename_type == rhs.streaming_filename_type &&
                streaming_filename_custom == rhs.streaming_filename_custom &&
                streaming_filename_exists == rhs.streaming_filename_exists &&
+               virtualcam_filename_type == rhs.virtualcam_filename_type &&
+               virtualcam_filename_custom == rhs.virtualcam_filename_custom &&
+               virtualcam_filename_exists == rhs.virtualcam_filename_exists &&
                srt_target_duration_secs == rhs.srt_target_duration_secs &&
                srt_target_line_length == rhs.srt_target_line_length &&
                streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
-               recording_transcripts_enabled == rhs.recording_transcripts_enabled;
+               recording_transcripts_enabled == rhs.recording_transcripts_enabled &&
+               virtualcam_transcripts_enabled == rhs.virtualcam_transcripts_enabled;
     }
 
     bool operator!=(const TranscriptOutputSettings &rhs) const {
@@ -191,10 +212,15 @@ struct TranscriptOutputSettings {
         printf("%s  streaming_filename_custom: %s\n", line_prefix, streaming_filename_custom.c_str());
         printf("%s  streaming_filename_exists: %s\n", line_prefix, streaming_filename_exists.c_str());
 
+        printf("%s  virtualcam_filename_type: %s\n", line_prefix, virtualcam_filename_type.c_str());
+        printf("%s  virtualcam_filename_custom: %s\n", line_prefix, virtualcam_filename_custom.c_str());
+        printf("%s  virtualcam_filename_exists: %s\n", line_prefix, virtualcam_filename_exists.c_str());
+
         printf("%s  srt_target_duration_secs: %d\n", line_prefix, srt_target_duration_secs);
         printf("%s  srt_target_line_length: %d\n", line_prefix, srt_target_line_length);
         printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
         printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
+        printf("%s  virtualcam_transcripts_enabled: %d\n", line_prefix, virtualcam_transcripts_enabled);
     }
 };
 
@@ -376,6 +402,7 @@ Q_DECLARE_METATYPE(std::shared_ptr<SourceCaptionerStatus>)
 class SourceCaptioner : public QObject {
 Q_OBJECT
 
+    bool base_enabled;
     std::unique_ptr<SourceAudioCaptureSession> source_audio_capture_session;
     std::unique_ptr<OutputAudioCaptureSession> output_audio_capture_session;
     std::unique_ptr<ContinuousCaptions> continuous_captions;
@@ -399,6 +426,7 @@ Q_OBJECT
 
     OutputWriter<TranscriptOutputSettings> transcript_streaming_output;
     OutputWriter<TranscriptOutputSettings> transcript_recording_output;
+    OutputWriter<TranscriptOutputSettings> transcript_virtualcam_output;
 
     std::tuple<string, string> last_text_source_set;
 
@@ -415,6 +443,7 @@ Q_OBJECT
             bool to_recoding,
             bool to_transcript_streaming,
             bool to_transcript_recording,
+            bool to_transcript_virtualcam,
             bool is_clearance
     );
 
@@ -457,7 +486,7 @@ signals:
 
 public:
 
-    SourceCaptioner(const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start);
+    SourceCaptioner(const bool enabled, const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start);
 
     ~SourceCaptioner();
 
@@ -475,6 +504,14 @@ public:
     void recording_started_event();
 
     void recording_stopped_event();
+
+    void virtualcam_started_event();
+
+    void virtualcam_stopped_event();
+
+    void set_enabled(const bool enabled) {
+        base_enabled = enabled;
+    }
 
 };
 

@@ -59,12 +59,17 @@ static bool captioning_status_string(
 
             if (status.audio_capture_status == AUDIO_SOURCE_CAPTURING) {
                 string target;
-                if (captioning_state.is_captioning_streaming && captioning_state.is_captioning_recording)
-                    target = "Stream and Recording";
+                if (captioning_state.is_captioning_streaming && captioning_state.is_captioning_recording &&
+                    captioning_state.is_captioning_virtualcam)
+                    target = "Stream & Recording & Virt Cam";
+                else if (captioning_state.is_captioning_streaming && captioning_state.is_captioning_recording)
+                    target = "Stream & Recording";
                 else if (captioning_state.is_captioning_streaming)
                     target = "Stream";
                 else if (captioning_state.is_captioning_recording)
                     target = "Recording";
+                else if (captioning_state.is_captioning_virtualcam)
+                    target = "Virtual Cam";
                 else if (captioning_state.is_captioning_preview)
                     target = "Preview";
                 else if (captioning_state.is_captioning_text_output)

@@ -122,10 +122,15 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
             "",
             "append",
 
+            "datetime",
+            "",
+            "append",
+
             8,
             44,
-            false,
-            false
+            true,
+            true,
+            true,
     };
 }
 
@@ -327,6 +332,8 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
                               source_settings.transcript_settings.streaming_transcripts_enabled);
     obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
                               source_settings.transcript_settings.recording_transcripts_enabled);
+    obs_data_set_default_bool(load_data, "transcript_for_virtualcam_enabled",
+                              source_settings.transcript_settings.virtualcam_transcripts_enabled);
     obs_data_set_default_string(load_data, "transcript_folder_path", source_settings.transcript_settings.output_path.c_str());
     obs_data_set_default_string(load_data, "transcript_format", source_settings.transcript_settings.format.c_str());
 
@@ -343,6 +350,13 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
                                 source_settings.transcript_settings.streaming_filename_custom.c_str());
     obs_data_set_default_string(load_data, "transcript_streaming_name_exists",
                                 source_settings.transcript_settings.streaming_filename_exists.c_str());
+
+    obs_data_set_default_string(load_data, "transcript_virtualcam_name_type",
+                                source_settings.transcript_settings.virtualcam_filename_type.c_str());
+    obs_data_set_default_string(load_data, "transcript_virtualcam_name_custom",
+                                source_settings.transcript_settings.virtualcam_filename_custom.c_str());
+    obs_data_set_default_string(load_data, "transcript_virtualcam_name_exists",
+                                source_settings.transcript_settings.virtualcam_filename_exists.c_str());
 
 
     obs_data_set_default_int(load_data, "transcript_srt_target_duration_secs",
@@ -393,6 +407,9 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
             obs_data_get_bool(load_data, "transcript_for_stream_enabled");
     source_settings.transcript_settings.recording_transcripts_enabled =
             obs_data_get_bool(load_data, "transcript_for_recording_enabled");
+    source_settings.transcript_settings.virtualcam_transcripts_enabled =
+            obs_data_get_bool(load_data, "transcript_for_virtualcam_enabled");
+
     source_settings.transcript_settings.output_path = obs_data_get_string(load_data, "transcript_folder_path");
     source_settings.transcript_settings.format = obs_data_get_string(load_data, "transcript_format");
 
@@ -403,6 +420,10 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.transcript_settings.streaming_filename_type = obs_data_get_string(load_data, "transcript_streaming_name_type");
     source_settings.transcript_settings.streaming_filename_custom = obs_data_get_string(load_data, "transcript_streaming_name_custom");
     source_settings.transcript_settings.streaming_filename_exists = obs_data_get_string(load_data, "transcript_streaming_name_exists");
+
+    source_settings.transcript_settings.virtualcam_filename_type = obs_data_get_string(load_data, "transcript_virtualcam_name_type");
+    source_settings.transcript_settings.virtualcam_filename_custom = obs_data_get_string(load_data, "transcript_virtualcam_name_custom");
+    source_settings.transcript_settings.virtualcam_filename_exists = obs_data_get_string(load_data, "transcript_virtualcam_name_exists");
 
     source_settings.transcript_settings.srt_target_duration_secs = obs_data_get_int(load_data, "transcript_srt_target_duration_secs");
     source_settings.transcript_settings.srt_target_line_length = obs_data_get_int(load_data, "transcript_srt_target_line_length");
@@ -442,6 +463,8 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                       settings.source_cap_settings.transcript_settings.streaming_transcripts_enabled);
     obs_data_set_bool(save_data, "transcript_for_recording_enabled",
                       settings.source_cap_settings.transcript_settings.recording_transcripts_enabled);
+    obs_data_set_bool(save_data, "transcript_for_virtualcam_enabled",
+                      settings.source_cap_settings.transcript_settings.virtualcam_transcripts_enabled);
     obs_data_set_string(save_data, "transcript_folder_path", settings.source_cap_settings.transcript_settings.output_path.c_str());
     obs_data_set_string(save_data, "transcript_format", settings.source_cap_settings.transcript_settings.format.c_str());
 
@@ -458,6 +481,13 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                         settings.source_cap_settings.transcript_settings.streaming_filename_custom.c_str());
     obs_data_set_string(save_data, "transcript_streaming_name_exists",
                         settings.source_cap_settings.transcript_settings.streaming_filename_exists.c_str());
+
+    obs_data_set_string(save_data, "transcript_virtualcam_name_type",
+                        settings.source_cap_settings.transcript_settings.virtualcam_filename_type.c_str());
+    obs_data_set_string(save_data, "transcript_virtualcam_name_custom",
+                        settings.source_cap_settings.transcript_settings.virtualcam_filename_custom.c_str());
+    obs_data_set_string(save_data, "transcript_virtualcam_name_exists",
+                        settings.source_cap_settings.transcript_settings.virtualcam_filename_exists.c_str());
 
     obs_data_set_int(save_data, "transcript_srt_target_duration_secs",
                      settings.source_cap_settings.transcript_settings.srt_target_duration_secs);
@@ -591,6 +621,10 @@ static bool is_recording_live() {
     return obs_frontend_recording_active();
 }
 
+static bool is_virtualcam_on() {
+    return obs_frontend_virtualcam_active();
+}
+
 
 static void setup_combobox_profanity(QComboBox &comboBox) {
     while (comboBox.count())
@@ -667,6 +701,21 @@ static void update_combobox_streaming_filename(QComboBox &comboBox, const QStrin
     }
 }
 
+static void setup_combobox_virtualcam_filename(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("virtualcam_transcript_[datetime].[srt/txt/log]", "datetime");
+    comboBox.addItem("Custom Name", "custom");
+}
+
+static void update_combobox_virtualcam_filename(QComboBox &comboBox, const QString &extension) {
+    for (int i = 0; i < comboBox.count(); i++) {
+        if (comboBox.itemData(i).toString() == "datetime")
+            comboBox.setItemText(i, "virtualcam_transcript_[datetime]." + extension);
+    }
+}
+
 static void setup_combobox_transcript_file_exists(QComboBox &comboBox) {
     while (comboBox.count())
         comboBox.removeItem(0);
@@ -709,8 +758,7 @@ static void update_combobox_output_target(
         QComboBox &comboBox,
         bool streaming_enabled,
         bool recording_enabled,
-        int default_index,
-        bool off_enabled
+        int default_index
 ) {
     int index = default_index;
     if (streaming_enabled && !recording_enabled)
@@ -720,8 +768,7 @@ static void update_combobox_output_target(
     else if (streaming_enabled && recording_enabled)
         index = 2;
     else if (!streaming_enabled && !recording_enabled) {
-        if (off_enabled)
-            index = 3;
+        index = 3;
     }
 
     comboBox.setCurrentIndex(index);

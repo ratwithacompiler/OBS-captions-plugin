@@ -76,47 +76,83 @@ QFileInfo find_unused_filename(const QFileInfo &output_directory,
     throw string("nope");
 }
 
+struct UseTranscriptSettings {
+    string name_type;
+    string filename_custom;
+    string filename_custom_exists;
+    string file_basename;
+};
+
+UseTranscriptSettings build_use_settings(const TranscriptOutputSettings &transcript_settings, const string &target_name) {
+    string name_type;
+    string name_custom;
+    string name_exists;
+    string basename;
+
+    if (target_name == "stream") {
+        name_type = transcript_settings.streaming_filename_type;
+        name_custom = transcript_settings.streaming_filename_custom;
+        name_exists = transcript_settings.streaming_filename_exists;
+        basename = "streaming_transcript_";
+    } else if (target_name == "recording") {
+        name_type = transcript_settings.recording_filename_type;
+        name_custom = transcript_settings.recording_filename_custom;
+        name_exists = transcript_settings.recording_filename_exists;
+        basename = "recording_transcript_";
+    } else if (target_name == "virtualcam") {
+        name_type = transcript_settings.virtualcam_filename_type;
+        name_custom = transcript_settings.virtualcam_filename_custom;
+        name_exists = transcript_settings.virtualcam_filename_exists;
+        basename = "virtualcam_transcript_";
+    } else
+        throw string("unsupported target name: " + target_name);
+
+    return UseTranscriptSettings{
+            name_type,
+            name_custom,
+            name_exists,
+            basename,
+    };
+}
+
 QFileInfo find_transcript_filename_custom(const TranscriptOutputSettings &transcript_settings,
+                                          const UseTranscriptSettings &rel,
                                           const QFileInfo &output_directory,
-                                          const bool is_stream,
                                           const std::chrono::system_clock::time_point &started_at,
                                           const int tries,
                                           bool &out_overwrite) {
-    const string &name_custom = is_stream ? transcript_settings.streaming_filename_custom : transcript_settings.recording_filename_custom;
-    const string &name_exists = is_stream ? transcript_settings.streaming_filename_exists
-                                          : transcript_settings.recording_filename_exists;
 
     // fully user supplied name, don't add any extension
-    if (name_custom.empty())
+    if (rel.filename_custom.empty())
         throw string("custom filename chosen but no filename given");
 
-    if (name_exists == "overwrite") {
+    if (rel.filename_custom_exists == "overwrite") {
         out_overwrite = true;
     }
 
-    auto file = QFileInfo(QDir(output_directory.absoluteFilePath()).absoluteFilePath(QString::fromStdString(name_custom)));
+    auto file = QFileInfo(QDir(output_directory.absoluteFilePath()).absoluteFilePath(QString::fromStdString(rel.filename_custom)));
     if (!file.exists())
         return file;
 
-    if (name_exists == "overwrite") {
+    if (rel.filename_custom_exists == "overwrite") {
         out_overwrite = true;
         return file;
     }
-    if (name_exists == "append") {
+    if (rel.filename_custom_exists == "append") {
         out_overwrite = false;
         return file;
     }
 
-    if (name_exists == "skip") {
+    if (rel.filename_custom_exists == "skip") {
         throw string("custom transcript file exists already, skipping: " + file.absoluteFilePath().toStdString());
     }
 
-    throw string("custom transcript file exists already, invalid exists option: " + name_exists);
+    throw string("custom transcript file exists already, invalid exists option: " + rel.filename_custom_exists);
 }
 
 QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &transcript_settings,
+                                            const UseTranscriptSettings &rel,
                                             const QFileInfo &output_directory,
-                                            const bool is_stream,
                                             const std::chrono::system_clock::time_point &started_at,
                                             const int tries,
                                             const string &extension) {
@@ -127,8 +163,8 @@ QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &tran
     oss << std::put_time(std::localtime(&started_at_t), "%Y-%m-%d_%H-%M-%S");
     auto started_at_str = oss.str();
 
-    string basename = is_stream ? "streaming_transcript_" : "recording_transcript_";
-    basename = basename + started_at_str;
+
+    string basename = rel.file_basename + started_at_str;
     return find_unused_filename(output_directory, QString::fromStdString(basename), QString::fromStdString(extension), tries);
 }
 
@@ -167,24 +203,23 @@ QFileInfo find_transcript_filename_recording(const TranscriptOutputSettings &tra
 }
 
 QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_settings,
+                                   const UseTranscriptSettings &rel,
                                    const QFileInfo &output_directory,
-                                   const bool is_stream,
+                                   const string &target_name,
                                    const std::chrono::system_clock::time_point &started_at,
                                    const int tries,
                                    bool &out_overwrite) {
-    const string &name_type = is_stream ? transcript_settings.streaming_filename_type : transcript_settings.recording_filename_type;
-
     out_overwrite = false;
-    if (name_type == "custom") {
-        return find_transcript_filename_custom(transcript_settings, output_directory, is_stream, started_at, tries, out_overwrite);
+    if (rel.name_type == "custom") {
+        return find_transcript_filename_custom(transcript_settings, rel, output_directory, started_at, tries, out_overwrite);
     }
 
     const string extension = transcript_format_extension(transcript_settings.format, "");
-    if (name_type == "datetime") {
-        return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, extension);
+    if (rel.name_type == "datetime") {
+        return find_transcript_filename_datetime(transcript_settings, rel, output_directory, started_at, tries, extension);
     }
 
-    if (name_type == "recording" && !is_stream) {
+    if (rel.name_type == "recording" && target_name == "recording") {
         const int attempts = 1;
         const int sleep_ms = 1000;
         const bool fallback_datetime = true;
@@ -207,12 +242,12 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
 
         if (fallback_datetime) {
             info_log("transcript_writer_loop find_transcript_filename recording failed, falling back to datetime name");
-            return find_transcript_filename_datetime(transcript_settings, output_directory, is_stream, started_at, tries, extension);
+            return find_transcript_filename_datetime(transcript_settings, rel, output_directory, started_at, tries, extension);
         }
         throw string("couldn't get recording basename after multiple tries");
     }
 
-    throw string("unsupported name type: " + name_type);
+    throw string("unsupported name type: " + rel.name_type);
 }
 
 
@@ -549,7 +584,6 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
         else
             prefix = "    ";
 
-
         write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result, true);
         if (fs.fail()) {
             error_log("transcript_writer_loop_raw error, write failed: '%s'", strerror(errno));
@@ -559,13 +593,23 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
 }
 
 void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
-                            const bool to_stream,
-                            const TranscriptOutputSettings transcript_settings) {
+                            const string target_name, const TranscriptOutputSettings transcript_settings) {
     const string format = transcript_settings.format;
     auto started_at_sys = std::chrono::system_clock::now();
     auto started_at_steady = std::chrono::steady_clock::now();
+    const string to_what = target_name;
 
-    string to_what(to_stream ? "streaming" : "recording");
+    UseTranscriptSettings use_settings;
+    try {
+        use_settings = build_use_settings(transcript_settings, target_name);
+    } catch (string ex) {
+        error_log("transcript_writer_loop startup failed: %s %s", to_what.c_str(), ex.c_str());
+        return;
+    } catch (...) {
+        error_log("transcript_writer_loop startup failed: %s", to_what.c_str());
+        return;
+    }
+
     if (format != "txt" && format != "txt_plain" && format != "srt" && format != "raw") {
         error_log("transcript_writer_loop %s error, invalid format: %s", to_what.c_str(), format.c_str());
         return;
@@ -586,9 +630,9 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     string transcript_file;
     bool overwrite_file = false;
     try {
-        transcript_file = find_transcript_filename(transcript_settings, output_directory, to_stream, started_at_sys, 100, overwrite_file)
+        transcript_file = find_transcript_filename(transcript_settings, use_settings, output_directory, target_name, started_at_sys, 100,
+                                                   overwrite_file)
                 .absoluteFilePath().toStdString();
-
         info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.c_str(), overwrite_file);
     }
     catch (string &err) {
@@ -612,6 +656,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
         SrtState settings = SrtState{started_at_steady, std::chrono::seconds(max_duration_secs), 1,
                                      transcript_settings.srt_target_line_length, 1250};
 
+        info_log("transcript_writer_loop starting write_loop: %s", format.c_str());
         if (format == "raw")
             write_loop_raw(fs, started_at_steady, control);
         else if (format == "txt")

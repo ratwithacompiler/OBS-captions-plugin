@@ -91,6 +91,10 @@ public:
     void recording_started_event();
 
     void recording_stopped_event();
+
+    void virtualcam_started_event();
+
+    void virtualcam_stopped_event();
 };
 
 

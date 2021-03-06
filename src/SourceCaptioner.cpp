@@ -40,8 +40,9 @@ void set_text_source_text(const string &text_source_name, const string &caption_
     obs_source_release(text_source);
 }
 
-SourceCaptioner::SourceCaptioner(const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start) :
+SourceCaptioner::SourceCaptioner(const bool enabled, const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start) :
         QObject(),
+        base_enabled(enabled),
         settings(settings),
         selected_scene_collection_name(scene_collection_name),
         last_caption_at(std::chrono::steady_clock::now()),
@@ -390,6 +391,7 @@ void SourceCaptioner::clear_output_timer_cb() {
                            to_recording,
                            false,
                            false,
+                           false,
                            true);
 
     if (!text_source_target_name.empty()) {
@@ -461,7 +463,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
 void SourceCaptioner::process_caption_result(const CaptionResult caption_result, bool interrupted) {
     shared_ptr<OutputCaptionResult> native_output_result;
     string recent_caption_text;
-    bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
+    bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording, to_transcript_virtualcam;
 
     if (this->last_caption_text == caption_result.caption_text && this->last_caption_final == caption_result.final) {
         return;
@@ -516,6 +518,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         to_recording = settings.recording_output_enabled;
         to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
         to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
+        to_transcript_virtualcam = settings.transcript_settings.enabled && settings.transcript_settings.virtualcam_transcripts_enabled;
     }
 
     this->output_caption_writers(CaptionOutput(native_output_result, false),
@@ -523,6 +526,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                  to_recording,
                                  to_transcript_streaming,
                                  to_transcript_recording,
+                                 to_transcript_virtualcam,
                                  false);
 
     if (text_output_result && !text_source_target_name.empty()) {
@@ -539,6 +543,7 @@ void SourceCaptioner::output_caption_writers(
         bool to_recoding,
         bool to_transcript_streaming,
         bool to_transcript_recording,
+        bool to_transcript_virtualcam,
         bool is_clearance) {
 
     bool sent_stream = false;
@@ -555,9 +560,15 @@ void SourceCaptioner::output_caption_writers(
     if (to_transcript_streaming) {
         sent_transcript_streaming = transcript_streaming_output.enqueue(output);
     }
+
     bool sent_transcript_recording = false;
     if (to_transcript_recording) {
         sent_transcript_recording = transcript_recording_output.enqueue(output);
+    }
+
+    bool sent_transcript_virtualcam = false;
+    if (to_transcript_virtualcam) {
+        sent_transcript_virtualcam = transcript_virtualcam_output.enqueue(output);
     }
 
 //    debug_log("queuing caption line , stream: %d, recording: %d, '%s'",
@@ -583,11 +594,11 @@ void SourceCaptioner::stream_started_event() {
     std::thread th(caption_output_writer_loop, control_output, true);
     th.detach();
 
-    if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.streaming_transcripts_enabled) {
+    if (this->base_enabled && cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.streaming_transcripts_enabled) {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_streaming_output.set_control(control_transcript);
 
-        std::thread th2(transcript_writer_loop, control_transcript, true, cur_settings.transcript_settings);
+        std::thread th2(transcript_writer_loop, control_transcript, "stream", cur_settings.transcript_settings);
         th2.detach();
     }
 }
@@ -607,11 +618,11 @@ void SourceCaptioner::recording_started_event() {
     std::thread th(caption_output_writer_loop, control_output, false);
     th.detach();
 
-    if (cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.recording_transcripts_enabled) {
+    if (this->base_enabled && cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.recording_transcripts_enabled) {
         auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
         transcript_recording_output.set_control(control_transcript);
 
-        std::thread th2(transcript_writer_loop, control_transcript, false, cur_settings.transcript_settings);
+        std::thread th2(transcript_writer_loop, control_transcript, "recording", cur_settings.transcript_settings);
         th2.detach();
     }
 }
@@ -619,6 +630,24 @@ void SourceCaptioner::recording_started_event() {
 void SourceCaptioner::recording_stopped_event() {
     recording_output.clear();
     transcript_recording_output.clear();
+}
+
+void SourceCaptioner::virtualcam_started_event() {
+    settings_change_mutex.lock();
+    SourceCaptionerSettings cur_settings = settings;
+    settings_change_mutex.unlock();
+
+    if (this->base_enabled && cur_settings.transcript_settings.enabled && cur_settings.transcript_settings.virtualcam_transcripts_enabled) {
+        auto control_transcript = std::make_shared<CaptionOutputControl<TranscriptOutputSettings>>(cur_settings.transcript_settings);
+        transcript_virtualcam_output.set_control(control_transcript);
+
+        std::thread th2(transcript_writer_loop, control_transcript, "virtualcam", cur_settings.transcript_settings);
+        th2.detach();
+    }
+}
+
+void SourceCaptioner::virtualcam_stopped_event() {
+    transcript_virtualcam_output.clear();
 }
 
 void SourceCaptioner::set_text_source_text(const string &text_source_name, const string &caption_text) {

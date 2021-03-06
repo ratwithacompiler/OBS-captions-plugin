@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QWidget>
 #include <CaptionStream.h>
-#include <src/ui/ui_CaptionSettingsWidget.h>
+#include "ui_CaptionSettingsWidget.h"
 
 #include "../SourceAudioCaptureSession.h"
 #include "../log.c"
@@ -46,6 +46,8 @@ private slots:
     void recording_name_index_change(int index);
 
     void streaming_name_index_change(int index);
+
+    void virtualcam_name_index_change(int index);
 
     void sources_combo_index_change(int index);
 

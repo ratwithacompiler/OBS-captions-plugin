@@ -138,7 +138,7 @@ void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_setting
 }
 
 void MainCaptionWidget::external_state_changed() {
-    plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live(), "");
+    plugin_manager.external_state_changed(is_stream_live(), isVisible(), is_recording_live(), is_virtualcam_on(), "");
 }
 
 void MainCaptionWidget::scene_collection_changed() {
@@ -163,6 +163,16 @@ void MainCaptionWidget::recording_started_event() {
 
 void MainCaptionWidget::recording_stopped_event() {
     plugin_manager.source_captioner.recording_stopped_event();
+    external_state_changed();
+}
+
+void MainCaptionWidget::virtualcam_started_event() {
+    plugin_manager.source_captioner.virtualcam_started_event();
+    external_state_changed();
+}
+
+void MainCaptionWidget::virtualcam_stopped_event() {
+    plugin_manager.source_captioner.virtualcam_stopped_event();
     external_state_changed();
 }
 

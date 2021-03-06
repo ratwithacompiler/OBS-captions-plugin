@@ -208,12 +208,15 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_capitalization(*capitalizationComboBox);
     setup_combobox_capitalization(*textSourceCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
-    setup_combobox_output_target(*transcriptSaveForComboBox, false);
     setup_combobox_transcript_format(*transcriptFormatComboBox);
+
     setup_combobox_recording_filename(*recordingTranscriptFilenameComboBox);
     setup_combobox_streaming_filename(*streamingTranscriptFilenameComboBox);
+    setup_combobox_virtualcam_filename(*virtualcamTranscriptFilenameComboBox);
+
     setup_combobox_transcript_file_exists(*recordingTranscriptCustomNameExistsCombobox);
     setup_combobox_transcript_file_exists(*streamingTranscriptCustomNameExistsCombobox);
+    setup_combobox_transcript_file_exists(*virtualcamTranscriptCustomNameExistsCombobox);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -232,6 +235,9 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
     QObject::connect(streamingTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::streaming_name_index_change);
+
+    QObject::connect(virtualcamTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::virtualcam_name_index_change);
 
     QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::sources_combo_index_change);
@@ -404,6 +410,7 @@ void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
     const QString extension = QString::fromStdString(transcript_format_extension(format, "[ext]"));
     update_combobox_recording_filename(*recordingTranscriptFilenameComboBox, extension);
     update_combobox_streaming_filename(*streamingTranscriptFilenameComboBox, extension);
+    update_combobox_virtualcam_filename(*virtualcamTranscriptFilenameComboBox, extension);
 }
 
 void CaptionSettingsWidget::language_index_change(int new_index) {
@@ -434,6 +441,14 @@ void CaptionSettingsWidget::streaming_name_index_change(int new_index) {
 
     streamingTranscriptCustomNameWidget->setVisible(isCustom);
     streamingTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
+}
+
+
+void CaptionSettingsWidget::virtualcam_name_index_change(int new_index) {
+    bool isCustom = this->virtualcamTranscriptFilenameComboBox->currentData().toString() == "custom";
+
+    virtualcamTranscriptCustomNameWidget->setVisible(isCustom);
+    virtualcamTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
 }
 
 
@@ -479,12 +494,10 @@ void CaptionSettingsWidget::accept_current_settings() {
 
     auto &transcript_settings = source_settings.transcript_settings;
     transcript_settings.enabled = saveTranscriptsCheckBox->isChecked();
-    const int transcript_combobox_val = transcriptSaveForComboBox->currentData().toInt();
-    if (!set_streaming_recording_enabled(transcript_combobox_val,
-                                         transcript_settings.streaming_transcripts_enabled,
-                                         transcript_settings.recording_transcripts_enabled)) {
-        error_log("invalid transcript output target combobox value, wtf: %d", transcript_combobox_val);
-    }
+    transcript_settings.streaming_transcripts_enabled =  transcriptsEnabledStreamCheckBox->isChecked();
+    transcript_settings.recording_transcripts_enabled =  transcriptsEnabledRecordingCheckBox->isChecked();
+    transcript_settings.virtualcam_transcripts_enabled =  transcriptsEnabledVirtualcamCheckBox->isChecked();
+
     transcript_settings.output_path = transcriptFolderPathLineEdit->text().toStdString();
     transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
     transcript_settings.srt_target_duration_secs = srtDurationSpinBox->value();
@@ -497,6 +510,10 @@ void CaptionSettingsWidget::accept_current_settings() {
     transcript_settings.streaming_filename_type = streamingTranscriptFilenameComboBox->currentData().toString().toStdString();
     transcript_settings.streaming_filename_custom = streamingTranscriptCustomNameOverwriteLineEdit->text().toStdString();
     transcript_settings.streaming_filename_exists = streamingTranscriptCustomNameExistsCombobox->currentData().toString().toStdString();
+
+    transcript_settings.virtualcam_filename_type = virtualcamTranscriptFilenameComboBox->currentData().toString().toStdString();
+    transcript_settings.virtualcam_filename_custom = virtualcamTranscriptCustomNameOverwriteLineEdit->text().toStdString();
+    transcript_settings.virtualcam_filename_exists = virtualcamTranscriptCustomNameExistsCombobox->currentData().toString().toStdString();
 
     apply_ui_scene_collection_settings();
 
@@ -542,7 +559,7 @@ void CaptionSettingsWidget::updateUi() {
     update_combobox_output_target(*outputTargetComboBox,
                                   source_settings.streaming_output_enabled,
                                   source_settings.recording_output_enabled,
-                                  0, true);
+                                  0);
 
     this->captionTimeoutEnabledCheckBox->setChecked(source_settings.format_settings.caption_timeout_enabled);
     this->captionTimeoutDoubleSpinBox->setValue(source_settings.format_settings.caption_timeout_seconds);
@@ -551,10 +568,11 @@ void CaptionSettingsWidget::updateUi() {
 
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
     on_saveTranscriptsCheckBox_stateChanged(0);
-    update_combobox_output_target(*transcriptSaveForComboBox,
-                                  source_settings.transcript_settings.streaming_transcripts_enabled,
-                                  source_settings.transcript_settings.recording_transcripts_enabled,
-                                  0, false);
+
+    this->transcriptsEnabledStreamCheckBox->setChecked(source_settings.transcript_settings.streaming_transcripts_enabled);
+    this->transcriptsEnabledRecordingCheckBox->setChecked(source_settings.transcript_settings.recording_transcripts_enabled);
+    this->transcriptsEnabledVirtualcamCheckBox->setChecked(source_settings.transcript_settings.virtualcam_transcripts_enabled);
+
     transcriptFolderPathLineEdit->setText(QString::fromStdString(source_settings.transcript_settings.output_path));
     combobox_set_data_str(*transcriptFormatComboBox, source_settings.transcript_settings.format.c_str(), 0);
     transcript_format_index_change(0);
@@ -567,15 +585,21 @@ void CaptionSettingsWidget::updateUi() {
     recordingTranscriptCustomNameOverwriteLineEdit->setText(
             QString::fromStdString(source_settings.transcript_settings.recording_filename_custom));
 
-
     combobox_set_data_str(*streamingTranscriptFilenameComboBox, source_settings.transcript_settings.streaming_filename_type.c_str(), 0);
     combobox_set_data_str(*streamingTranscriptCustomNameExistsCombobox,
                           source_settings.transcript_settings.streaming_filename_exists.c_str(), 0);
     streamingTranscriptCustomNameOverwriteLineEdit->setText(
             QString::fromStdString(source_settings.transcript_settings.streaming_filename_custom));
 
+    combobox_set_data_str(*virtualcamTranscriptFilenameComboBox, source_settings.transcript_settings.virtualcam_filename_type.c_str(), 0);
+    combobox_set_data_str(*virtualcamTranscriptCustomNameExistsCombobox,
+                          source_settings.transcript_settings.virtualcam_filename_exists.c_str(), 0);
+    virtualcamTranscriptCustomNameOverwriteLineEdit->setText(
+            QString::fromStdString(source_settings.transcript_settings.virtualcam_filename_custom));
+
     recording_name_index_change(0);
     streaming_name_index_change(0);
+    virtualcam_name_index_change(0);
 
     set_show_key(false);
 }
@@ -614,6 +638,7 @@ void CaptionSettingsWidget::on_saveTranscriptsCheckBox_stateChanged(int new_stat
     this->transcripWidget2->setDisabled(disabled);
     this->transcripWidget3->setDisabled(disabled);
     this->transcripWidget4->setDisabled(disabled);
+    this->transcripWidget5->setDisabled(disabled);
     this->transcriptSrtSettingsWidget->setDisabled(disabled);
 }
 
