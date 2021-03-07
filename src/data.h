@@ -47,7 +47,6 @@ static const std::string all_audio_output_capture_source_data(const int track_in
     return AUDIO_OUTPUT_CAPTURE_ALL_AUDIO_SOURCE_NAME + std::to_string(track_index);
 }
 
-
 static const std::string corrected_streaming_audio_output_capture_source_name(const std::string &data) {
     const int track_index = all_audio_output_capture_source_track_index(data);
     if (track_index >= 0) {

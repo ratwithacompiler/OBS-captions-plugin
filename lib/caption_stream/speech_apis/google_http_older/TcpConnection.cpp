@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "TcpConnection.h"
 
-#include "utils.h"
 #include "log.h"
 
 #define READ_BUFFER_SIZE 2048

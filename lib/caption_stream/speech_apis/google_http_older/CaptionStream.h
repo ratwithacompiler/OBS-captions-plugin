@@ -26,10 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <queue>
 #include <chrono>
 #include <mutex>
-#include "thirdparty/cameron314/blockingconcurrentqueue.h"
-
-#include "ThreadsaferCallback.h"
-#include "CaptionResult.h"
+#include <cameron314/blockingconcurrentqueue.h>
+#include <ThreadsaferCallback.h>
+#include <CaptionResult.h>
 
 typedef unsigned int uint;
 using namespace std;

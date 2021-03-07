@@ -1,4 +1,4 @@
-include(ExternalProject)
+project(speech_api_http_google)
 
 message("SETTING UP SPEECH API OLD")
 
@@ -8,7 +8,7 @@ if (PLIBSYS_ROOT_DIR)
     set(PLIBSYS_DIR ${PLIBSYS_ROOT_DIR})
 else ()
     message("using default CI plibsys repo dir")
-    set(PLIBSYS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../CI/deps/plibsys)
+    set(PLIBSYS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../CI/http/deps/plibsys)
 endif ()
 
 ##PLIBSYS
@@ -19,33 +19,35 @@ include_directories(${PLIBSYS_DIR}/src ${CMAKE_BINARY_DIR})
 add_subdirectory(${PLIBSYS_DIR} plibsys EXCLUDE_FROM_ALL)
 ###PLIBSYS
 
-if (UNIX AND NOT APPLE)
-    target_compile_options(plibsysstatic PRIVATE "-fPIC")
-endif ()
-
 set(SPEECH_API_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/TcpConnection.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/CaptionStream.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/CaptionStream.h
-
-        PARENT_SCOPE
         )
 
-SET(SPEECH_API_INCLUDES
-        ${PLIBSYS_DIR}/src
-        PARENT_SCOPE
-        )
+include_directories(${PLIBSYS_DIR}/src)
 
-SET(SPEECH_API_TARGET_INCLUDES_PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
+if (BUILD_SHARED_LIB)
+    add_library(speech_api_lib
+            ${SPEECH_API_SOURCES}
+            )
+else ()
+    add_library(speech_api_lib STATIC
+            ${SPEECH_API_SOURCES}
+            )
+endif ()
+
+
+if (UNIX AND NOT APPLE)
+    target_compile_options(plibsysstatic PRIVATE "-fPIC")
+    target_compile_options(speech_api_lib PRIVATE "-fPIC")
+endif ()
+
+target_include_directories(speech_api_lib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_include_directories(speech_api_lib PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/json11
+        ${PLIBSYS_DIR}/src)
 
-        ${PLIBSYS_DIR}/src
-        PARENT_SCOPE
-        )
-
-SET(SPEECH_API_TARGET_LINK_LIBRARIES_PRIVATE
-        plibsysstatic
-
-        PARENT_SCOPE
-        )
+target_link_libraries(speech_api_lib plibsysstatic)

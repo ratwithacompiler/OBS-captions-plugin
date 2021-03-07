@@ -4,131 +4,79 @@
 jobs:
   - job: 'Build_MacOS_HTTP'
     pool:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.15'
 
     steps:
-      - script: git submodule update --init --recursive
-        displayName: 'Checkout Submodules'
-
       - task: DownloadPipelineArtifact@2
         inputs:
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
-
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/macos_obs"
+          branchName: "refs/heads/macos_obs_26.to.27"
           artifactName: obs_deps_macos
-          targetPath: $(Build.SourcesDirectory)/CI/obs_deps/
+          targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
-      - script: $(Build.SourcesDirectory)/CI/install-script-osx.sh
-        workingDirectory: $(Build.SourcesDirectory)/CI
+      - script: $(Build.SourcesDirectory)/CI/http/osx-install-script.sh
+        workingDirectory: $(Build.SourcesDirectory)/CI/http/
         displayName: 'Setup build'
         env:
           GOOGLE_API_KEY: $(GOOGLE_API_KEY)
 
-      - bash: |
-          pwd
-          set -e
-          make -j4
-        displayName: 'Build'
-        workingDirectory: $(Build.SourcesDirectory)/CI/build
-
-      - script: $(Build.SourcesDirectory)/CI/post-install-script-osx.sh
-        displayName: 'Post install'
-        workingDirectory: $(Build.SourcesDirectory)/CI
-
       - task: PublishPipelineArtifact@1
         inputs:
-          path: "$(Build.SourcesDirectory)/CI/release/"
+          path: "$(Build.SourcesDirectory)/CI/http/release/"
           artifact: Closed_Captions_Plugin__Release_MacOS_HTTP
 
   - job: 'Build_Windows_HTTP'
     pool:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-2019'
 
     steps:
-      - script: git submodule update --init --recursive
-        displayName: 'Checkout Submodules'
-
       - task: DownloadPipelineArtifact@2
         inputs:
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
-
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/windows_obs"
+          branchName: "refs/heads/windows_obs_26.to.27"
           artifactName: obs_deps_windows
-          targetPath: $(Build.SourcesDirectory)/CI/obs_deps/
+          targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
-      - script: $(Build.SourcesDirectory)\CI\install-script-win.cmd
+      - script: $(Build.SourcesDirectory)\CI\http\win-install-script.cmd
         displayName: 'Setup, CMake'
-        workingDirectory: $(Build.SourcesDirectory)\CI
+        workingDirectory: $(Build.SourcesDirectory)\CI\http
         env:
           GOOGLE_API_KEY: $(GOOGLE_API_KEY)
 
-      - task: MSBuild@1
-        displayName: 'Build 64-bit'
-        inputs:
-          msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
-          solution: $(Build.SourcesDirectory)\CI\build_64\obs_google_caption_plugin.sln
-
-      - task: MSBuild@1
-        displayName: 'Build 32-bit'
-        inputs:
-          msbuildArguments: '/m /p:Configuration=RelWithDebInfo'
-          solution: $(Build.SourcesDirectory)\CI\build_32\obs_google_caption_plugin.sln
-
-      - script: $(Build.SourcesDirectory)\CI\post-install-script-win.cmd
-        workingDirectory: $(Build.SourcesDirectory)\CI
-        displayName: 'Post install'
-
       - task: PublishPipelineArtifact@1
         inputs:
-          path: '$(Build.SourcesDirectory)/CI/release/'
+          path: '$(Build.SourcesDirectory)/CI/http/release/'
           artifact: Closed_Captions_Plugin__Release_Windows_HTTP
-
 
   - job: 'Build_Linux_HTTP'
     pool:
       vmImage: 'ubuntu-18.04'
 
     steps:
-      - script: git submodule update --init --recursive
-        displayName: 'Checkout Submodules'
-
       - task: DownloadPipelineArtifact@2
         inputs:
           project: '4b438742-da7e-4123-8cf4-55564485db7e'
           pipeline: 6
-
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/linux_obs"
+          branchName: "refs/heads/linux_obs_26.to.27"
           artifactName: obs_deps_linux
-          targetPath: $(Build.SourcesDirectory)/CI/obs_deps/
+          targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
-      - script: $(Build.SourcesDirectory)/CI/install-script-linux.sh
+      - script: $(Build.SourcesDirectory)/CI/http/linux-install-script.sh
         displayName: 'Setup, CMake'
-        workingDirectory: $(Build.SourcesDirectory)/CI
+        workingDirectory: $(Build.SourcesDirectory)/CI/http/
         env:
           GOOGLE_API_KEY: $(GOOGLE_API_KEY)
 
-      - bash: |
-          pwd
-          set -e
-          cd ./build
-          make -j4
-        displayName: 'Build'
-        workingDirectory: $(Build.SourcesDirectory)/CI
-
-      - script: $(Build.SourcesDirectory)/CI/post-install-script-linux.sh
-        displayName: 'Post install'
-        workingDirectory: $(Build.SourcesDirectory)/CI
-
       - task: PublishPipelineArtifact@1
         inputs:
-          path: "$(Build.SourcesDirectory)/CI/release/"
+          path: "$(Build.SourcesDirectory)/CI/http/release/"
           artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
 

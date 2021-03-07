@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CaptionSettingsWidget.h"
 #include "../log.c"
 
-#include <concurrentqueue.h>
+#include <cameron314/blockingconcurrentqueue.h>
 #include "../CaptionPluginSettings.h"
 #include "../CaptionPluginManager.h"
 

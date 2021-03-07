@@ -11,7 +11,7 @@ set(VERSION_STRING "0.18b")
 
 set(DEVMODE OFF)
 if (USE_DEVMODE)
-    message(WARNING "building in DEVMODE mode")
+    #    message(WARNING "building in DEVMODE mode")
     set(DEVMODE ON)
 endif ()
 
@@ -36,17 +36,11 @@ add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
 set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
 set(OBS_LIB_BIN_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
-set(QT_DIR "" CACHE STRING "Path to Qt dir")
+set(QT_DEP_DIR "" CACHE STRING "Path to Qt dir")
 
-message("hmm ${OBS_SOURCE_DIR}")
-message("hmm ${OBS_LIB_DIR}")
-message("hmm ${QT_DIR}")
-
-if (DEFINED QT_DIR)
-    list(APPEND CMAKE_PREFIX_PATH "${QT_DIR}")
-    message("added ${QT_DIR} to prefix path")
-endif ()
-
+message("OBS_SOURCE_DIR: ${OBS_SOURCE_DIR}")
+message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
+message("QT_DEP_DIR: ${QT_DEP_DIR}")
 
 if (NOT OBS_SOURCE_DIR)
     message(FATAL_ERROR "OBS_SOURCE_DIR not set")
@@ -56,23 +50,23 @@ if (NOT OBS_LIB_DIR)
     message(FATAL_ERROR "OBS_LIB_DIR not set")
 endif ()
 
-configure_file(CI/post-install-script-win.cmd CI/post-install-script-win.cmd)
-configure_file(CI/post-install-script-osx.sh CI/post-install-script-osx.sh)
-configure_file(CI/post-install-script-linux.sh CI/post-install-script-linux.sh)
+configure_file(CI/http/win-install-script.cmd CI/http/win-install-script.cmd)
+configure_file(CI/http/osx-install-script.sh CI/http/osx-install-script.sh)
+configure_file(CI/http/linux-install-script.sh CI/http/linux-install-script.sh)
 
 add_subdirectory(lib/caption_stream)
 
 if (DEVMODE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-deprecated-declarations")
     message("CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 
-#    target_compile_definitions(caption_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
-    target_compile_definitions(caption_stream PRIVATE GOOGLE="127.0.0.1" PORTUP=9125 PORTDOWN=9125)
+    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    #    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="127.0.0.1" PORTUP=9125 PORTDOWN=9125)
     message("using api: localhost")
 
     add_compile_definitions(USE_DEVMODE=1)
 else ()
-    target_compile_definitions(caption_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
     message("using api: google")
 endif ()
 
@@ -111,12 +105,19 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-
-find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
+    message("USING QT_DEP_DIR: ${QT_DEP_DIR}")
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Core
+            PATHS ${QT_DEP_DIR}
+            NO_DEFAULT_PATH
+            )
+else ()
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+endif ()
+message("qt: ${Qt_DIR} ; ${Qt5_DIR}")
 
 #configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
 #set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
-
 
 set(obs_QRC src/resources/obs.qrc)
 qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
@@ -128,8 +129,8 @@ add_library(obs_google_caption_plugin MODULE
         )
 
 
-if (CAPTION_STREAM_WINDOWS_STATIC_RUNTIME)
-    message(CAPTION_STREAM_WINDOWS_STATIC_RUNTIME ENABLED)
+if (ENABLE_WINDOWS_STATIC_RUNTIME)
+    message(ENABLE_WINDOWS_STATIC_RUNTIME ENABLED)
     #        set_property(TARGET obs_google_caption_plugin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     foreach (flag_var
             CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
