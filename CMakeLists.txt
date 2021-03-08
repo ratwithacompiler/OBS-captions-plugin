@@ -8,6 +8,7 @@ project(obs_google_caption_plugin)
 set(CMAKE_CXX_STANDARD 14)
 set(VERSION_STRING "0.18b")
 
+message("BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
 
 set(DEVMODE OFF)
 if (USE_DEVMODE)
@@ -29,7 +30,7 @@ elseif (GOOGLE_API_KEY)
     message("using fixed GOOGLE_API_KEY")
     set(PLUGIN_COMPILE_DEFINITIONS GOOGLE_API_KEY_STR="${GOOGLE_API_KEY}")
 else ()
-    message(FATAL_ERROR "no GOOGLE_API_KEY set")
+    message(FATAL_ERROR "no GOOGLE_API_KEY set and no ENABLE_CUSTOM_API_KEY=ON either")
 endif ()
 
 add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
@@ -54,19 +55,23 @@ configure_file(CI/http/win-install-script.cmd CI/http/win-install-script.cmd)
 configure_file(CI/http/osx-install-script.sh CI/http/osx-install-script.sh)
 configure_file(CI/http/linux-install-script.sh CI/http/linux-install-script.sh)
 
+configure_file(CI/grpc/win-install-script.cmd CI/grpc/win-install-script.cmd)
+configure_file(CI/grpc/osx-install-script.sh CI/grpc/osx-install-script.sh)
+configure_file(CI/grpc/linux-install-script.sh CI/grpc/linux-install-script.sh)
+
 add_subdirectory(lib/caption_stream)
 
 if (DEVMODE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wno-deprecated-declarations")
     message("CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}")
 
-    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
-    #    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="127.0.0.1" PORTUP=9125 PORTDOWN=9125)
+    target_compile_definitions(speech_api_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    #    target_compile_definitions(speech_api_stream PRIVATE GOOGLE="127.0.0.1" PORTUP=9125 PORTDOWN=9125)
     message("using api: localhost")
 
     add_compile_definitions(USE_DEVMODE=1)
 else ()
-    target_compile_definitions(speech_api_lib PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
+    target_compile_definitions(speech_api_stream PRIVATE GOOGLE="www.google.com" PORTUP=80 PORTDOWN=80)
     message("using api: google")
 endif ()
 
@@ -106,9 +111,10 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
-    message("USING QT_DEP_DIR: ${QT_DEP_DIR}")
+    FILE(TO_CMAKE_PATH "${QT_DEP_DIR}" QT_DEP_DIR_CMAKE)
+    message("USING QT_DEP_DIR: ${QT_DEP_DIR_CMAKE}")
     find_package(Qt5 REQUIRED COMPONENTS Widgets Core
-            PATHS ${QT_DEP_DIR}
+            PATHS "${QT_DEP_DIR_CMAKE}"
             NO_DEFAULT_PATH
             )
 else ()
@@ -129,19 +135,21 @@ add_library(obs_google_caption_plugin MODULE
         )
 
 
-if (ENABLE_WINDOWS_STATIC_RUNTIME)
-    message(ENABLE_WINDOWS_STATIC_RUNTIME ENABLED)
+if (WIN32 AND NOT BUILD_SHARED_LIBS)
+    message(BUILD_SHARED_LIBS: setting win flags)
     #        set_property(TARGET obs_google_caption_plugin PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
     foreach (flag_var
+            CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
             CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
             CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
-        message("flag var: ${flag_var}: " ${${flag_var}}"")
         if (${flag_var} MATCHES "/MD")
+            message("before: ${flag_var}: " ${${flag_var}}"")
             string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            message("new: ${flag_var}: " ${${flag_var}}"")
-        endif (${flag_var} MATCHES "/MD")
-    endforeach (flag_var)
+            message("after : ${flag_var}: " ${${flag_var}}"")
+        endif ()
+    endforeach ()
 endif ()
 
 if (PLUGIN_COMPILE_DEFINITIONS)

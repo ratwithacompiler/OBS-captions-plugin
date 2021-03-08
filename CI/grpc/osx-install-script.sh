@@ -18,16 +18,6 @@ pwd
 (cd ../../ && git submodule update --init --recursive)
 
 echo --------------------------------------------------------------
-echo PLIBSYS
-echo --------------------------------------------------------------
-
-pwd
-cd deps
-./clone_plibsys.sh
-cd ..
-pwd
-
-echo --------------------------------------------------------------
 echo DEPS
 echo --------------------------------------------------------------
 
@@ -46,21 +36,27 @@ ls -l obs_deps
 OBS_ROOT="$PWD/obs_deps/obs_src"
 echo OBS_ROOT: $OBS_ROOT
 
+GRPC_ROOT="$PWD/grpc_deps"
+echo GRPC_ROOT: $GRPC_ROOT
+
 mkdir build
 cd build
 pwd
 
 cmake ../../../ \
-  -DSPEECH_API_GOOGLE_HTTP_OLD=ON \
+  -DSPEECH_API_GOOGLE_GRPC_V1=ON \
   -DOBS_SOURCE_DIR="$OBS_ROOT" \
   -DOBS_LIB_DIR="$OBS_ROOT/build" \
   -DQT_DEP_DIR=/tmp/obsdeps \
+  -DGRPC_CMAKE_INCLUDE="$GRPC_ROOT"/vcpkg_export/scripts/buildsystems/vcpkg.cmake \
+  -DGOOGLEAPIS_DIR="$GRPC_ROOT"/googleapis \
   "$API_OR_UI_KEY_ARG"
+
 cd ../
 
 # copy the cmake processed file with version_string
 # (the one time a self modifying bash script is actually useful)
-cp -v build/CI/http/osx-install-script.sh ./
+cp -v build/CI/grpc/osx-install-script.sh ./
 
 echo --------------------------------------------------------------
 echo BUILDING

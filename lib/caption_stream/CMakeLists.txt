@@ -1,9 +1,6 @@
 project(caption_stream)
 
-set(BUILD_SHARED_LIB "" CACHE STRING "build as shared lib")
-set(BUILD_SHARED_LIB OFF)
-
-message("BUILD_SHARED_LIB: ${BUILD_SHARED_LIB}")
+message("BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 
 if (SPEECH_API_GOOGLE_GRPC_V1 AND SPEECH_API_GOOGLE_HTTP_OLD)
     message(FATAL_ERROR "both SPEECH_API_GOOGLE_GRPC_V1 AND SPEECH_API_GOOGLE_HTTP_OLD given, nope")
@@ -37,41 +34,30 @@ set(caption_stream_HEADERS
         ContinuousCaptions.h
         )
 
-if (BUILD_SHARED_LIB)
-    message("caption_stream as shared lib")
-    add_library(caption_stream
-            ${SPEECH_API_SOURCES}
-            ${caption_stream_SOURCES}
-            ${caption_stream_HEADERS}
-            )
-else ()
-    message("caption_stream as static lib")
-    add_library(caption_stream STATIC
-            ${SPEECH_API_SOURCES}
-            ${caption_stream_SOURCES}
-            ${caption_stream_HEADERS}
-            )
-endif ()
+add_library(caption_stream STATIC
+        ${SPEECH_API_SOURCES}
+        ${caption_stream_SOURCES}
+        ${caption_stream_HEADERS}
+        )
+
 target_include_directories(caption_stream PUBLIC ./)
 target_include_directories(caption_stream PUBLIC thirdparty/)
-target_link_libraries(caption_stream speech_api_lib)
+target_link_libraries(caption_stream speech_api_stream)
 
-if (ENABLE_WINDOWS_STATIC_RUNTIME)
-    message("ENABLE_WINDOWS_STATIC_RUNTIME ENABLED")
-    #        set_property(TARGET caption_stream PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded")
-    SET(ENABLE_WINDOWS_STATIC_RUNTIME ON
-            PARENT_SCOPE)
-
+if (WIN32 AND NOT BUILD_SHARED_LIBS)
+    message(BUILD_SHARED_LIBS: setting win flags)
     foreach (flag_var
+            CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
+            CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO
             CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
             CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
-        message("flag var: ${flag_var}: " ${${flag_var}}"")
         if (${flag_var} MATCHES "/MD")
+            message("before: ${flag_var}: " ${${flag_var}}"")
             string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            message("new: ${flag_var}: " ${${flag_var}}"")
-        endif (${flag_var} MATCHES "/MD")
-    endforeach (flag_var)
+            message("after : ${flag_var}: " ${${flag_var}}"")
+        endif ()
+    endforeach ()
 endif ()
 
 if (UNIX AND NOT APPLE)

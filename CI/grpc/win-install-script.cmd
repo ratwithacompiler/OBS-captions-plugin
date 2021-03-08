@@ -1,7 +1,15 @@
 
-set DepsBaseOBS=%cd%\obs_deps\
+set DepsBaseOBS=%cd%\obs_deps
 echo DepsBaseOBS %DepsBaseOBS%
+
+set DepsBaseGRPCx64=%cd%\grpc_deps_x64
+set DepsBaseGRPCx86=%cd%\grpc_deps_x86
+echo DepsBaseGRPCx64 %DepsBaseGRPCx64%
+echo DepsBaseGRPCx86 %DepsBaseGRPCx86%
+
 dir
+dir %DepsBaseGRPCx64%
+dir %DepsBaseGRPCx86%
 
 if defined GOOGLE_API_KEY (
   if "%GOOGLE_API_KEY%" == "$(GOOGLE_API_KEY)" (
@@ -17,74 +25,72 @@ if not defined API_OR_UI_KEY_ARG (
     set API_OR_UI_KEY_ARG=-DENABLE_CUSTOM_API_KEY=ON
 )
 
-cd deps
-cmd /C clone_plibsys.cmd
-cd ..
-
 :: 64 bit build
 mkdir build_64
 cd build_64
 
-
 cmake.exe ../../../ ^
 -G "Visual Studio 16 2019" -A x64 ^
--DSPEECH_API_GOOGLE_HTTP_OLD=ON ^
+-DSPEECH_API_GOOGLE_GRPC_V1=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_64\' ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
-"%API_OR_UI_KEY_ARG%"
-REM -DCMAKE_BUILD_TYPE=Release ^
-REM -DBUILD_64=ON
+-DGOOGLEAPIS_DIR='%DepsBaseGRPCx64%\googleapis' ^
+-DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx64%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
+-DVCPKG_TARGET_TRIPLET=x64-windows ^
+-DBUILD_SHARED_LIBS=ON ^
+%API_OR_UI_KEY_ARG%
+
+REM -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019_64' ^
+REM -DVCPKG_TARGET_TRIPLET=x64-windows-static ^
 
 if %errorlevel% neq 0 (
     echo cmake 64 failed
     cd ..
     exit /b %errorlevel%
 )
-
 cd ..
 cd
-REM dir build_64
-REM cd
-
-
-
 
 :: 32 bit build
 mkdir build_32
 cd build_32
-cd
 
-cmake.exe ../../../  ^
+cmake.exe ../../../ ^
 -G "Visual Studio 16 2019" -A Win32 ^
--DSPEECH_API_GOOGLE_HTTP_OLD=ON ^
+-DSPEECH_API_GOOGLE_GRPC_V1=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_32\' ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
-"%API_OR_UI_KEY_ARG%"
-REM -DCMAKE_BUILD_TYPE=Release ^
-REM -DBUILD_32=ON
+-DGOOGLEAPIS_DIR='%DepsBaseGRPCx86%\googleapis' ^
+-DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx86%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
+-DVCPKG_TARGET_TRIPLET=x86-windows ^
+-DBUILD_SHARED_LIBS=ON ^
+%API_OR_UI_KEY_ARG%
+
+REM -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019' ^
+REM -DVCPKG_TARGET_TRIPLET=x86-windows-static ^
 
 if %errorlevel% neq 0 (
     echo cmake 32 failed
     cd ..
     exit /b %errorlevel%
 )
-
 cd ..
 cd
-REM dir build_32
-REM cd
 
 :: copy the cmake processed file with version_string
-copy build_64\CI\http\win-install-script.cmd win-install-script.cmd
-REM type post-win-install-script.cmd
+copy build_64\CI\grpc\win-install-script.cmd win-install-script.cmd
 
-cd build_32
+cd build_64
 cmake --build . --config RelWithDebInfo
 cd ..
 
-cd build_64
+REM echo "wuttt??????????????/"
+REM echo "wuttt??????????????/"
+REM exit 0
+
+cd build_32
 cmake --build . --config RelWithDebInfo
 cd ..
 

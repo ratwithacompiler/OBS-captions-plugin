@@ -80,3 +80,120 @@ jobs:
           path: "$(Build.SourcesDirectory)/CI/http/release/"
           artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
 
+  - job: 'Build_MacOS_GRPC'
+    pool:
+      vmImage: 'macOS-10.15'
+
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/macos_obs_26.to.27"
+          artifactName: obs_deps_macos
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/unix_grpc"
+          artifactName: grpc_deps_macos_x64
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps/
+
+      - script: $(Build.SourcesDirectory)/CI/grpc/osx-install-script.sh
+        workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
+        displayName: 'Setup build'
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: "$(Build.SourcesDirectory)/CI/grpc/release/"
+          artifact: Closed_Captions_Plugin__Release_MacOS_GRPC
+
+  - job: 'Build_Windows_GRPC'
+    pool:
+      vmImage: 'windows-2019'
+
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/windows_obs_26.to.27"
+          artifactName: obs_deps_windows
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/windows_grpc"
+          artifactName: grpc_deps_windows_x86
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps_x86/
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/windows_grpc"
+          artifactName: grpc_deps_windows_x64
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps_x64/
+
+      - script: $(Build.SourcesDirectory)\CI\grpc\win-install-script.cmd
+        displayName: 'Setup, CMake'
+        workingDirectory: $(Build.SourcesDirectory)\CI\grpc
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: '$(Build.SourcesDirectory)/CI/grpc/release/'
+          artifact: Closed_Captions_Plugin__Release_Windows_GRPC
+
+  - job: 'Build_Linux_GRPC'
+    pool:
+      vmImage: 'ubuntu-18.04'
+
+    steps:
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/linux_obs_26.to.27"
+          artifactName: obs_deps_linux
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+          project: '4b438742-da7e-4123-8cf4-55564485db7e'
+          pipeline: 6
+          buildType: 'specific'
+          buildVersionToDownload: 'latestFromBranch'
+          branchName: "refs/heads/unix_grpc"
+          artifactName: grpc_deps_linux_x64
+          targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps/
+
+      - script: $(Build.SourcesDirectory)/CI/grpc/linux-install-script.sh
+        displayName: 'Setup, CMake'
+        workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
+        env:
+          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          path: "$(Build.SourcesDirectory)/CI/grpc/release/"
+          artifact: Closed_Captions_Plugin__Release_Linux64_GRPC
