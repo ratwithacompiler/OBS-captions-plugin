@@ -627,13 +627,13 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
         return;
     }
 
-    string transcript_file;
+    QString transcript_file;
     bool overwrite_file = false;
     try {
         transcript_file = find_transcript_filename(transcript_settings, use_settings, output_directory, target_name, started_at_sys, 100,
                                                    overwrite_file)
-                .absoluteFilePath().toStdString();
-        info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.c_str(), overwrite_file);
+                .absoluteFilePath();
+        info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
     }
     catch (string &err) {
         error_log("transcript_writer_loop find_transcript_filename error: %s", err.c_str());
@@ -646,7 +646,14 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
     try {
         std::fstream fs;
-        fs.open(transcript_file, std::fstream::out | std::ios::binary | (overwrite_file ? std::fstream::trunc : std::fstream::app));
+
+#if _WIN32
+        fs.open(transcript_file.toStdWString(), std::fstream::out | std::ios::binary | (overwrite_file ? std::fstream::trunc : std::fstream::app));
+#else
+        fs.open(transcript_file.toStdString(),
+                std::fstream::out | std::ios::binary | (overwrite_file ? std::fstream::trunc : std::fstream::app));
+#endif
+
         if (fs.fail()) {
             error_log("transcript_writer_loop %s error, couldn't open file", strerror(errno));
             return;
