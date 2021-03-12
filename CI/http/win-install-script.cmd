@@ -32,6 +32,7 @@ cmake.exe ../../../ ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_64\' ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
+-DBUILD_SHARED_LIBS=ON ^
 "%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
 REM -DBUILD_64=ON
@@ -61,6 +62,7 @@ cmake.exe ../../../  ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_32\' ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
+-DBUILD_SHARED_LIBS=ON ^
 "%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
 REM -DBUILD_32=ON
@@ -82,10 +84,12 @@ REM type post-win-install-script.cmd
 
 cd build_32
 cmake --build . --config RelWithDebInfo
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 cd build_64
 cmake --build . --config RelWithDebInfo
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 dir

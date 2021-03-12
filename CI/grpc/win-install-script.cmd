@@ -37,9 +37,11 @@ cmake.exe ../../../ ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
 -DGOOGLEAPIS_DIR='%DepsBaseGRPCx64%\googleapis' ^
 -DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx64%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
--DVCPKG_TARGET_TRIPLET=x64-windows ^
+-DVCPKG_TARGET_TRIPLET=x64-windows-static-md ^
 -DBUILD_SHARED_LIBS=ON ^
 %API_OR_UI_KEY_ARG%
+
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 REM -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019_64' ^
 REM -DVCPKG_TARGET_TRIPLET=x64-windows-static ^
@@ -64,9 +66,11 @@ cmake.exe ../../../ ^
 -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
 -DGOOGLEAPIS_DIR='%DepsBaseGRPCx86%\googleapis' ^
 -DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx86%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
--DVCPKG_TARGET_TRIPLET=x86-windows ^
+-DVCPKG_TARGET_TRIPLET=x86-windows-static-md ^
 -DBUILD_SHARED_LIBS=ON ^
 %API_OR_UI_KEY_ARG%
+
+if %errorlevel% neq 0 exit /b %errorlevel%
 
 REM -DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019' ^
 REM -DVCPKG_TARGET_TRIPLET=x86-windows-static ^
@@ -84,6 +88,7 @@ copy build_64\CI\grpc\win-install-script.cmd win-install-script.cmd
 
 cd build_64
 cmake --build . --config RelWithDebInfo
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 REM echo "wuttt??????????????/"
@@ -92,6 +97,7 @@ REM exit 0
 
 cd build_32
 cmake --build . --config RelWithDebInfo
+if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
 
 dir

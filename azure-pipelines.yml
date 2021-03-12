@@ -138,7 +138,7 @@ jobs:
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
           branchName: "refs/heads/windows_grpc"
-          artifactName: grpc_deps_windows_x86
+          artifactName: grpc_deps_windows_x86_static_md
           targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps_x86/
 
       - task: DownloadPipelineArtifact@2
@@ -148,7 +148,7 @@ jobs:
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
           branchName: "refs/heads/windows_grpc"
-          artifactName: grpc_deps_windows_x64
+          artifactName: grpc_deps_windows_x64_static_md
           targetPath: $(Build.SourcesDirectory)/CI/grpc/grpc_deps_x64/
 
       - script: $(Build.SourcesDirectory)\CI\grpc\win-install-script.cmd
