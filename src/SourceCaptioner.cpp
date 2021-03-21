@@ -395,7 +395,7 @@ void SourceCaptioner::clear_output_timer_cb() {
                            true);
 
     if (!text_source_target_name.empty()) {
-        set_text_source_text(text_source_target_name, "");
+        set_text_source_text(text_source_target_name, " ");
     }
 
     emit caption_result_received(nullptr, true, "");
