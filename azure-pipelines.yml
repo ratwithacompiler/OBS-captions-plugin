@@ -13,7 +13,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/macos_obs_26.to.27"
+          branchName: "refs/heads/macos_obs_27"
           artifactName: obs_deps_macos
           targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
@@ -39,7 +39,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/windows_obs_26.to.27"
+          branchName: "refs/heads/windows_obs_27"
           artifactName: obs_deps_windows
           targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
@@ -65,7 +65,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/linux_obs_26.to.27"
+          branchName: "refs/heads/linux_obs_27"
           artifactName: obs_deps_linux
           targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
 
@@ -91,7 +91,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/macos_obs_26.to.27"
+          branchName: "refs/heads/macos_obs_27"
           artifactName: obs_deps_macos
           targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
 
@@ -127,7 +127,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/windows_obs_26.to.27"
+          branchName: "refs/heads/windows_obs_27"
           artifactName: obs_deps_windows
           targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
 
@@ -173,7 +173,7 @@ jobs:
           pipeline: 6
           buildType: 'specific'
           buildVersionToDownload: 'latestFromBranch'
-          branchName: "refs/heads/linux_obs_26.to.27"
+          branchName: "refs/heads/linux_obs_27"
           artifactName: obs_deps_linux
           targetPath: $(Build.SourcesDirectory)/CI/grpc/obs_deps/
 

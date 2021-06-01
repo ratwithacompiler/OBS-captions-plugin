@@ -6,7 +6,7 @@ project(obs_google_caption_plugin)
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
 set(CMAKE_CXX_STANDARD 14)
-set(VERSION_STRING "0.18b")
+set(VERSION_STRING "0.19b")
 
 message("BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
 

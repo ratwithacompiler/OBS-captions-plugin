@@ -34,7 +34,7 @@ cmake.exe ../../../ ^
 -DSPEECH_API_GOOGLE_GRPC_V1=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_64\' ^
--DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
+-DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019_64' ^
 -DGOOGLEAPIS_DIR='%DepsBaseGRPCx64%\googleapis' ^
 -DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx64%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
 -DVCPKG_TARGET_TRIPLET=x64-windows-static-md ^
@@ -63,7 +63,7 @@ cmake.exe ../../../ ^
 -DSPEECH_API_GOOGLE_GRPC_V1=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_32\' ^
--DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
+-DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019' ^
 -DGOOGLEAPIS_DIR='%DepsBaseGRPCx86%\googleapis' ^
 -DGRPC_CMAKE_INCLUDE='%DepsBaseGRPCx86%\vcpkg_export\scripts\buildsystems\vcpkg.cmake' ^
 -DVCPKG_TARGET_TRIPLET=x86-windows-static-md ^
@@ -90,10 +90,6 @@ cd build_64
 cmake --build . --config RelWithDebInfo
 if %errorlevel% neq 0 exit /b %errorlevel%
 cd ..
-
-REM echo "wuttt??????????????/"
-REM echo "wuttt??????????????/"
-REM exit 0
 
 cd build_32
 cmake --build . --config RelWithDebInfo

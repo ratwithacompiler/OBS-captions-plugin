@@ -31,7 +31,7 @@ cmake.exe ../../../ ^
 -DSPEECH_API_GOOGLE_HTTP_OLD=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_64\' ^
--DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017_64' ^
+-DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019_64' ^
 -DBUILD_SHARED_LIBS=ON ^
 "%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
@@ -61,7 +61,7 @@ cmake.exe ../../../  ^
 -DSPEECH_API_GOOGLE_HTTP_OLD=ON ^
 -DOBS_SOURCE_DIR='%DepsBaseOBS%\obs_src\' ^
 -DOBS_LIB_DIR='%DepsBaseOBS%\obs_src\build_32\' ^
--DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.10.1\msvc2017' ^
+-DQT_DEP_DIR='%DepsBaseOBS%\Qt\5.15.2\msvc2019' ^
 -DBUILD_SHARED_LIBS=ON ^
 "%API_OR_UI_KEY_ARG%"
 REM -DCMAKE_BUILD_TYPE=Release ^
