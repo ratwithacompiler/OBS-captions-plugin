@@ -54,7 +54,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * **On Android** it's `Closed Captions` under the player settings options right beneath the quality selection. The option will only show up once the streamer has talked.
 
 ### Installation (Windows):
-#### Requires OBS 23.2.1 (released June 15th 2019) or newer!
+#### Requires OBS 27.0 (released June 2021) or newer!
 
 * Close OBS if running
 * Download latest Closed_Captions_Plugin.zip version for Windows [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
@@ -79,7 +79,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 ![Example of Plugin in OBS](https://i.imgur.com/wGzcseX.png)
 
 ### Installation (Mac OS):
-#### Requires OBS 24 or newer!
+#### Requires OBS 27.0 (released June 2021) or newer!
 
 * Close OBS if running
 * Download latest Closed_Captions_Plugin.zip version for MacOS [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
@@ -100,6 +100,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 ![Installation Mac](https://i.imgur.com/nlF3TMr.png)
 
 ### Installation (Linux):
+#### Requires OBS 27.0 (released June 2021) or newer!
 
 Linux support is not well tested yet and requires OBS built with caption support (`-DBUILD_CAPTIONS=ON`).
 
