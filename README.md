@@ -31,7 +31,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 
 Does NOT work with Streamlabs OBS (SLOBS), it doesn't support 3rd party plugins like this.
 
-Does NOT support any languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work.
+Does NOT support native caption output for languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work. Transcripts and Open Captions do work.
 
 Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
 
