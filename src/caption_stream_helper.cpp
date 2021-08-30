@@ -622,13 +622,7 @@ static bool is_recording_live() {
 }
 
 static bool is_virtualcam_on() {
-    const uint32_t version = obs_get_version();
-    const uint32_t major_version = version >> 24;
-
-    if(major_version >= 27)
-        return obs_frontend_virtualcam_active();
-
-    return false;
+    return obs_frontend_virtualcam_active();
 }
 
 
