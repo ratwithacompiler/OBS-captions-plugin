@@ -29,7 +29,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 
 ##### Known Issues/Downsides:
 
-Does NOT work with Streamlabs OBS (SLOBS).
+Does NOT work with Streamlabs OBS (SLOBS), it doesn't support 3rd party plugins like this.
 
 Does NOT support any languages with foreign character sets like Japanese or Russian, that isn't possible the way Twitch and OBS captions work.
 
