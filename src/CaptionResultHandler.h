@@ -73,6 +73,7 @@ struct CaptionFormatSettings {
     uint caption_line_count;
     CapitalizationType capitalization;
     bool caption_insert_newlines;
+    bool caption_insert_punctuation;
 
     bool caption_timeout_enabled;
     double caption_timeout_seconds;
@@ -83,6 +84,7 @@ struct CaptionFormatSettings {
             uint caption_line_count,
             CapitalizationType capitalization,
             bool caption_insert_newlines,
+            bool caption_insert_punctuation,
             const DefaultReplacer &replacer,
             bool caption_timeout_enabled,
             double caption_timeout_seconds
@@ -91,6 +93,7 @@ struct CaptionFormatSettings {
             caption_line_count(caption_line_count),
             capitalization(capitalization),
             caption_insert_newlines(caption_insert_newlines),
+            caption_insert_punctuation(caption_insert_punctuation),
             replacer(replacer),
             caption_timeout_enabled(caption_timeout_enabled),
             caption_timeout_seconds(caption_timeout_seconds) {
@@ -102,6 +105,7 @@ struct CaptionFormatSettings {
         printf("%s  caption_line_count: %d\n", line_prefix, caption_line_count);
         printf("%s  capitalization: %d\n", line_prefix, capitalization);
         printf("%s  caption_insert_newlines: %d\n", line_prefix, caption_insert_newlines);
+        printf("%s  caption_insert_punctuation: %d\n", line_prefix, caption_insert_punctuation);
         printf("%s  user_replacements: %lu\n", line_prefix, replacer.user_replacements().size());
         for (auto &word : replacer.user_replacements())
             printf("%s        %s '%s' -> '%s'\n",
@@ -115,6 +119,7 @@ struct CaptionFormatSettings {
                caption_line_count == rhs.caption_line_count &&
                capitalization == rhs.capitalization &&
                caption_insert_newlines == rhs.caption_insert_newlines &&
+               caption_insert_punctuation == rhs.caption_insert_punctuation &&
                replacer == rhs.replacer &&
                caption_timeout_enabled == rhs.caption_timeout_enabled &&
                caption_timeout_seconds == rhs.caption_timeout_seconds;
@@ -156,6 +161,7 @@ public:
             const CaptionResult &caption_result,
             const bool fillup_with_previous,
             const bool insert_newlines,
+            const bool punctuation,
             const uint line_length,
             const uint targeted_line_count,
             const CapitalizationType capitalization,

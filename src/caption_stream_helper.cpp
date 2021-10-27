@@ -75,6 +75,7 @@ static CaptionFormatSettings default_CaptionFormatSettings() {
             3,
             CAPITALIZATION_NORMAL,
             false,
+            false,
             emptyDefaultReplacer(),
             true,
             15.0,
@@ -96,7 +97,8 @@ static TextOutputSettings default_TextOutputSettings() {
             "",
             60,
             4,
-            CAPITALIZATION_NORMAL
+            false,
+            CAPITALIZATION_NORMAL,
 //            true
     };
 }
@@ -264,6 +266,7 @@ static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t 
     TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
 
     obs_data_set_default_bool(load_data, "text_output_enabled", defaults.text_output_settings.enabled);
+    obs_data_set_default_bool(load_data, "text_output_insert_punctuation", defaults.text_output_settings.insert_punctuation);
     obs_data_set_default_string(load_data, "text_output_source_name", defaults.text_output_settings.text_source_name.c_str());
     obs_data_set_default_int(load_data, "text_output_line_length", defaults.text_output_settings.line_length);
     obs_data_set_default_int(load_data, "text_output_line_count", defaults.text_output_settings.line_count);
@@ -272,6 +275,7 @@ static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t 
 //    obs_data_set_default_bool(load_data, "text_output_insert_newlines", defaults.text_output_settings.insert_newlines);
 
     text_output_settings.enabled = obs_data_get_bool(load_data, "text_output_enabled");
+    text_output_settings.insert_punctuation = obs_data_get_bool(load_data, "text_output_insert_punctuation");
     text_output_settings.text_source_name = obs_data_get_string(load_data, "text_output_source_name");
     text_output_settings.line_length = obs_data_get_int(load_data, "text_output_line_length");
     text_output_settings.line_count = obs_data_get_int(load_data, "text_output_line_count");
@@ -294,6 +298,7 @@ static void set_SceneCollectionSettings_on_data(obs_data_t *save_data, const Sce
 
     const TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
     obs_data_set_bool(save_data, "text_output_enabled", text_output_settings.enabled);
+    obs_data_set_bool(save_data, "text_output_insert_punctuation", text_output_settings.insert_punctuation);
     obs_data_set_string(save_data, "text_output_source_name", text_output_settings.text_source_name.c_str());
     obs_data_set_int(save_data, "text_output_line_length", text_output_settings.line_length);
     obs_data_set_int(save_data, "text_output_line_count", text_output_settings.line_count);
@@ -314,6 +319,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     obs_data_set_default_bool(load_data, "streaming_output_enabled", source_settings.streaming_output_enabled);
     obs_data_set_default_bool(load_data, "recording_output_enabled", source_settings.recording_output_enabled);
     obs_data_set_default_bool(load_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+    obs_data_set_default_bool(load_data, "caption_insert_punctuation", source_settings.format_settings.caption_insert_punctuation);
     obs_data_set_default_int(load_data, "caption_line_count", source_settings.format_settings.caption_line_count);
     obs_data_set_default_int(load_data, "caption_capitalization", source_settings.format_settings.capitalization);
     obs_data_set_default_string(load_data, "manual_banned_words", "");
@@ -369,6 +375,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.recording_output_enabled = obs_data_get_bool(load_data, "recording_output_enabled");
 
     source_settings.format_settings.caption_insert_newlines = obs_data_get_bool(load_data, "caption_insert_newlines");
+    source_settings.format_settings.caption_insert_punctuation = obs_data_get_bool(load_data, "caption_insert_punctuation");
     source_settings.format_settings.caption_line_count = (int) obs_data_get_int(load_data, "caption_line_count");
     source_settings.format_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "caption_capitalization");
 
@@ -442,6 +449,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
     obs_data_set_int(save_data, "caption_line_count", source_settings.format_settings.caption_line_count);
     obs_data_set_bool(save_data, "caption_insert_newlines", source_settings.format_settings.caption_insert_newlines);
+    obs_data_set_bool(save_data, "caption_insert_punctuation", source_settings.format_settings.caption_insert_punctuation);
     obs_data_set_int(save_data, "caption_capitalization", source_settings.format_settings.capitalization);
 //    obs_data_set_bool(save_data, "caption_insert_newlines", settings.format_settings.caption_insert_newlines);
 

@@ -75,6 +75,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const CaptionResult &caption_result,
         const bool fillup_with_previous,
         const bool insert_newlines,
+        const bool punctuation,
         const uint line_length,
         const uint targeted_line_count,
         const CapitalizationType capitalization,
@@ -110,6 +111,8 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         vector<string> all_lines;
         if (fillup_with_previous) {
             string filled_line = cleaned_line;
+            if (punctuation && capitalization != CAPITALIZATION_ALL_LOWERCASE && !filled_line.empty() && isascii(filled_line[0]))
+                filled_line[0] = toupper(filled_line[0]);
 
             if (filled_line.size() < max_length && !result_history.empty()) {
                 for (auto i = result_history.rbegin(); i != result_history.rend(); ++i) {
@@ -130,8 +133,15 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
                         }
                     }
 
-                    filled_line.insert(0, 1, ' ');
+                    if (punctuation)
+                        filled_line.insert(0, ". ");
+                    else
+                        filled_line.insert(0, 1, ' ');
+
                     filled_line.insert(0, (*i)->clean_caption_text);
+
+                    if (punctuation && capitalization != CAPITALIZATION_ALL_LOWERCASE && !filled_line.empty() && isascii(filled_line[0]))
+                        filled_line[0] = toupper(filled_line[0]);
 
 //                    debug_log("filled up with previous text %lu, %lu", filled_line.size(), (*i)->clean_caption_text.size());
 //                    debug_log("filled up with previous text added '%s', filled: '%s'",

@@ -337,6 +337,7 @@ void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
     text_output_settings.text_source_name = this->textSourceOutputComboBox->currentText().toStdString();
     text_output_settings.line_count = this->textSourceLineCountSpinBox->value();
     text_output_settings.line_length = this->textSourceLineLengthSpinBox->value();
+    text_output_settings.insert_punctuation = this->textSourcePunctuationCheckBox->isChecked();
     text_output_settings.capitalization = (CapitalizationType) this->textSourceCapitalizationComboBox->currentData().toInt();
 //    text_output_settings.insert_newlines = this->textSourceForceLinebreaksCheckBox->isChecked();
 
@@ -389,6 +390,8 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
 
     this->textSourceEnableOutputCheckBox->setChecked(use_settings.text_output_settings.enabled);
     on_textSourceEnableOutputCheckBox_stateChanged(0);
+
+    this->textSourcePunctuationCheckBox->setChecked(use_settings.text_output_settings.insert_punctuation);
 
     auto text_sources = get_text_sources();
     text_sources.insert(text_sources.begin(), "");
@@ -468,6 +471,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     source_settings.format_settings.capitalization = (CapitalizationType) capitalizationComboBox->currentData().toInt();
 
     source_settings.format_settings.caption_insert_newlines = insertLinebreaksCheckBox->isChecked();
+    source_settings.format_settings.caption_insert_punctuation = addPunctuationCheckBox->isChecked();
     current_settings.enabled = enabledCheckBox->isChecked();
 
     // just for now as the foreign langs list might have errors or some only partially use non native charsets
@@ -552,6 +556,7 @@ void CaptionSettingsWidget::updateUi() {
 
     lineCountSpinBox->setValue(source_settings.format_settings.caption_line_count);
     insertLinebreaksCheckBox->setChecked(source_settings.format_settings.caption_insert_newlines);
+    addPunctuationCheckBox->setChecked(source_settings.format_settings.caption_insert_punctuation);
     combobox_set_data_int(*capitalizationComboBox, source_settings.format_settings.capitalization, 0);
 
     enabledCheckBox->setChecked(current_settings.enabled);
