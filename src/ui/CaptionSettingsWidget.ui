@@ -347,7 +347,7 @@ p, li { white-space: pre-wrap; }
              <string notr="true">border: 1px solid red;</string>
             </property>
             <property name="text">
-             <string>WARNING: This language does not support native caption output to streams and recordings. Only Transcripts will work correctly.</string>
+             <string>Note: This language does not support native caption output to streams and recordings. Only Open Captions and Transcripts will work correctly.</string>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
