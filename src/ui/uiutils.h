@@ -6,6 +6,108 @@
 #define OBS_GOOGLE_CAPTION_PLUGIN_UI_UTILS_H
 
 #include "../CaptionPluginManager.h"
+#include <QComboBox>
+#include "../log.c"
+
+typedef std::tuple<string, string, uint32_t> ObsSourceTup;
+
+static TextOutputSettings default_TextOutputSettings() {
+    return {
+            true,
+            "",
+            60,
+            4,
+            false,
+            CAPITALIZATION_NORMAL,
+//            true
+    };
+}
+
+
+static vector<ObsSourceTup> get_obs_sources() {
+    vector<ObsSourceTup> sources;
+
+    auto cb = [](void *param, obs_source_t *source) {
+        auto sources = reinterpret_cast<vector<ObsSourceTup> *>(param);
+        if (!sources) {
+            return false;
+        }
+
+        const char *source_type = obs_source_get_id(source);
+        const char *name = obs_source_get_name(source);
+
+        if (!name || !source_type)
+            return true;
+
+        uint32_t caps = obs_source_get_output_flags(source);
+        sources->push_back(ObsSourceTup(string(name), string(source_type), caps));
+
+//        info_log("source: %s id: %s", name, id);
+        return true;
+    };
+    obs_enum_sources(cb, &sources);
+    return sources;
+}
+
+
+static vector<string> get_audio_sources() {
+    auto sources = get_obs_sources();
+    vector<string> audio_sources;
+
+    for (auto &a_source: sources) {
+        if (std::get<2>(a_source) & OBS_SOURCE_AUDIO) {
+            audio_sources.push_back(std::get<0>(a_source));
+        }
+    }
+
+    return audio_sources;
+}
+
+
+static vector<string> get_text_sources() {
+    auto sources = get_obs_sources();
+    vector<string> text_sources;
+
+    for (auto &a_source: sources) {
+        string &source_type = std::get<1>(a_source);
+        if (source_type == "text_gdiplus" || source_type == "text_gdiplus_v2"
+            || source_type == "text_ft2_source" || source_type == "text_ft2_source_v2"
+            || source_type == "text_pango_source") {
+            text_sources.push_back(std::get<0>(a_source));
+        }
+    }
+
+    return text_sources;
+}
+
+static void setup_combobox_texts(QComboBox &comboBox,
+                                 const vector<string> &items
+) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    for (auto &a_item: items) {
+        comboBox.addItem(QString::fromStdString(a_item));
+    }
+}
+
+static int combobox_set_data_int(QComboBox &combo_box, const int data, int default_index) {
+    int index = combo_box.findData(data);
+    if (index == -1)
+        index = default_index;
+
+    combo_box.setCurrentIndex(index);
+    return index;
+}
+
+static void setup_combobox_capitalization(QComboBox &comboBox) {
+    while (comboBox.count())
+        comboBox.removeItem(0);
+
+    comboBox.addItem("Normal english like.", 0);
+    comboBox.addItem("ALL. CAPS. ", 1);
+    comboBox.addItem("all. lowercase.", 2);
+}
 
 static string transcript_format_extension(const string &format, const string &fallback) {
     if (format == "raw")

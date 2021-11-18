@@ -16,7 +16,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
 #include <QComboBox>
-
 #include <CaptionStream.h>
 #include "log.c"
 #include <utils.h>
@@ -24,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CaptionPluginSettings.h"
 #include <util/util.hpp>
 #include <util/platform.h>
+#include "ui/uiutils.h"
 
 #define SAVE_ENTRY_NAME "cloud_closed_caption_rat"
 
@@ -52,7 +52,7 @@ static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings()
 #ifdef USE_DEVMODE
             100,
 #else
-        280,
+            280,
 #endif
             2,
             10,
@@ -91,22 +91,9 @@ static CaptionSourceSettings default_CaptionSourceSettings() {
     };
 }
 
-static TextOutputSettings default_TextOutputSettings() {
-    return {
-            false,
-            "",
-            60,
-            4,
-            false,
-            CAPITALIZATION_NORMAL,
-//            true
-    };
-}
-
 static SceneCollectionSettings default_SceneCollectionSettings() {
     return {
-            default_CaptionSourceSettings(),
-            default_TextOutputSettings()
+            default_CaptionSourceSettings()
     };
 }
 
@@ -176,9 +163,15 @@ static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings
         source_settings.stream_settings.stream_settings.profanity_filter = 1;
 }
 
+static void enforce_TextOutputSettings_values(TextOutputSettings &settings) {
+    if (settings.capitalization < 0 || settings.capitalization > 2)
+        settings.capitalization = (CapitalizationType) 0;
+}
+
 static void enforce_SceneCollectionSettings_values(SceneCollectionSettings &settings) {
-    if (settings.text_output_settings.capitalization < 0 || settings.text_output_settings.capitalization > 2)
-        settings.text_output_settings.capitalization = (CapitalizationType) 0;
+    for (auto &i: settings.text_outputs) {
+        enforce_TextOutputSettings_values(i);
+    }
 }
 
 static string current_scene_collection_name() {
@@ -192,60 +185,25 @@ static string current_scene_collection_name() {
     return name;
 }
 
-typedef std::tuple<string, string, uint32_t> ObsSourceTup;
 
-static vector<ObsSourceTup> get_obs_sources() {
-    vector<ObsSourceTup> sources;
+static TextOutputSettings get_TextOutputSettings_from_data(obs_data_t *load_data) {
+    TextOutputSettings settings = default_TextOutputSettings();
 
-    auto cb = [](void *param, obs_source_t *source) {
-        auto sources = reinterpret_cast<vector<ObsSourceTup> *>(param);
-        if (!sources) {
-            return false;
-        }
+    obs_data_set_default_bool(load_data, "enabled", false);
+    obs_data_set_default_bool(load_data, "insert_punctuation", settings.insert_punctuation);
+    obs_data_set_default_string(load_data, "source_name", settings.text_source_name.c_str());
+    obs_data_set_default_int(load_data, "line_length", settings.line_length);
+    obs_data_set_default_int(load_data, "line_count", settings.line_count);
+    obs_data_set_default_int(load_data, "capitalization", settings.capitalization);
 
-        const char *source_type = obs_source_get_id(source);
-        const char *name = obs_source_get_name(source);
+    settings.enabled = obs_data_get_bool(load_data, "enabled");
+    settings.insert_punctuation = obs_data_get_bool(load_data, "insert_punctuation");
+    settings.text_source_name = obs_data_get_string(load_data, "source_name");
+    settings.line_length = obs_data_get_int(load_data, "line_length");
+    settings.line_count = obs_data_get_int(load_data, "line_count");
+    settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "capitalization");
 
-        if (!name || !source_type)
-            return true;
-
-        uint32_t caps = obs_source_get_output_flags(source);
-        sources->push_back(ObsSourceTup(string(name), string(source_type), caps));
-
-//        info_log("source: %s id: %s", name, id);
-        return true;
-    };
-    obs_enum_sources(cb, &sources);
-    return sources;
-}
-
-static vector<string> get_audio_sources() {
-    auto sources = get_obs_sources();
-    vector<string> audio_sources;
-
-    for (auto &a_source : sources) {
-        if (std::get<2>(a_source) & OBS_SOURCE_AUDIO) {
-            audio_sources.push_back(std::get<0>(a_source));
-        }
-    }
-
-    return audio_sources;
-}
-
-static vector<string> get_text_sources() {
-    auto sources = get_obs_sources();
-    vector<string> text_sources;
-
-    for (auto &a_source : sources) {
-        string &source_type = std::get<1>(a_source);
-        if (source_type == "text_gdiplus" || source_type == "text_gdiplus_v2"
-            || source_type == "text_ft2_source" || source_type == "text_ft2_source_v2"
-            || source_type == "text_pango_source") {
-            text_sources.push_back(std::get<0>(a_source));
-        }
-    }
-
-    return text_sources;
+    return settings;
 }
 
 static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t *load_data) {
@@ -263,28 +221,25 @@ static SceneCollectionSettings get_SceneCollectionSettings_from_data(obs_data_t 
     string mute_when_str = obs_data_get_string(load_data, "source_caption_when");
     caption_source_settings.mute_when = string_to_mute_setting(mute_when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
 
-    TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
-
-    obs_data_set_default_bool(load_data, "text_output_enabled", defaults.text_output_settings.enabled);
-    obs_data_set_default_bool(load_data, "text_output_insert_punctuation", defaults.text_output_settings.insert_punctuation);
-    obs_data_set_default_string(load_data, "text_output_source_name", defaults.text_output_settings.text_source_name.c_str());
-    obs_data_set_default_int(load_data, "text_output_line_length", defaults.text_output_settings.line_length);
-    obs_data_set_default_int(load_data, "text_output_line_count", defaults.text_output_settings.line_count);
-    obs_data_set_default_int(load_data, "text_output_capitalization", defaults.text_output_settings.capitalization);
-
-//    obs_data_set_default_bool(load_data, "text_output_insert_newlines", defaults.text_output_settings.insert_newlines);
-
-    text_output_settings.enabled = obs_data_get_bool(load_data, "text_output_enabled");
-    text_output_settings.insert_punctuation = obs_data_get_bool(load_data, "text_output_insert_punctuation");
-    text_output_settings.text_source_name = obs_data_get_string(load_data, "text_output_source_name");
-    text_output_settings.line_length = obs_data_get_int(load_data, "text_output_line_length");
-    text_output_settings.line_count = obs_data_get_int(load_data, "text_output_line_count");
-    text_output_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "text_output_capitalization");
+    obs_data_array_t *text_outputs_array = obs_data_get_array(load_data, "text_source_outputs");
+    for (size_t index = 0; index < obs_data_array_count(text_outputs_array); index++) {
+        obs_data_t *a_item = obs_data_array_item(text_outputs_array, index);
+        scene_collection_settings.text_outputs.push_back(get_TextOutputSettings_from_data(a_item));
+        obs_data_release(a_item);
+    }
+    obs_data_array_release(text_outputs_array);
 
     enforce_SceneCollectionSettings_values(scene_collection_settings);
-//    text_output_settings.insert_newlines = obs_data_get_bool(a_scene_source_obj, "text_output_insert_newlines");
-
     return scene_collection_settings;
+}
+
+static void set_TextOutputSettings_on_data(const TextOutputSettings &settings, obs_data_t *save_data) {
+    obs_data_set_bool(save_data, "enabled", settings.enabled);
+    obs_data_set_bool(save_data, "insert_punctuation", settings.insert_punctuation);
+    obs_data_set_string(save_data, "source_name", settings.text_source_name.c_str());
+    obs_data_set_int(save_data, "line_length", settings.line_length);
+    obs_data_set_int(save_data, "line_count", settings.line_count);
+    obs_data_set_int(save_data, "capitalization", settings.capitalization);
 }
 
 static void set_SceneCollectionSettings_on_data(obs_data_t *save_data, const SceneCollectionSettings &scene_collection_settings) {
@@ -296,14 +251,15 @@ static void set_SceneCollectionSettings_on_data(obs_data_t *save_data, const Sce
     obs_data_set_string(save_data, "source_name", caption_source_settings.caption_source_name.c_str());
     obs_data_set_string(save_data, "mute_source_name", caption_source_settings.mute_source_name.c_str());
 
-    const TextOutputSettings &text_output_settings = scene_collection_settings.text_output_settings;
-    obs_data_set_bool(save_data, "text_output_enabled", text_output_settings.enabled);
-    obs_data_set_bool(save_data, "text_output_insert_punctuation", text_output_settings.insert_punctuation);
-    obs_data_set_string(save_data, "text_output_source_name", text_output_settings.text_source_name.c_str());
-    obs_data_set_int(save_data, "text_output_line_length", text_output_settings.line_length);
-    obs_data_set_int(save_data, "text_output_line_count", text_output_settings.line_count);
-    obs_data_set_int(save_data, "text_output_capitalization", text_output_settings.capitalization);
-//        obs_data_set_bool(a_scene_source_obj, "text_output_insert_newlines", text_output_settings.insert_newlines);
+    obs_data_array_t *text_outs_array = obs_data_array_create();
+    for (const auto &text_out: scene_collection_settings.text_outputs) {
+        obs_data_t *data = obs_data_create();
+        set_TextOutputSettings_on_data(text_out, data);
+        obs_data_array_push_back(text_outs_array, data);
+        obs_data_release(data);
+    }
+    obs_data_set_array(save_data, "text_source_outputs", text_outs_array);
+    obs_data_array_release(text_outs_array);
 }
 
 static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *load_data) {
@@ -642,14 +598,6 @@ static void setup_combobox_profanity(QComboBox &comboBox) {
     comboBox.addItem("On (Unreliable!)", 1);
 }
 
-static void setup_combobox_capitalization(QComboBox &comboBox) {
-    while (comboBox.count())
-        comboBox.removeItem(0);
-
-    comboBox.addItem("Normal english like.", 0);
-    comboBox.addItem("ALL. CAPS. ", 1);
-    comboBox.addItem("all. lowercase.", 2);
-}
 
 static void setup_combobox_output_target(QComboBox &comboBox, bool add_off_option) {
     while (comboBox.count())

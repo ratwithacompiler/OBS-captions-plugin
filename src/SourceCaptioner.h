@@ -86,7 +86,7 @@ struct TextOutputSettings {
     bool insert_punctuation;
     CapitalizationType capitalization;
 
-    void print(const char *line_prefix = "") {
+    void print(const char *line_prefix = "") const {
         printf("%sTextOutputSettings\n", line_prefix);
         printf("%s  enabled: %d\n", line_prefix, enabled);
         printf("%s  text_source_name: %s\n", line_prefix, text_source_name.c_str());
@@ -95,6 +95,14 @@ struct TextOutputSettings {
         printf("%s  insert_punctuation: %d\n", line_prefix, insert_punctuation);
         printf("%s  capitalization: %d\n", line_prefix, capitalization);
 //        printf("%s  insert_newlines: %d\n", line_prefix, insert_newlines);
+    }
+
+    bool isValid() const {
+        return !text_source_name.empty() && line_count && line_length;
+    }
+
+    bool isValidEnabled() const {
+        return enabled && isValid();
     }
 
     bool operator==(const TextOutputSettings &rhs) const {
@@ -114,11 +122,11 @@ struct TextOutputSettings {
 
 struct SceneCollectionSettings {
     CaptionSourceSettings caption_source_settings;
-    TextOutputSettings text_output_settings;
+    std::vector<TextOutputSettings> text_outputs;
 
     bool operator==(const SceneCollectionSettings &rhs) const {
         return caption_source_settings == rhs.caption_source_settings &&
-               text_output_settings == rhs.text_output_settings;
+               text_outputs == rhs.text_outputs;
     }
 
     bool operator!=(const SceneCollectionSettings &rhs) const {
@@ -279,7 +287,13 @@ struct SourceCaptionerSettings {
         printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
         printf("%s  Scene Collection Settings:\n", line_prefix);
         scene_collection_settings.caption_source_settings.print((string(line_prefix) + "    ").c_str());
-        scene_collection_settings.text_output_settings.print((string(line_prefix) + "    ").c_str());
+        printf("%s  Text Output Settings (%lu):\n", line_prefix, scene_collection_settings.text_outputs.size());
+
+        int cnt = 0;
+        for (const auto &i: scene_collection_settings.text_outputs) {
+            printf("%s     #%d:\n", line_prefix, cnt++);
+            i.print((string(line_prefix) + "      ").c_str());
+        }
 
 //        printf("%s  Scene Collection Settings: %lu\n", line_prefix, scene_collection_settings_map.size());
 //        for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {

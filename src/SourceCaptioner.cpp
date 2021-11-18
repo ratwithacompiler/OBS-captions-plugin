@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "caption_output_writer.h"
 #include "caption_transcript_writer.h"
 
+typedef std::tuple<string, string> TextOutputTup;
 
 void set_text_source_text(const string &text_source_name, const string &caption_text) {
     obs_source_t *text_source = obs_get_source_by_name(text_source_name.c_str());
@@ -355,7 +356,7 @@ void SourceCaptioner::clear_output_timer_cb() {
 //    info_log("clear timer checkkkkkkkkkkkkkkk");
 
     bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
-    string text_source_target_name;
+    vector<string> text_source_names;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         if (!this->settings.format_settings.caption_timeout_enabled || this->last_caption_cleared)
@@ -377,11 +378,11 @@ void SourceCaptioner::clear_output_timer_cb() {
         to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
 
         const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
-        if (scene_col_settings.text_output_settings.enabled
-            && !scene_col_settings.text_output_settings.text_source_name.empty()) {
-            text_source_target_name = scene_col_settings.text_output_settings.text_source_name;
+        for (const auto &text_out: scene_col_settings.text_outputs) {
+            if (!text_out.isValidEnabled())
+                continue;
+            text_source_names.push_back(text_out.text_source_name);
         }
-
     }
 
     auto now = std::chrono::steady_clock::now();
@@ -394,10 +395,9 @@ void SourceCaptioner::clear_output_timer_cb() {
                            false,
                            true);
 
-    if (!text_source_target_name.empty()) {
-        set_text_source_text(text_source_target_name, " ");
+    for (const auto &to_clear: text_source_names) {
+        set_text_source_text(to_clear, " ");
     }
-
     emit caption_result_received(nullptr, true, "");
 }
 
@@ -471,8 +471,7 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
     this->last_caption_text = caption_result.caption_text;
     this->last_caption_final = caption_result.final;
 
-    shared_ptr<OutputCaptionResult> text_output_result;
-    string text_source_target_name;
+    vector<TextOutputTup> text_source_sets;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
 
@@ -494,19 +493,21 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
             return;
 
         const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
-        if (scene_col_settings.text_output_settings.enabled
-            && !scene_col_settings.text_output_settings.text_source_name.empty()) {
+        for (const auto &text_out: scene_col_settings.text_outputs) {
+            if (!text_out.isValidEnabled())
+                continue;
 
-            text_source_target_name = scene_col_settings.text_output_settings.text_source_name;
-            text_output_result = caption_result_handler->prepare_caption_output(caption_result,
-                                                                                true,
-                                                                                true,
-                                                                                scene_col_settings.text_output_settings.insert_punctuation,
-                                                                                scene_col_settings.text_output_settings.line_length,
-                                                                                scene_col_settings.text_output_settings.line_count,
-                                                                                scene_col_settings.text_output_settings.capitalization,
-                                                                                interrupted,
-                                                                                results_history);
+            auto text_output_result = caption_result_handler->prepare_caption_output(caption_result,
+                                                                                     true,
+                                                                                     true,
+                                                                                     text_out.insert_punctuation,
+                                                                                     text_out.line_length,
+                                                                                     text_out.line_count,
+                                                                                     text_out.capitalization,
+                                                                                     interrupted,
+                                                                                     results_history);
+
+            text_source_sets.emplace_back(text_out.text_source_name, text_output_result->output_line);
         }
 
         store_result(native_output_result);
@@ -531,8 +532,8 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                  to_transcript_virtualcam,
                                  false);
 
-    if (text_output_result && !text_source_target_name.empty()) {
-        set_text_source_text(text_source_target_name, text_output_result->output_line);
+    for (const auto &text_out: text_source_sets) {
+        set_text_source_text(std::get<0>(text_out), std::get<1>(text_out));
     }
 
     emit caption_result_received(native_output_result, false, recent_caption_text);

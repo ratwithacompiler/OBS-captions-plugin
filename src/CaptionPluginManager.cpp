@@ -50,9 +50,16 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     const bool is_preview_relevant = state.external_is_preview_open;
 
     const bool any_output_active = state.external_is_streaming || state.external_is_recording || state.external_is_virtualcam_on;
-    const bool is_text_output_relevant = (any_output_active && scene_col_settings.text_output_settings.enabled
-                                          && !scene_col_settings.text_output_settings.text_source_name.empty());
 
+    bool is_text_output_relevant = false;
+    if (any_output_active) {
+        for (const auto &i: scene_col_settings.text_outputs) {
+            if (i.isValidEnabled()) {
+                is_text_output_relevant = true;
+                break;
+            }
+        }
+    }
     const bool equal_settings = new_settings == plugin_settings;
     const bool do_captioning = (
             new_settings.enabled &&

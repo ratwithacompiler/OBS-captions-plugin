@@ -28,12 +28,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "../log.c"
 #include "../SourceCaptioner.h"
 #include "../CaptionPluginSettings.h"
+#include "OpenCaptionSettingsWidget.h"
 
 class CaptionSettingsWidget : public QWidget, Ui_CaptionSettingsWidget {
 Q_OBJECT
 
     CaptionPluginSettings current_settings;
     string scene_collection_name;
+    OpenCaptionSettingsList *caption_settings_widget;
 
     void accept_current_settings();
 
@@ -66,8 +68,6 @@ private slots:
     void on_saveTranscriptsCheckBox_stateChanged(int new_state);
 
     void on_enabledCheckBox_stateChanged(int new_state);
-
-    void on_textSourceEnableOutputCheckBox_stateChanged(int new_state);
 
     void set_show_key(bool set_to_show);
 

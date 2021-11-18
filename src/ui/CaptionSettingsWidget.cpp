@@ -34,17 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define AUDIO_TRACK_COUNT 6
 
 
-static void setup_combobox_texts(QComboBox &comboBox,
-                                 const vector<string> &items
-) {
-    while (comboBox.count())
-        comboBox.removeItem(0);
-
-    for (auto &a_item : items) {
-        comboBox.addItem(QString::fromStdString(a_item));
-    }
-}
-
 static void setup_combobox_texts_data(QComboBox &comboBox, const vector<string> &items
 ) {
     while (comboBox.count())
@@ -83,15 +72,6 @@ static int combobox_set_data_str(QComboBox &combo_box, const char *data, int def
     combo_box.setCurrentIndex(index);
     return index;
 
-}
-
-static int combobox_set_data_int(QComboBox &combo_box, const int data, int default_index) {
-    int index = combo_box.findData(data);
-    if (index == -1)
-        index = default_index;
-
-    combo_box.setCurrentIndex(index);
-    return index;
 }
 
 
@@ -182,8 +162,11 @@ void getReplacements(QTableWidget *tableWidget, std::vector<WordReplacement> &re
 CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest_settings)
         : QWidget(),
           Ui_CaptionSettingsWidget(),
-          current_settings(latest_settings) {
+          current_settings(latest_settings),
+          caption_settings_widget(nullptr) {
     setupUi(this);
+    caption_settings_widget = new OpenCaptionSettingsList(this);
+    this->textOutputsListScrollArea->setWidget(caption_settings_widget);
 
     QString with_version = bottomTextBrowser->toPlainText().replace("${VERSION_STRING}", VERSION_STRING);
     bottomTextBrowser->setPlainText(with_version);
@@ -206,7 +189,6 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
     setup_combobox_capitalization(*capitalizationComboBox);
-    setup_combobox_capitalization(*textSourceCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_transcript_format(*transcriptFormatComboBox);
 
@@ -332,14 +314,7 @@ void CaptionSettingsWidget::apply_ui_scene_collection_settings() {
     cap_source_settings.mute_when = string_to_mute_setting(when_str, CAPTION_SOURCE_MUTE_TYPE_FROM_OWN_SOURCE);
 //    debug_log("accepting when: %d", current_settings.caption_source_settings.mute_when);
 
-    TextOutputSettings &text_output_settings = scene_col_settings.text_output_settings;
-    text_output_settings.enabled = this->textSourceEnableOutputCheckBox->isChecked();
-    text_output_settings.text_source_name = this->textSourceOutputComboBox->currentText().toStdString();
-    text_output_settings.line_count = this->textSourceLineCountSpinBox->value();
-    text_output_settings.line_length = this->textSourceLineLengthSpinBox->value();
-    text_output_settings.insert_punctuation = this->textSourcePunctuationCheckBox->isChecked();
-    text_output_settings.capitalization = (CapitalizationType) this->textSourceCapitalizationComboBox->currentData().toInt();
-//    text_output_settings.insert_newlines = this->textSourceForceLinebreaksCheckBox->isChecked();
+    scene_col_settings.text_outputs = this->caption_settings_widget->getSettings();
 
     current_settings.source_cap_settings.update_setting(current_scene_collection_name, scene_col_settings);
 }
@@ -384,25 +359,7 @@ void CaptionSettingsWidget::update_scene_collection_ui(const string &use_scene_c
     combobox_set_data_str(*captionWhenComboBox, mute_when_str.c_str(), 0);
 
     this->update_sources_visibilities();
-
-    // text output source
-    const QSignalBlocker blocker4(textSourceOutputComboBox);
-
-    this->textSourceEnableOutputCheckBox->setChecked(use_settings.text_output_settings.enabled);
-    on_textSourceEnableOutputCheckBox_stateChanged(0);
-
-    this->textSourcePunctuationCheckBox->setChecked(use_settings.text_output_settings.insert_punctuation);
-
-    auto text_sources = get_text_sources();
-    text_sources.insert(text_sources.begin(), "");
-    setup_combobox_texts(*textSourceOutputComboBox, text_sources);
-
-    this->textSourceLineLengthSpinBox->setValue(use_settings.text_output_settings.line_length);
-    this->textSourceLineCountSpinBox->setValue(use_settings.text_output_settings.line_count);
-    combobox_set_data_int(*textSourceCapitalizationComboBox, use_settings.text_output_settings.capitalization, 0);
-//    this->textSourceForceLinebreaksCheckBox->setChecked(use_settings.text_output_settings.insert_newlines);
-
-    this->textSourceOutputComboBox->setCurrentText(QString::fromStdString(use_settings.text_output_settings.text_source_name));
+    this->caption_settings_widget->setSettings(use_settings.text_outputs);
 }
 
 void CaptionSettingsWidget::transcript_format_index_change(int new_index) {
@@ -544,7 +501,6 @@ void CaptionSettingsWidget::updateUi() {
 //    sceneCollectionNameLabel_GeneralRight->setText(QString::fromStdString(scene_collection_name));
 //    sceneCollectionNameLabel_TextSourceRight->setText(QString::fromStdString(scene_collection_name));
     this->generalSceneCollectionWidget->hide();
-    this->textSourceWidget1->hide();
 
     update_scene_collection_ui(scene_collection_name);
 
@@ -647,11 +603,6 @@ void CaptionSettingsWidget::on_saveTranscriptsCheckBox_stateChanged(int new_stat
     this->transcriptSrtSettingsWidget->setDisabled(disabled);
 }
 
-void CaptionSettingsWidget::on_textSourceEnableOutputCheckBox_stateChanged(int new_state) {
-    const bool disabled = !textSourceEnableOutputCheckBox->isChecked();
-    this->textSourceWidget1->setDisabled(disabled);
-    this->textSourceWidget2->setDisabled(disabled);
-}
 
 void CaptionSettingsWidget::on_enabledCheckBox_stateChanged(int new_state) {
 //    const bool disabled = !enabledCheckBox->isChecked();
