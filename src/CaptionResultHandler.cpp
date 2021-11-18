@@ -23,45 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <vector>
 #include <utils.h>
-
-void split_into_non_wrapped_lines(vector<string> &output_lines, const string &text, const uint max_line_length) {
-    istringstream stream(text);
-    string word;
-    string line;
-    while (getline(stream, word, ' ')) {
-        if (word.empty())
-            continue;
-
-        int new_len = line.size() + (line.empty() ? 0 : 1) + word.size();
-        if (new_len <= max_line_length) {
-            // still fits into line
-            if (!line.empty())
-                line.append(" ");
-            line.append(word);
-        } else {
-            if (!line.empty())
-                output_lines.push_back(line);
-
-            line = word;
-        }
-    }
-
-    if (!line.empty())
-        output_lines.push_back(line);
-
-//    for (auto line: output_lines)
-//        debug_log("%s", line.c_str());
-}
-
-static void join_strings(const vector<string> &lines, char join_char, string &output) {
-    for (const string &a_line: lines) {
-        if (!output.empty())
-            output.push_back(join_char);
-
-        output.append(a_line);
-    }
-}
-
+#include "stringutils.h"
 
 static void string_capitalization(string &line, const CapitalizationType capitalization) {
     if (capitalization == CAPITALIZATION_ALL_CAPS)
@@ -152,17 +114,17 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
                 }
             }
             string_capitalization(filled_line, capitalization);
-            split_into_non_wrapped_lines(all_lines, filled_line, line_length);
+            split_into_lines(all_lines, filled_line, line_length);
         } else {
             string_capitalization(cleaned_line, capitalization);
-            split_into_non_wrapped_lines(all_lines, cleaned_line, line_length);
+            split_into_lines(all_lines, cleaned_line, line_length);
         }
 
         const uint use_lines_cnt = all_lines.size() > targeted_line_count ? targeted_line_count : all_lines.size();
         output_result->output_lines.insert(output_result->output_lines.end(), all_lines.end() - use_lines_cnt, all_lines.end());
 
         if (!output_result->output_lines.empty()) {
-            char join_char = insert_newlines ? '\n' : ' ';
+            string join_char = insert_newlines ? "\n" : " ";
             join_strings(output_result->output_lines, join_char, output_result->output_line);
 //            info_log("hhmm line: %s", output_result->output_line.c_str());
         }

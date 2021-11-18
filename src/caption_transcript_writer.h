@@ -15,45 +15,12 @@
 #include <deque>
 #include "SourceCaptioner.h"
 #include "ui/uiutils.h"
+#include "stringutils.h"
 
 using ResultQueue = std::deque<std::shared_ptr<OutputCaptionResult>>;
 
 const string NEWLINE_STR = "\r\n";
 
-static void split_into_non_wrapped_lines(vector<string> &output_lines, const string &text, const uint max_line_length) {
-    istringstream stream(text);
-    string word;
-    string line;
-    while (getline(stream, word, ' ')) {
-        if (word.empty())
-            continue;
-
-        int new_len = line.size() + (line.empty() ? 0 : 1) + word.size();
-        if (new_len <= max_line_length) {
-            // still fits into line
-            if (!line.empty())
-                line.append(" ");
-            line.append(word);
-        } else {
-            if (!line.empty())
-                output_lines.push_back(line);
-
-            line = word;
-        }
-    }
-
-    if (!line.empty())
-        output_lines.push_back(line);
-}
-
-static void join_strings(const vector<string> &lines, const string &joiner, string &output) {
-    for (const string &a_line: lines) {
-        if (!output.empty())
-            output.append(joiner);
-
-        output.append(a_line);
-    }
-}
 
 QFileInfo find_unused_filename(const QFileInfo &output_directory,
                                const QString &basename,
@@ -323,7 +290,7 @@ string srt_entry_caption_text(const SrtState &settings, const ResultQueue &resul
 
     if (settings.line_length) {
         vector<string> lines;
-        split_into_non_wrapped_lines(lines, text, settings.line_length);
+        split_into_lines(lines, text, settings.line_length);
         text.clear();
         join_strings(lines, NEWLINE_STR, text);
     }
