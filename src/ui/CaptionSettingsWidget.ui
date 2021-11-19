@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>508</width>
-    <height>1098</height>
+    <width>460</width>
+    <height>1174</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1054,7 +1054,13 @@ p, li { white-space: pre-wrap; }
        </item>
        <item>
         <widget class="QWidget" name="transcriptSrtSettingsWidget" native="true">
-         <layout class="QGridLayout" name="gridLayout">
+         <layout class="QFormLayout" name="formLayout_4">
+          <property name="labelAlignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+          </property>
+          <property name="verticalSpacing">
+           <number>4</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -1067,13 +1073,10 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <property name="verticalSpacing">
-           <number>4</number>
-          </property>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_20">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>Max Caption Line Length</string>
+             <string>SRT Settings</string>
             </property>
            </widget>
           </item>
@@ -1081,13 +1084,6 @@ p, li { white-space: pre-wrap; }
            <widget class="QLabel" name="label_19">
             <property name="text">
              <string>Preferred Caption Duration</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_18">
-            <property name="text">
-             <string>SRT Settings</string>
             </property>
            </widget>
           </item>
@@ -1107,6 +1103,13 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>Max Caption Line Length</string>
+            </property>
+           </widget>
+          </item>
           <item row="2" column="1">
            <widget class="QSpinBox" name="srtLineLengthSpinBox">
             <property name="suffix">
@@ -1120,6 +1123,37 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_11">
+            <property name="text">
+             <string>Capitalization</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="srtCapitalizationComboBox"/>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="srtAddPunctuationCheckBox">
+            <property name="text">
+             <string>Add Punctuation </string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="QCheckBox" name="srtSplitSentencesCheckBox">
+            <property name="text">
+             <string>Split Sentences Longer Than Preferred Duration</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -1130,8 +1164,8 @@ p, li { white-space: pre-wrap; }
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>9</width>
+           <height>10</height>
           </size>
          </property>
         </spacer>
@@ -1165,8 +1199,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>462</width>
-            <height>645</height>
+            <width>389</width>
+            <height>721</height>
            </rect>
           </property>
          </widget>

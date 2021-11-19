@@ -5,6 +5,15 @@
 #include <QStringList>
 #include <QTextBoundaryFinder>
 
+static void string_capitalization(string &line, const CapitalizationType capitalization) {
+    if (capitalization == CAPITALIZATION_ALL_CAPS)
+        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
+
+    else if (capitalization == CAPITALIZATION_ALL_LOWERCASE)
+        std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+}
+
+
 static bool isAscii(const std::string &text) {
     for (auto c: text) {
         if (static_cast<unsigned char>(c) > 127) {

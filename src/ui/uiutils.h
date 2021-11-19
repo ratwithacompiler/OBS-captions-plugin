@@ -105,8 +105,8 @@ static void setup_combobox_capitalization(QComboBox &comboBox) {
         comboBox.removeItem(0);
 
     comboBox.addItem("Normal english like.", 0);
-    comboBox.addItem("ALL. CAPS. ", 1);
-    comboBox.addItem("all. lowercase.", 2);
+    comboBox.addItem("ALL CAPS", 1);
+    comboBox.addItem("all lowercase", 2);
 }
 
 static string transcript_format_extension(const string &format, const string &fallback) {

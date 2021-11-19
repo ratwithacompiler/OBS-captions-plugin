@@ -118,6 +118,9 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
             8,
             44,
             true,
+            false,
+            CAPITALIZATION_NORMAL,
+            true,
             true,
             true,
     };
@@ -156,6 +159,10 @@ static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings
 
     if (source_settings.format_settings.capitalization < 0 || source_settings.format_settings.capitalization > 2)
         source_settings.format_settings.capitalization = (CapitalizationType) 0;
+
+    if (source_settings.transcript_settings.srt_capitalization < 0
+        || source_settings.transcript_settings.srt_capitalization > 2)
+        source_settings.transcript_settings.srt_capitalization = (CapitalizationType) 0;
 
     // backwards compatibility with old ettings that had off, mild, strict instead off/on.
     // ensure old strict/2 falls back to on/1 not off/0 default.
@@ -325,6 +332,12 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
                              source_settings.transcript_settings.srt_target_duration_secs);
     obs_data_set_default_int(load_data, "transcript_srt_target_line_length",
                              source_settings.transcript_settings.srt_target_line_length);
+    obs_data_set_default_bool(load_data, "transcript_srt_add_punctuation",
+                              source_settings.transcript_settings.srt_add_punctuation);
+    obs_data_set_default_bool(load_data, "transcript_srt_split_single_sentences",
+                              source_settings.transcript_settings.srt_split_single_sentences);
+    obs_data_set_default_int(load_data, "transcript_srt_capitalization",
+                             source_settings.transcript_settings.srt_capitalization);
 
     settings.enabled = obs_data_get_bool(load_data, "enabled");
     source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
@@ -390,6 +403,10 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
     source_settings.transcript_settings.srt_target_duration_secs = obs_data_get_int(load_data, "transcript_srt_target_duration_secs");
     source_settings.transcript_settings.srt_target_line_length = obs_data_get_int(load_data, "transcript_srt_target_line_length");
+    source_settings.transcript_settings.srt_add_punctuation = obs_data_get_bool(load_data, "transcript_srt_add_punctuation");
+    source_settings.transcript_settings.srt_split_single_sentences = obs_data_get_bool(load_data, "transcript_srt_split_single_sentences");
+    source_settings.transcript_settings.srt_capitalization = (CapitalizationType) obs_data_get_int(load_data,
+                                                                                                   "transcript_srt_capitalization");
 
     enforce_CaptionPluginSettings_values(settings);
 
@@ -457,6 +474,13 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
                      settings.source_cap_settings.transcript_settings.srt_target_duration_secs);
     obs_data_set_int(save_data, "transcript_srt_target_line_length",
                      settings.source_cap_settings.transcript_settings.srt_target_line_length);
+
+    obs_data_set_bool(save_data, "transcript_srt_add_punctuation",
+                      settings.source_cap_settings.transcript_settings.srt_add_punctuation);
+    obs_data_set_bool(save_data, "transcript_srt_split_single_sentences",
+                      settings.source_cap_settings.transcript_settings.srt_split_single_sentences);
+    obs_data_set_int(save_data, "transcript_srt_capitalization",
+                     settings.source_cap_settings.transcript_settings.srt_capitalization);
 
     obs_data_set_string(save_data, "plugin_version", VERSION_STRING);
 }

@@ -13,13 +13,22 @@
 #include <fstream>
 #include <sstream>
 #include <deque>
-#include "SourceCaptioner.h"
 #include "ui/uiutils.h"
 #include "stringutils.h"
 
-using ResultQueue = std::deque<std::shared_ptr<OutputCaptionResult>>;
+using ResultTup = std::tuple<
+        std::chrono::steady_clock::time_point,
+        std::chrono::steady_clock::time_point,
+        std::string,
+        bool   //is_sentence_start: false for parts[1:] of a sentence that was split into multiple parts
+        // so those can be handled differently from normal single full sentences.
+>;
+using ResultQueue = std::deque<ResultTup>;
 
 const string NEWLINE_STR = "\r\n";
+
+using MonoTP = std::chrono::steady_clock::time_point;
+using MonoDur = std::chrono::steady_clock::duration;
 
 
 QFileInfo find_unused_filename(const QFileInfo &output_directory,
@@ -249,6 +258,9 @@ struct SrtState {
     std::chrono::steady_clock::duration max_entry_duration;
     uint sequence_number = 0;
     uint line_length = 0;
+    bool add_punctuation = false;
+    bool split_sentence = false;
+    CapitalizationType capitalization = CAPITALIZATION_NORMAL;
 
     // only use caption results that were created up to this many milliseconds before the transcript was created
     // to prevent a sentence that had already started being spoken before the transcript started from going into the log
@@ -261,11 +273,11 @@ int batch_up_to(const SrtState &settings, ResultQueue &results) {
     if (results.empty())
         return -1;
 
-    auto &first_received_at = results[0]->caption_result.first_received_at;
+    auto &first_received_at = std::get<0>(results[0]);
 
     uint take_until_ind = 0;
     for (int i = 1; i < results.size(); i++) {
-        std::chrono::steady_clock::duration total = results[i]->caption_result.received_at - first_received_at;
+        std::chrono::steady_clock::duration total = std::get<1>(results[i]) - first_received_at;
         if (total <= settings.max_entry_duration)
             take_until_ind = i;
         else
@@ -277,10 +289,24 @@ int batch_up_to(const SrtState &settings, ResultQueue &results) {
 string srt_entry_caption_text(const SrtState &settings, const ResultQueue &results, const int up_to_index) {
     ostringstream text_os;
     for (int i = 0; i < up_to_index + 1; i++) {
-        text_os << results[i]->clean_caption_text;
+        string line = std::get<2>(results[i]);
+        if (settings.add_punctuation
+            && settings.capitalization == CAPITALIZATION_NORMAL
+            && std::get<3>(results[i]) //only capitalize the first part
+            && !line.empty()
+            && isascii(line[0])) {
+            line[0] = toupper(line[0]);
+        }
+
+        text_os << line;
 //        printf("using line %d, '%s'\n", i, results[i]->clean_caption_text.c_str());
-        if (i)
-            text_os << " ";
+        if (i) {
+            if (settings.add_punctuation) {
+                text_os << ". ";
+
+            } else
+                text_os << " ";
+        }
     }
 
     string text = text_os.str();
@@ -302,7 +328,7 @@ string srt_entry_caption_text(const SrtState &settings, const ResultQueue &resul
 
 int write_results_batch_srt(const SrtState &settings, std::fstream &fs, const ResultQueue &results, const int up_to_index) {
     int start_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            results[0]->caption_result.first_received_at - settings.transcript_started_at).count();
+            std::get<0>(results[0]) - settings.transcript_started_at).count();
 
     if (start_offset_ms < 0)
         start_offset_ms = 0;
@@ -313,7 +339,7 @@ int write_results_batch_srt(const SrtState &settings, std::fstream &fs, const Re
     }
 
     const int end_offset_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            results[up_to_index]->caption_result.received_at - settings.transcript_started_at).count();
+            std::get<1>(results[up_to_index]) - settings.transcript_started_at).count();
 
     if (end_offset_ms < 0) {
         return 0;
@@ -345,7 +371,7 @@ bool write_transcript_caption_results_srt(SrtState &settings, std::fstream &fs, 
     const auto now = std::chrono::steady_clock::now();
     while (!results.empty() && !fs.fail()) {
         if (!write_all) {
-            auto since_first = now - results[0]->caption_result.first_received_at;
+            auto since_first = now - std::get<0>(results[0]);
             if (since_first <= settings.max_entry_duration) {
                 debug_log(
                         "write_transcript_caption_results_srt: current results still too recent, batch could still change, "
@@ -409,6 +435,99 @@ bool relevant_result(const SrtState &settings, const CaptionOutput &caption_outp
     return true;
 }
 
+
+void split_vec(std::vector<std::vector<string>> &out, const std::vector<string> &words, size_t chunks) {
+    size_t length = words.size() / chunks;
+    size_t extra = words.size() % chunks;
+
+    size_t begin = 0;
+    size_t end = 0;
+    for (size_t i = 0; i < (std::min)(chunks, words.size()); ++i) {
+        end += length;
+        if (extra > 0) {
+            end += 1;
+            extra--;
+        }
+        out.push_back(std::vector<string>(words.begin() + begin, words.begin() + end));
+        begin = end;
+    }
+}
+
+void split_res(const MonoTP &start, const MonoTP &end, const string &full_text,
+               const MonoDur &max_duration, ResultQueue &results) {
+
+    MonoDur length = end - start;
+
+    double parts = (double) (std::chrono::duration_cast<std::chrono::milliseconds>(length).count()) /
+                   (double) (std::chrono::duration_cast<std::chrono::milliseconds>(max_duration).count());
+    int parts_cnt = ceil(parts);
+    debug_log("sentence longer than max duration, %lld >= %lld, splitting into %d parts (src %f)",
+              std::chrono::duration_cast<std::chrono::milliseconds>(length).count(),
+              std::chrono::duration_cast<std::chrono::milliseconds>(max_duration).count(),
+                      parts_cnt, parts);
+
+    if (parts_cnt <= 1) {
+//        printf("split_res parts_cnt <= 1, no point: %d\n", parts_cnt);
+        results.emplace_back(start, end, full_text, true);
+        return;
+    }
+
+    QString qtext = QString::fromStdString(full_text).simplified();
+    QStringList qwords = qtext.split(QRegExp("\\s+"));
+    std::vector<string> words;
+    for (int i = 0; i < qwords.size(); i++)
+        words.push_back(qwords.at(i).toStdString());
+
+    std::vector<std::vector<string>> word_vecs;
+    split_vec(word_vecs, words, parts_cnt);
+
+    MonoDur part_duration = length / parts_cnt;
+    int cnt = 0;
+    for (const auto &word_vec: word_vecs) {
+        string line;
+        join_strings(word_vec, " ", line);
+        if (!line.empty()) {
+            MonoDur part_start = part_duration * cnt;
+            MonoDur part_end = part_duration * (cnt + 1);
+            results.emplace_back(start + part_start, start + part_end, line, cnt == 0);
+        }
+        cnt++;
+    }
+}
+
+void add_result(SrtState &settings, ResultQueue &results, shared_ptr<OutputCaptionResult> output_res) {
+    string text = output_res->clean_caption_text;
+    string_capitalization(text, settings.capitalization);
+
+    bool split = false;
+    if (settings.split_sentence) {
+        std::chrono::steady_clock::duration length = output_res->caption_result.received_at
+                                                     - output_res->caption_result.first_received_at;
+        split = length > settings.max_entry_duration;
+    }
+
+    if (!split) {
+        results.emplace_back(output_res->caption_result.first_received_at, output_res->caption_result.received_at,
+                             text, true);
+        return;
+    }
+
+//    auto before = results.size();
+    split_res(output_res->caption_result.first_received_at, output_res->caption_result.received_at,
+              text, settings.max_entry_duration, results);
+
+//    int cnt = 0;
+//    printf("added lines: %lu\n", results.size() - before);
+//    for (int i = before; i < results.size(); i++) {
+//        const auto &res = results[i];
+//        printf("line %d:  %lld -> %lld: '%s' \n", cnt++,
+//               std::chrono::duration_cast<std::chrono::milliseconds>(std::get<0>(res) - settings.transcript_started_at).count(),
+//               std::chrono::duration_cast<std::chrono::milliseconds>(std::get<1>(res) - settings.transcript_started_at).count(),
+//               std::get<2>(res).c_str()
+//        );
+//    }
+}
+
 void write_loop_srt(SrtState &settings, std::fstream &fs,
                     shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
     std::shared_ptr<OutputCaptionResult> held_nonfinal_result;
@@ -430,7 +549,7 @@ void write_loop_srt(SrtState &settings, std::fstream &fs,
             continue;
 
         if (caption_output.output_result->caption_result.final) {
-            results.push_back(caption_output.output_result);
+            add_result(settings, results, caption_output.output_result);
 
             if (!write_transcript_caption_results_srt(settings, fs, results, false)) {
                 return;
@@ -441,7 +560,7 @@ void write_loop_srt(SrtState &settings, std::fstream &fs,
     }
 
     if (held_nonfinal_result) {
-        results.push_back(held_nonfinal_result);
+        add_result(settings, results, held_nonfinal_result);
         held_nonfinal_result = nullptr;
     }
 
@@ -628,7 +747,10 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
         const uint max_duration_secs = transcript_settings.srt_target_duration_secs ? transcript_settings.srt_target_duration_secs : 1;
         SrtState settings = SrtState{started_at_steady, std::chrono::seconds(max_duration_secs), 1,
-                                     transcript_settings.srt_target_line_length, 1250};
+                                     transcript_settings.srt_target_line_length,
+                                     transcript_settings.srt_add_punctuation, transcript_settings.srt_split_single_sentences,
+
+                                     transcript_settings.srt_capitalization, 1250};
 
         info_log("transcript_writer_loop starting write_loop: %s", format.c_str());
         if (format == "raw")

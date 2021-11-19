@@ -25,13 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utils.h>
 #include "stringutils.h"
 
-static void string_capitalization(string &line, const CapitalizationType capitalization) {
-    if (capitalization == CAPITALIZATION_ALL_CAPS)
-        std::transform(line.begin(), line.end(), line.begin(), ::toupper);
-
-    else if (capitalization == CAPITALIZATION_ALL_LOWERCASE)
-        std::transform(line.begin(), line.end(), line.begin(), ::tolower);
-}
 
 shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         const CaptionResult &caption_result,
@@ -73,7 +66,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         vector<string> all_lines;
         if (fillup_with_previous) {
             string filled_line = cleaned_line;
-            if (punctuation && capitalization != CAPITALIZATION_ALL_LOWERCASE && !filled_line.empty() && isascii(filled_line[0]))
+            if (punctuation && capitalization == CAPITALIZATION_NORMAL && !filled_line.empty() && isascii(filled_line[0]))
                 filled_line[0] = toupper(filled_line[0]);
 
             if (filled_line.size() < max_length && !result_history.empty()) {
@@ -102,7 +95,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
 
                     filled_line.insert(0, (*i)->clean_caption_text);
 
-                    if (punctuation && capitalization != CAPITALIZATION_ALL_LOWERCASE && !filled_line.empty() && isascii(filled_line[0]))
+                    if (punctuation && capitalization == CAPITALIZATION_NORMAL && !filled_line.empty() && isascii(filled_line[0]))
                         filled_line[0] = toupper(filled_line[0]);
 
 //                    debug_log("filled up with previous text %lu, %lu", filled_line.size(), (*i)->clean_caption_text.size());

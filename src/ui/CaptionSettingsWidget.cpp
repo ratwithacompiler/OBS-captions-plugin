@@ -189,6 +189,7 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_languages(*languageComboBox);
     setup_combobox_profanity(*profanityFilterComboBox);
     setup_combobox_capitalization(*capitalizationComboBox);
+    setup_combobox_capitalization(*srtCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_transcript_format(*transcriptFormatComboBox);
 
@@ -463,6 +464,9 @@ void CaptionSettingsWidget::accept_current_settings() {
     transcript_settings.format = transcriptFormatComboBox->currentData().toString().toStdString();
     transcript_settings.srt_target_duration_secs = srtDurationSpinBox->value();
     transcript_settings.srt_target_line_length = srtLineLengthSpinBox->value();
+    transcript_settings.srt_add_punctuation = srtAddPunctuationCheckBox->isChecked();
+    transcript_settings.srt_split_single_sentences = srtSplitSentencesCheckBox->isChecked();
+    transcript_settings.srt_capitalization = (CapitalizationType) srtCapitalizationComboBox->currentData().toInt();
 
     transcript_settings.recording_filename_type = recordingTranscriptFilenameComboBox->currentData().toString().toStdString();
     transcript_settings.recording_filename_custom = recordingTranscriptCustomNameOverwriteLineEdit->text().toStdString();
@@ -539,6 +543,9 @@ void CaptionSettingsWidget::updateUi() {
     transcript_format_index_change(0);
     srtDurationSpinBox->setValue(source_settings.transcript_settings.srt_target_duration_secs);
     srtLineLengthSpinBox->setValue(source_settings.transcript_settings.srt_target_line_length);
+    srtAddPunctuationCheckBox->setChecked(source_settings.transcript_settings.srt_add_punctuation);
+    srtSplitSentencesCheckBox->setChecked(source_settings.transcript_settings.srt_split_single_sentences);
+    combobox_set_data_int(*srtCapitalizationComboBox, source_settings.transcript_settings.srt_capitalization, 0);
 
     combobox_set_data_str(*recordingTranscriptFilenameComboBox, source_settings.transcript_settings.recording_filename_type.c_str(), 0);
     combobox_set_data_str(*recordingTranscriptCustomNameExistsCombobox,
