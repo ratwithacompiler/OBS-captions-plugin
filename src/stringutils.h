@@ -13,6 +13,11 @@ static void string_capitalization(string &line, const CapitalizationType capital
         std::transform(line.begin(), line.end(), line.begin(), ::tolower);
 }
 
+static void lstrip(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
 
 static bool isAscii(const std::string &text) {
     for (auto c: text) {

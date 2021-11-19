@@ -61,6 +61,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
                 error_log("string replacement error '%s'", caption_result.caption_text.c_str());
             }
         }
+        lstrip(cleaned_line);
         output_result->clean_caption_text = cleaned_line;
 
         vector<string> all_lines;
