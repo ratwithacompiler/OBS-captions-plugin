@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
-    <height>1174</height>
+    <width>480</width>
+    <height>1178</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -378,36 +378,13 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item row="6" column="0">
-           <widget class="QLabel" name="label_15">
-            <property name="text">
-             <string>Capitalization</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QComboBox" name="capitalizationComboBox">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>250</width>
-              <height>0</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
            <widget class="QLabel" name="apiKeyLabel">
             <property name="text">
              <string>API Key</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
+          <item row="6" column="1">
            <widget class="QWidget" name="apiKeyWidget" native="true">
             <property name="minimumSize">
              <size>
@@ -546,14 +523,14 @@ p, li { white-space: pre-wrap; }
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
+          <item row="4" column="0">
            <widget class="QLabel" name="nativeForceLinebreaksLabel">
             <property name="text">
              <string>Force Linebreaks</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="4" column="1">
            <widget class="QWidget" name="widget_7" native="true">
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <property name="spacing">
@@ -601,14 +578,14 @@ p, li { white-space: pre-wrap; }
             </layout>
            </widget>
           </item>
-          <item row="4" column="0">
+          <item row="5" column="0">
            <widget class="QCheckBox" name="captionTimeoutEnabledCheckBox">
             <property name="text">
              <string>Caption Timeout</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="5" column="1">
            <widget class="QDoubleSpinBox" name="captionTimeoutDoubleSpinBox">
             <property name="decimals">
              <number>1</number>
@@ -626,6 +603,29 @@ p, li { white-space: pre-wrap; }
            <widget class="QCheckBox" name="addPunctuationCheckBox">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_15">
+            <property name="text">
+             <string>Capitalization</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QComboBox" name="capitalizationComboBox">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>250</width>
+              <height>0</height>
+             </size>
             </property>
            </widget>
           </item>
@@ -1106,7 +1106,7 @@ p, li { white-space: pre-wrap; }
           <item row="2" column="0">
            <widget class="QLabel" name="label_20">
             <property name="text">
-             <string>Max Caption Line Length</string>
+             <string>Max Line Length</string>
             </property>
            </widget>
           </item>
@@ -1133,13 +1133,6 @@ p, li { white-space: pre-wrap; }
           <item row="3" column="1">
            <widget class="QComboBox" name="srtCapitalizationComboBox"/>
           </item>
-          <item row="4" column="0" colspan="2">
-           <widget class="QCheckBox" name="srtAddPunctuationCheckBox">
-            <property name="text">
-             <string>Add Punctuation </string>
-            </property>
-           </widget>
-          </item>
           <item row="5" column="0" colspan="2">
            <widget class="QCheckBox" name="srtSplitSentencesCheckBox">
             <property name="text">
@@ -1151,6 +1144,13 @@ p, li { white-space: pre-wrap; }
            <widget class="QLabel" name="label_12">
             <property name="text">
              <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="srtAddPunctuationCheckBox">
+            <property name="text">
+             <string>Add Punctuation </string>
             </property>
            </widget>
           </item>
@@ -1199,8 +1199,8 @@ p, li { white-space: pre-wrap; }
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>389</width>
-            <height>721</height>
+            <width>434</width>
+            <height>725</height>
            </rect>
           </property>
          </widget>

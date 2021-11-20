@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>383</width>
-    <height>195</height>
+    <height>197</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -121,7 +121,7 @@
       <item row="3" column="0">
        <widget class="QLabel" name="label_17">
         <property name="text">
-         <string>Line Count</string>
+         <string>Lines</string>
         </property>
        </widget>
       </item>
