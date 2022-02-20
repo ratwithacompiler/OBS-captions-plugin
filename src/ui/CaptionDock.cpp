@@ -33,6 +33,7 @@ CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_mana
         this->setMaximumWidth(target_width);
         this->setMinimumWidth(target_width);
     }
+    this->verticalLayout->setAlignment(Qt::AlignTop);
 //    info_log("after: %d %d", this->minimumWidth(), this->maximumWidth());
 }
 
