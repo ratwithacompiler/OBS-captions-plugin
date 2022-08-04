@@ -112,23 +112,68 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(obs_QRC src/resources/obs.qrc)
+
+
 if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
     FILE(TO_CMAKE_PATH "${QT_DEP_DIR}" QT_DEP_DIR_CMAKE)
     message("USING QT_DEP_DIR: ${QT_DEP_DIR_CMAKE}")
-    find_package(Qt5 REQUIRED COMPONENTS Widgets Core
-            PATHS "${QT_DEP_DIR_CMAKE}"
+
+    #    set(Qt6_DIR ${QT_DEP_DIR_CMAKE})
+    #    set(Qt6WidgetsTools_DIR ${QT_DEP_DIR_CMAKE})
+
+    message("CMAKE_PREFIX_PATH before: ${CMAKE_PREFIX_PATH}")
+    set(CMAKE_PREFIX_PATH_ORG "${CMAKE_PREFIX_PATH}")
+    set(CMAKE_PREFIX_PATH "${QT_DEP_DIR_CMAKE}")
+    #    find_qt(COMPONENTS Widgets Core)
+
+    find_package(Qt6
+            COMPONENTS Widgets Core
+            PATHS ${QT_DEP_DIR_CMAKE}
+
             NO_DEFAULT_PATH
+            NO_CMAKE_PATH
             )
+
+    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH_ORG}")
+    message("CMAKE_PREFIX_PATH after: ${CMAKE_PREFIX_PATH}")
+
+    message(" huhhh Qt_DIR: ${Qt_DIR} ;Qt6_DIR: ${Qt6_DIR} ${Qt6_FOUND}")
+    IF (Qt6_FOUND)
+        message("found qt6: ${Qt_DIR} ; ${Qt6_DIR}")
+        qt_add_resources(obs_QRC_SOURCES ${obs_QRC})
+    else ()
+        find_package(Qt5 REQUIRED COMPONENTS Widgets Core
+                PATHS ${QT_DEP_DIR_CMAKE}
+                NO_DEFAULT_PATH
+                )
+
+        message("found qt5: ${Qt_DIR} ; ${Qt5_DIR}")
+        qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
+    ENDIF ()
+
 else ()
-    find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
+    IF (Qt6_FOUND)
+        message("found qt6: ${Qt_DIR} ; ${Qt6_DIR}")
+        qt_add_resources(obs_QRC_SOURCES ${obs_QRC})
+    elseif ()
+        find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+        message("found qt5: ${Qt_DIR} ; ${Qt5_DIR}")
+        qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
+    ENDIF ()
+
 endif ()
-message("qt: ${Qt_DIR} ; ${Qt5_DIR}")
+
+IF (Qt6_FOUND)
+    set(_qt_widgets Qt6::Widgets)
+else ()
+    set(_qt_widgets Qt5::Widgets)
+endif ()
 
 #configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
 #set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
 
-set(obs_QRC src/resources/obs.qrc)
-qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
 
 add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_HEADERS}
@@ -147,54 +192,58 @@ if (WIN32 AND NOT BUILD_SHARED_LIBS)
             CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
         if (${flag_var} MATCHES "/MD")
-            message("before: ${flag_var}: " ${${flag_var}}"")
-            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            message("after : ${flag_var}: " ${${flag_var}}"")
+            message("before: ${flag_var}: " ${${flag_var}}" ")
+            string(REGEX REPLACE " /MD" "/MT" ${flag_var} "${${flag_var}}")
+            message("after : ${flag_var}: " ${${flag_var}}" ")
         endif ()
     endforeach ()
 endif ()
 
 if (PLUGIN_COMPILE_DEFINITIONS)
-    #    message("PLUGIN_COMPILE_DEFINITIONS ${PLUGIN_COMPILE_DEFINITIONS}")
+    #    message(" PLUGIN_COMPILE_DEFINITIONS ${PLUGIN_COMPILE_DEFINITIONS}")
     target_compile_definitions(obs_google_caption_plugin PRIVATE ${PLUGIN_COMPILE_DEFINITIONS})
 endif ()
 
 #message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
 
-find_library(LIBOBS_LIBRARY obs
+find_package(libobs REQUIRED
+        CONFIG
+        PATHS
         ${OBS_LIB_DIR}
         ${OBS_LIB_DIR}/libobs/
         ${OBS_LIB_DIR}/libobs/RelWithDebInfo/
         ${OBS_LIB_DIR}/libobs/Relase/
         ${OBS_LIB_DIR}/libobs/*/
+        NO_DEFAULT_PATH
         )
 
-if (NOT LIBOBS_LIBRARY)
-    message(FATAL_ERROR "libOBS not found: ${OBS_LIB_DIR}")
-endif ()
 message("using libOBS: ${LIBOBS_LIBRARY}")
+if (NOT libobs_FOUND)
+    message(FATAL_ERROR "libobs not found: ${OBS_LIB_DIR}")
+endif ()
+message("using libOBS: ${libobs_DIR}")
 
-find_library(OBS_FRONTEND_LIBRARY obs-frontend-api
+find_package(obs-frontend-api REQUIRED
+        CONFIG
+        PATHS
         ${OBS_LIB_DIR}
         ${OBS_LIB_DIR}/UI/obs-frontend-api/
         ${OBS_LIB_DIR}/UI/obs-frontend-api/RelWithDebInfo/
         ${OBS_LIB_DIR}/UI/obs-frontend-api/Release/
         ${OBS_LIB_DIR}/UI/obs-frontend-api/*/
+        NO_DEFAULT_PATH
         )
 
-if (NOT OBS_FRONTEND_LIBRARY)
+message("using obs_frontend_library: ${obs-frontend-api_DIR}")
+if (NOT obs-frontend-api_FOUND)
     message(FATAL_ERROR "obs_frontend_library not found: ${OBS_LIB_DIR}")
 endif ()
-message("using obs_frontend_library: ${OBS_FRONTEND_LIBRARY}")
+message("using obs_frontend_library: ${obs-frontend-api_DIR} ")
 
-if (NOT OBS_FRONTEND_LIBRARY)
-    message(FATAL_ERROR "obs_frontend_library not found")
-endif ()
 
 target_link_libraries(obs_google_caption_plugin
         caption_stream
-        ${OBS_FRONTEND_LIBRARY}
-        ${LIBOBS_LIBRARY}
+        OBS::libobs OBS::obs-frontend-api
 
-        Qt5::Widgets
+        ${_qt_widgets}
         )

@@ -473,7 +473,7 @@ void split_res(const MonoTP &start, const MonoTP &end, const string &full_text,
     }
 
     QString qtext = QString::fromStdString(full_text).simplified();
-    QStringList qwords = qtext.split(QRegExp("\\s+"));
+    QStringList qwords = qtext.split(QRegularExpression("\\s+"));
     std::vector<string> words;
     for (int i = 0; i < qwords.size(); i++)
         words.push_back(qwords.at(i).toStdString());

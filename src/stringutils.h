@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QStringList>
 #include <QTextBoundaryFinder>
+#include <QRegularExpression>
 
 static void string_capitalization(string &line, const CapitalizationType capitalization) {
     if (capitalization == CAPITALIZATION_ALL_CAPS)
@@ -43,7 +44,7 @@ static void splitSmallest(QVector<QString> &out_chars, const QString &word) {
 static void split_into_lines_unicode_ish(vector<string> &output_lines, const string &text, const uint max_line_length) {
     QString qtext = QString::fromStdString(text).simplified();
 
-    QStringList words = qtext.split(QRegExp("\\s+"));
+    QStringList words = qtext.split(QRegularExpression("\\s+"));
     uint cnt = 0;
 
     QString line;
