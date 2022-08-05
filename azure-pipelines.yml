@@ -9,14 +9,14 @@ jobs:
       steps:
          -  task: Cache@2
             inputs:
-               key: '"28.0.0.beta1"'
+               key: '"28.0.0.beta1_mac_t0"'
                restoreKeys:
                path: $(Build.SourcesDirectory)/CI/http/obs-studio
             displayName: Cache OBS Studio build
 
          -  script: $(Build.SourcesDirectory)/CI/http/osx-install-script.sh
             workingDirectory: $(Build.SourcesDirectory)/CI/http/
-            displayName: 'Setup build'
+            displayName: 'Setup & Build'
             env:
                GOOGLE_API_KEY: $(GOOGLE_API_KEY)
 
@@ -25,58 +25,52 @@ jobs:
                path: "$(Build.SourcesDirectory)/CI/http/release/"
                artifact: Closed_Captions_Plugin__Release_MacOS_HTTP
 
-#  - job: 'Build_Windows_HTTP'
-#    pool:
-#      vmImage: 'windows-2019'
-#
-#    steps:
-#      - task: DownloadPipelineArtifact@2
-#        inputs:
-#          project: '4b438742-da7e-4123-8cf4-55564485db7e'
-#          pipeline: 6
-#          buildType: 'specific'
-#          buildVersionToDownload: 'latestFromBranch'
-#          branchName: "refs/heads/windows_obs_27"
-#          artifactName: obs_deps_windows
-#          targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
-#
-#      - script: $(Build.SourcesDirectory)\CI\http\win-install-script.cmd
-#        displayName: 'Setup, CMake'
-#        workingDirectory: $(Build.SourcesDirectory)\CI\http
-#        env:
-#          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
-#
-#      - task: PublishPipelineArtifact@1
-#        inputs:
-#          path: '$(Build.SourcesDirectory)/CI/http/release/'
-#          artifact: Closed_Captions_Plugin__Release_Windows_HTTP
-#
-#  - job: 'Build_Linux_HTTP'
-#    pool:
-#      vmImage: 'ubuntu-18.04'
-#
-#    steps:
-#      - task: DownloadPipelineArtifact@2
-#        inputs:
-#          project: '4b438742-da7e-4123-8cf4-55564485db7e'
-#          pipeline: 6
-#          buildType: 'specific'
-#          buildVersionToDownload: 'latestFromBranch'
-#          branchName: "refs/heads/linux_obs_27"
-#          artifactName: obs_deps_linux
-#          targetPath: $(Build.SourcesDirectory)/CI/http/obs_deps/
-#
-#      - script: $(Build.SourcesDirectory)/CI/http/linux-install-script.sh
-#        displayName: 'Setup, CMake'
-#        workingDirectory: $(Build.SourcesDirectory)/CI/http/
-#        env:
-#          GOOGLE_API_KEY: $(GOOGLE_API_KEY)
-#
-#      - task: PublishPipelineArtifact@1
-#        inputs:
-#          path: "$(Build.SourcesDirectory)/CI/http/release/"
-#          artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
-#
+   -  job: 'Build_Windows_HTTP'
+      pool:
+         vmImage: 'windows-2022'
+
+      steps:
+         -  task: Cache@2
+            inputs:
+               key: '"28.0.0.beta1_win_t0"'
+               restoreKeys:
+               path: $(Build.SourcesDirectory)\CI\http\obs-studio
+            displayName: Cache OBS Studio build
+
+         -  script: python $(Build.SourcesDirectory)\CI\http\win-install-script.py
+            displayName: 'Setup & Build'
+            workingDirectory: $(Build.SourcesDirectory)\CI\http
+            env:
+               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+         -  task: PublishPipelineArtifact@1
+            inputs:
+               path: '$(Build.SourcesDirectory)/CI/http/release/'
+               artifact: Closed_Captions_Plugin__Release_Windows_HTTP
+
+   -  job: 'Build_Linux_HTTP'
+      pool:
+         vmImage: 'ubuntu-22.04'
+
+      steps:
+         -  task: Cache@2
+            inputs:
+               key: '"28.0.0.beta1_linux_t0"'
+               restoreKeys:
+               path: $(Build.SourcesDirectory)/CI/http/obs-studio
+            displayName: Cache OBS Studio build
+
+         -  script: $(Build.SourcesDirectory)/CI/http/linux-install-script.sh
+            workingDirectory: $(Build.SourcesDirectory)/CI/http/
+            displayName: 'Setup & Build'
+            env:
+               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+
+         -  task: PublishPipelineArtifact@1
+            inputs:
+               path: "$(Build.SourcesDirectory)/CI/http/release/"
+               artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
+
 #  - job: 'Build_MacOS_GRPC'
 #    pool:
 #      vmImage: 'macOS-10.15'

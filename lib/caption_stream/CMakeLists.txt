@@ -64,21 +64,21 @@ if (UNIX AND NOT APPLE)
     target_compile_options(caption_stream PRIVATE "-fPIC")
 endif ()
 
-if (DEVMODE)
-    if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
-        find_package(Qt5 REQUIRED COMPONENTS Widgets Core
-                PATHS ${QT_DEP_DIR}
-                NO_DEFAULT_PATH
-                )
-    else ()
-        find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
-    endif ()
-
-    add_executable(caption_stream_dev_main
-            dev/main.cpp
-            )
-    target_link_libraries(caption_stream_dev_main
-            caption_stream
-            Qt5::Core
-            )
-endif ()
+#if (DEVMODE)
+#    if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
+#        find_package(Qt5 REQUIRED COMPONENTS Widgets Core
+#                PATHS ${QT_DEP_DIR}
+#                NO_DEFAULT_PATH
+#                )
+#    else ()
+#        find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+#    endif ()
+#
+#    add_executable(caption_stream_dev_main
+#            dev/main.cpp
+#            )
+#    target_link_libraries(caption_stream_dev_main
+#            caption_stream
+#            Qt5::Core
+#            )
+#endif ()

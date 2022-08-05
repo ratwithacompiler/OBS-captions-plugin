@@ -1,14 +1,24 @@
 cmake_minimum_required(VERSION 3.12)
 project(obs_google_caption_plugin)
 
+set(CMAKE_CXX_STANDARD 17)
+set(VERSION_STRING "0.28b")
 
-#message("prefix: ${CMAKE_FIND_LIBRARY_PREFIXES}")
-#message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
+set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
+set(OBS_LIB_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
+set(OBS_DEPS_DIR "" CACHE STRING "Path to OBS deps and Qt deps")
 
-set(CMAKE_CXX_STANDARD 14)
-set(VERSION_STRING "0.20b")
+message("OBS_SOURCE_DIR: ${OBS_SOURCE_DIR}")
+message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
+message("OBS_DEPS_DIR: ${OBS_DEPS_DIR}")
 
-message("BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
+
+IF (WIN32)
+    set(CMAKE_PREFIX_PATH "${OBS_LIB_DIR};${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
+else ()
+    # add UI to be able to build from non installed build dir directly during dev
+    set(CMAKE_PREFIX_PATH "${OBS_LIB_DIR};${OBS_LIB_DIR}/UI;${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
+endif ()
 
 set(DEVMODE OFF)
 if (USE_DEVMODE)
@@ -35,13 +45,6 @@ endif ()
 
 add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
-set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
-set(OBS_LIB_BIN_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
-set(QT_DEP_DIR "" CACHE STRING "Path to Qt dir")
-
-message("OBS_SOURCE_DIR: ${OBS_SOURCE_DIR}")
-message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
-message("QT_DEP_DIR: ${QT_DEP_DIR}")
 
 if (NOT OBS_SOURCE_DIR)
     message(FATAL_ERROR "OBS_SOURCE_DIR not set")
@@ -50,10 +53,6 @@ endif ()
 if (NOT OBS_LIB_DIR)
     message(FATAL_ERROR "OBS_LIB_DIR not set")
 endif ()
-
-configure_file(CI/http/win-install-script.cmd CI/http/win-install-script.cmd)
-configure_file(CI/http/osx-install-script.sh CI/http/osx-install-script.sh)
-configure_file(CI/http/linux-install-script.sh CI/http/linux-install-script.sh)
 
 configure_file(CI/grpc/win-install-script.cmd CI/grpc/win-install-script.cmd)
 configure_file(CI/grpc/osx-install-script.sh CI/grpc/osx-install-script.sh)
@@ -114,73 +113,23 @@ set(CMAKE_AUTOUIC ON)
 
 set(obs_QRC src/resources/obs.qrc)
 
-
-if (DEFINED QT_DEP_DIR AND NOT "${QT_DEP_DIR}" STREQUAL "")
-    FILE(TO_CMAKE_PATH "${QT_DEP_DIR}" QT_DEP_DIR_CMAKE)
-    message("USING QT_DEP_DIR: ${QT_DEP_DIR_CMAKE}")
-
-    #    set(Qt6_DIR ${QT_DEP_DIR_CMAKE})
-    #    set(Qt6WidgetsTools_DIR ${QT_DEP_DIR_CMAKE})
-
-    message("CMAKE_PREFIX_PATH before: ${CMAKE_PREFIX_PATH}")
-    set(CMAKE_PREFIX_PATH_ORG "${CMAKE_PREFIX_PATH}")
-    set(CMAKE_PREFIX_PATH "${QT_DEP_DIR_CMAKE}")
-    #    find_qt(COMPONENTS Widgets Core)
-
-    find_package(Qt6
-            COMPONENTS Widgets Core
-            PATHS ${QT_DEP_DIR_CMAKE}
-
-            NO_DEFAULT_PATH
-            NO_CMAKE_PATH
-            )
-
-    set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH_ORG}")
-    message("CMAKE_PREFIX_PATH after: ${CMAKE_PREFIX_PATH}")
-
-    message(" huhhh Qt_DIR: ${Qt_DIR} ;Qt6_DIR: ${Qt6_DIR} ${Qt6_FOUND}")
-    IF (Qt6_FOUND)
-        message("found qt6: ${Qt_DIR} ; ${Qt6_DIR}")
-        qt_add_resources(obs_QRC_SOURCES ${obs_QRC})
-    else ()
-        find_package(Qt5 REQUIRED COMPONENTS Widgets Core
-                PATHS ${QT_DEP_DIR_CMAKE}
-                NO_DEFAULT_PATH
-                )
-
-        message("found qt5: ${Qt_DIR} ; ${Qt5_DIR}")
-        qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
-    ENDIF ()
-
-else ()
-    find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
-    IF (Qt6_FOUND)
-        message("found qt6: ${Qt_DIR} ; ${Qt6_DIR}")
-        qt_add_resources(obs_QRC_SOURCES ${obs_QRC})
-    elseif ()
-        find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
-        message("found qt5: ${Qt_DIR} ; ${Qt5_DIR}")
-        qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
-    ENDIF ()
-
-endif ()
-
+find_package(Qt6 COMPONENTS Widgets Core)
 IF (Qt6_FOUND)
+    message("using Qt6: ${Qt6_DIR}")
+    qt_add_resources(obs_QRC_SOURCES ${obs_QRC})
     set(_qt_widgets Qt6::Widgets)
-else ()
+elseif ()
+    find_package(Qt5 REQUIRED COMPONENTS Widgets Core)
+    message("using Qt5: ${Qt5_DIR}")
+    qt5_add_resources(obs_QRC_SOURCES ${obs_QRC})
     set(_qt_widgets Qt5::Widgets)
-endif ()
-
-#configure_file(src/ui/CaptionSettingsWidget.ui src/ui/CaptionSettingsWidget_out.ui)
-#set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_BINARY_DIR})
-
+ENDIF ()
 
 add_library(obs_google_caption_plugin MODULE
         ${obs_google_caption_plugin_HEADERS}
         ${obs_google_caption_plugin_SOURCES}
         ${obs_QRC_SOURCES}
         )
-
 
 if (WIN32 AND NOT BUILD_SHARED_LIBS)
     message(BUILD_SHARED_LIBS: setting win flags)
@@ -204,46 +153,30 @@ if (PLUGIN_COMPILE_DEFINITIONS)
     target_compile_definitions(obs_google_caption_plugin PRIVATE ${PLUGIN_COMPILE_DEFINITIONS})
 endif ()
 
-#message("suffix: ${CMAKE_FIND_LIBRARY_SUFFIXES}")
+#message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+#message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
 
 find_package(libobs REQUIRED
         CONFIG
         PATHS
         ${OBS_LIB_DIR}
-        ${OBS_LIB_DIR}/libobs/
-        ${OBS_LIB_DIR}/libobs/RelWithDebInfo/
-        ${OBS_LIB_DIR}/libobs/Relase/
-        ${OBS_LIB_DIR}/libobs/*/
+        ${OBS_LIB_DIR}/lib
+        ${OBS_LIB_DIR}/Frameworks
         NO_DEFAULT_PATH
         )
-
-message("using libOBS: ${LIBOBS_LIBRARY}")
-if (NOT libobs_FOUND)
-    message(FATAL_ERROR "libobs not found: ${OBS_LIB_DIR}")
-endif ()
 message("using libOBS: ${libobs_DIR}")
 
 find_package(obs-frontend-api REQUIRED
         CONFIG
         PATHS
         ${OBS_LIB_DIR}
-        ${OBS_LIB_DIR}/UI/obs-frontend-api/
-        ${OBS_LIB_DIR}/UI/obs-frontend-api/RelWithDebInfo/
-        ${OBS_LIB_DIR}/UI/obs-frontend-api/Release/
-        ${OBS_LIB_DIR}/UI/obs-frontend-api/*/
+        ${OBS_LIB_DIR}/lib
+        ${OBS_LIB_DIR}/UI
+        ${OBS_LIB_DIR}/Frameworks
         NO_DEFAULT_PATH
         )
-
 message("using obs_frontend_library: ${obs-frontend-api_DIR}")
-if (NOT obs-frontend-api_FOUND)
-    message(FATAL_ERROR "obs_frontend_library not found: ${OBS_LIB_DIR}")
-endif ()
-message("using obs_frontend_library: ${obs-frontend-api_DIR} ")
 
+target_link_libraries(obs_google_caption_plugin PRIVATE caption_stream ${_qt_widgets}
+        OBS::libobs OBS::obs-frontend-api)
 
-target_link_libraries(obs_google_caption_plugin
-        caption_stream
-        OBS::libobs OBS::obs-frontend-api
-
-        ${_qt_widgets}
-        )
