@@ -6,35 +6,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from win_shared import check_call, download, unzip, spa
+
 DEPS = "https://github.com/obsproject/obs-deps/releases/download/2022-08-02/windows-deps-2022-08-02-x64.zip"
 DEPS_QT = "https://github.com/obsproject/obs-deps/releases/download/2022-08-02/windows-deps-qt6-2022-08-02-x64.zip"
 
-
-def eprint(*args, **kwargs):
-	print(*args, **kwargs, file = sys.stderr)
-
-
 CMAKE_VS_ARGS = ["-G", "Visual Studio 17 2022", "-A", "x64"]
-
-
-def spa(line: str):
-	args = line.split(" ")
-	return [i for i in args if i]
-
-
-def check_call(args: list, cwd = None, shell = False):
-	cwd = str(cwd) if cwd else None
-	print(f"calling {args !r} in cwd: {cwd !r}, shell={shell}")
-	sys.stdout.flush()
-	return subprocess.check_call(args, cwd = cwd, shell = shell)
-
-
-def download(url: str, target_path: Path):
-	check_call([*spa("curl -L -f --retry 10 -o"), str(target_path), url])
-
-
-def unzip(zipfile: Path, target_path: Path):
-	check_call(["7z", "x", str(zipfile), f"-o{str(target_path)}"])
 
 
 def setup_obs(obs_studio: Path, clean_afterwards: bool):
@@ -134,37 +111,3 @@ def patch_w32(installed_dir: Path):
 
 	target_file.write_text(new_contents)
 	print("patched libobsTargets.cmake", target_file)
-
-
-def get_google_api_key_arg():
-	google_api_key = os.environ.get("GOOGLE_API_KEY")
-	if google_api_key == "$(GOOGLE_API_KEY)":
-		google_api_key = None
-		eprint("mkdir ignoring azure env arg", google_api_key)
-
-	if google_api_key:
-		print("building with hardcoded API key", len(google_api_key))
-		google_api_key_arg = f"-DGOOGLE_API_KEY={google_api_key}"
-	else:
-		print("building with UI for user provided API key")
-		google_api_key_arg = "-DENABLE_CUSTOM_API_KEY=ON"
-
-	return google_api_key_arg
-
-
-def package_zip(release: Path, build_dir: Path, version: str):
-	release.mkdir(parents = True, exist_ok = True)
-
-	obs_plugin = release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows\obs-plugins")
-	print(f"obs_plugin plugin path: {obs_plugin}")
-	obs_plugin.mkdir(parents = True, exist_ok = True)
-
-	obs_plugin_64bit = obs_plugin.joinpath("64bit")
-	obs_plugin_64bit.mkdir(exist_ok = True)
-
-	plugin_dll = build_dir.joinpath(r"RelWithDebInfo\obs_google_caption_plugin.dll")
-	print(f"copying  {plugin_dll!r} -> {obs_plugin_64bit!r}")
-	shutil.copy(plugin_dll, obs_plugin_64bit)
-
-	check_call(["7z", "a", "-r", release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows.zip"), obs_plugin.parent])
-	check_call(["7z", "a", "-r", release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows_plugins.zip"), obs_plugin])

@@ -149,6 +149,8 @@ if (PLUGIN_COMPILE_DEFINITIONS)
     target_compile_definitions(obs_google_caption_plugin PRIVATE ${PLUGIN_COMPILE_DEFINITIONS})
 endif ()
 
+install(TARGETS obs_google_caption_plugin DESTINATION lib)
+
 #message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
 #message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
 

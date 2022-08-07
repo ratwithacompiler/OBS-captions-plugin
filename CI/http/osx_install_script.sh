@@ -24,6 +24,7 @@ if [ -e /usr/local/bin/cmake ]; then
   CMAKE=/usr/local/bin/cmake
 fi
 echo "CMAKE: $CMAKE"
+echo "CLEAN_OBS: $CLEAN_OBS"
 
 echo --------------------------------------------------------------
 echo BUILD OBS
@@ -33,6 +34,7 @@ build_obs
 echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
 echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
 echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
+echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
 
 echo --------------------------------------------------------------
 echo PLUGIN PLIBSYS
@@ -58,6 +60,7 @@ else
   API_OR_UI_KEY_ARG="-DENABLE_CUSTOM_API_KEY=ON"
 fi
 
+INSTALLED_DIR="$(pwd)/installed"
 mkdir -p build && cd build && pwd
 
 $CMAKE \
@@ -69,6 +72,7 @@ $CMAKE \
   -DOBS_DEPS_DIR="$BUILD_OBS__UNPACKED_DEPS_DIR" \
   -DSPEECH_API_GOOGLE_HTTP_OLD=ON \
   "$API_OR_UI_KEY_ARG" \
+  -DCMAKE_INSTALL_PREFIX:PATH="$INSTALLED_DIR" \
   "$ROOT_DIR/../.."
 
 echo --------------------------------------------------------------
@@ -77,13 +81,20 @@ echo --------------------------------------------------------------
 
 cd "$CI_ROOT_DIR" && cd build && pwd
 $CMAKE --build . --config RelWithDebInfo
+$CMAKE --install . --config RelWithDebInfo --verbose
 
 echo --------------------------------------------------------------
 echo POST INSTALL, FIX RPATHS, BUILD ZIP
 echo --------------------------------------------------------------
 
 cd "$CI_ROOT_DIR" && pwd
-make_release_zip
+osx_make_release_zip
+
+echo --------------------------------------------------------------
+echo CLEANUP
+echo --------------------------------------------------------------
+
+build_obs_cleanup
 
 echo --------------------------------------------------------------
 echo DONE

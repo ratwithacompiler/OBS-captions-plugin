@@ -21,9 +21,11 @@ function build_obs() {
   BUILD_OBS__UNPACKED_DEPS_DIR="$(pwd)/unpacked_deps"
   BUILD_OBS__INSTALLED_DIR="$(pwd)/build_installed"
   BUILD_OBS__SRC_DIR="$(pwd)/src"
+  BUILD_OBS__BUILD_DIR="$(pwd)/src/build"
   echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
   echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
   echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
+  echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
 
   if [ -e "src/done" ]; then
     echo "obs build done,skipping"
@@ -69,4 +71,17 @@ function build_obs() {
   cd ../
   du -chd1 && pwd
   touch "done"
+}
+
+function build_obs_cleanup() {
+  if [ "$CLEAN_OBS" = "1" ] || [ "$CLEAN_OBS" = "true" ]; then
+    if [[ -n "$BUILD_OBS__BUILD_DIR" && -d "$BUILD_OBS__BUILD_DIR" ]]; then
+      echo "cleaning up OBS BUILD dir: $BUILD_OBS__BUILD_DIR"
+      rm -rf "$BUILD_OBS__BUILD_DIR" || true
+    else
+      echo "OBS BUILD dir folder not found: $BUILD_OBS__BUILD_DIR"
+    fi
+  else
+    echo "not cleaning OBS build, CLEAN_OBS: $CLEAN_OBS"
+  fi
 }

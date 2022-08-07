@@ -9,9 +9,11 @@ function build_obs() {
   BUILD_OBS__UNPACKED_DEPS_DIR="$(pwd)/unpacked_deps"
   BUILD_OBS__INSTALLED_DIR="$(pwd)/build_installed"
   BUILD_OBS__SRC_DIR="$(pwd)/src"
+  BUILD_OBS__BUILD_DIR="$(pwd)/src/build"
   echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
   echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
   echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
+  echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
   test -n OSX_ARCHITECTURES
 
   if [ -e "src/done" ]; then
@@ -67,40 +69,15 @@ function build_obs() {
   touch "done"
 }
 
-function make_release_zip() {
-  set -e
-
-  cp -v build/libobs_google_caption_plugin.so ./
-  local libfile="libobs_google_caption_plugin.so"
-
-  #make rpaths relative, OBS 28+
-  otool -L "$libfile"
-
-  install_name_tool \
-    -change @rpath/QtWidgets.framework/Versions/A/QtWidgets @executable_path/../Frameworks/QtWidgets.framework/Versions/A/QtWidgets \
-    -change @rpath/QtGui.framework/Versions/A/QtGui @executable_path/../Frameworks/QtGui.framework/Versions/A/QtGui \
-    -change @rpath/QtCore.framework/Versions/A/QtCore @executable_path/../Frameworks/QtCore.framework/Versions/A/QtCore \
-    -change @rpath/libobs.framework/Versions/A/libobs @executable_path/../Frameworks/libobs.framework/Versions/A/libobs \
-    -change @rpath/libobs-frontend-api.1.dylib @executable_path/../Frameworks/libobs-frontend-api.dylib \
-    "$libfile"
-  otool -L "$libfile"
-
-  # ensure it worked
-  otool -L "$libfile" | grep -q '@executable_path/../Frameworks/QtGui.framework/Versions/A/QtGui'
-  otool -L "$libfile" | grep -q '@executable_path/../Frameworks/QtCore.framework/Versions/A/QtCore'
-  otool -L "$libfile" | grep -q '@executable_path/../Frameworks/QtWidgets.framework/Versions/A/QtWidgets'
-  otool -L "$libfile" | grep -q '@executable_path/../Frameworks/libobs.framework/Versions/A/libobs'
-  otool -L "$libfile" | grep -q '@executable_path/../Frameworks/libobs-frontend-api.dylib'
-
-  local RELEASE_NAME="Closed_Captions_Plugin__v""$VERSION_STRING""_MacOS"
-  local RELEASE_FOLDER="release/$RELEASE_NAME/cloud_captions_plugin/bin"
-
-  mkdir -p "$RELEASE_FOLDER"
-  cp -v libobs_google_caption_plugin.so "$RELEASE_FOLDER"/cloud_captions_plugin.so
-
-  cd release
-  zip -r "$RELEASE_NAME".zip "$RELEASE_NAME"
-  cd ..
-  du -chd1 && df -lh
-  ls -l "$RELEASE_FOLDER"
+function build_obs_cleanup() {
+  if [ "$CLEAN_OBS" = "1" ] || [ "$CLEAN_OBS" = "true" ]; then
+    if [[ -n "$BUILD_OBS__BUILD_DIR" && -d "$BUILD_OBS__BUILD_DIR" ]]; then
+      echo "cleaning up OBS BUILD dir: $BUILD_OBS__BUILD_DIR"
+      rm -rf "$BUILD_OBS__BUILD_DIR" || true
+    else
+      echo "OBS BUILD dir folder not found: $BUILD_OBS__BUILD_DIR"
+    fi
+  else
+    echo "not cleaning OBS build, CLEAN_OBS: $CLEAN_OBS"
+  fi
 }

@@ -24,6 +24,8 @@ if [ -e /usr/local/bin/cmake ]; then
   CMAKE=/usr/local/bin/cmake
 fi
 echo "CMAKE: $CMAKE"
+echo "CLEAN_VCPKG: $CLEAN_VCPKG"
+echo "CLEAN_OBS: $CLEAN_OBS"
 
 echo --------------------------------------------------------------
 echo BUILD OBS
@@ -33,6 +35,7 @@ build_obs
 echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
 echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
 echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
+echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
 
 echo --------------------------------------------------------------
 echo VCPKG SETUP
@@ -71,19 +74,6 @@ mv -vn installed/universal-osx-release/lib/libssl.a installed/universal-osx-rele
 lipo -create installed/arm64-osx-release/lib/libcrypto.a installed/x64-osx-release/lib/libcrypto.a -output installed/universal-osx-release/lib/libcrypto.a
 lipo -create installed/arm64-osx-release/lib/libssl.a installed/x64-osx-release/lib/libssl.a -output installed/universal-osx-release/lib/libssl.a
 VCPKG_TRIPLET="universal-osx-release"
-
-if [ -e packages ]; then
-  echo "deleting unneeded vcpkg folder: packages"
-  rm -r packages
-fi
-if [ -e downloads ]; then
-  echo "deleting unneeded vcpkg folder: downloads"
-  rm -r downloads
-fi
-if [ -e buildtrees ]; then
-  echo "deleting unneeded vcpkg folder: buildtrees"
-  rm -r buildtrees
-fi
 
 echo --------------------------------------------------------------
 echo GOOGLEAPIS
@@ -132,6 +122,7 @@ fi
 VCPKG_CMAKE_PREFIX_PATH="$VCPKG_DIR/installed/$VCPKG_TRIPLET"
 echo "VCPKG_CMAKE_PREFIX_PATH: $VCPKG_CMAKE_PREFIX_PATH"
 
+INSTALLED_DIR="$(pwd)/installed"
 mkdir -p build && cd build && pwd
 
 $CMAKE \
@@ -145,6 +136,7 @@ $CMAKE \
   -DGOOGLEAPIS_DIR="$GOOGLE_APIS" \
   -DCMAKE_PREFIX_PATH="$VCPKG_CMAKE_PREFIX_PATH" \
   "$API_OR_UI_KEY_ARG" \
+  -DCMAKE_INSTALL_PREFIX:PATH="$INSTALLED_DIR" \
   "$ROOT_DIR/../.."
 
 echo --------------------------------------------------------------
@@ -153,13 +145,37 @@ echo --------------------------------------------------------------
 
 cd "$CI_ROOT_DIR" && cd build && pwd
 $CMAKE --build . --config RelWithDebInfo
+$CMAKE --install . --config RelWithDebInfo --verbose
 
 echo --------------------------------------------------------------
 echo POST INSTALL, FIX RPATHS, BUILD ZIP
 echo --------------------------------------------------------------
 
 cd "$CI_ROOT_DIR" && pwd
-make_release_zip
+osx_make_release_zip
+
+echo --------------------------------------------------------------
+echo CLEANUP
+echo --------------------------------------------------------------
+
+build_obs_cleanup
+
+if [ "$CLEAN_VCPKG" = "1" ] || [ "$CLEAN_VCPKG" = "true" ]; then
+  cd "$VCPKG_DIR"
+  echo "cleaning VCPKG"
+  if [ -e packages ]; then
+    echo "deleting unneeded vcpkg folder: packages"
+    rm -r packages
+  fi
+  if [ -e downloads ]; then
+    echo "deleting unneeded vcpkg folder: downloads"
+    rm -r downloads
+  fi
+  if [ -e buildtrees ]; then
+    echo "deleting unneeded vcpkg folder: buildtrees"
+    rm -r buildtrees
+  fi
+fi
 
 echo --------------------------------------------------------------
 echo DONE
