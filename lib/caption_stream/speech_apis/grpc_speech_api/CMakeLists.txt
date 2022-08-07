@@ -88,10 +88,18 @@ message("using GOOGLEAPIS_PATH: ${GOOGLEAPIS_PATH}")
 include_directories(${GOOGLEAPIS_PATH})
 
 
-file(GLOB_RECURSE GOOGLE_API ${GOOGLEAPIS_PATH}/google/api/*.cc)
+#file(GLOB_RECURSE GOOGLE_TYPE ${GOOGLEAPIS_PATH}/google/type/*.cc)
+#file(GLOB_RECURSE GOOGLE_LOGGING ${GOOGLEAPIS_PATH}/google/logging/*.cc)
+#file(GLOB_RECURSE GOOGLE_API ${GOOGLEAPIS_PATH}/google/api/*.cc)
+#file(GLOB_RECURSE GOOGLE_API ${GOOGLEAPIS_PATH}/google/api/*.cc)
+file(GLOB_RECURSE GOOGLE_API
+        ${GOOGLEAPIS_PATH}/google/api/http*.cc
+        ${GOOGLEAPIS_PATH}/google/api/field_behavior*.cc
+        ${GOOGLEAPIS_PATH}/google/api/client*.cc
+        ${GOOGLEAPIS_PATH}/google/api/annotations*.cc
+        ${GOOGLEAPIS_PATH}/google/api/resource*.cc
+        )
 file(GLOB_RECURSE GOOGLE_RPC ${GOOGLEAPIS_PATH}/google/rpc/*.cc)
-file(GLOB_RECURSE GOOGLE_TYPE ${GOOGLEAPIS_PATH}/google/type/*.cc)
-file(GLOB_RECURSE GOOGLE_LOGGING ${GOOGLEAPIS_PATH}/google/logging/*.cc)
 file(GLOB_RECURSE GOOGLE_LONGRUNNING ${GOOGLEAPIS_PATH}/google/longrunning/*.cc)
 file(GLOB_RECURSE GOOGLE_SPEECH ${GOOGLEAPIS_PATH}/google/cloud/speech/v1/*.cc)
 

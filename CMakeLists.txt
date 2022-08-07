@@ -54,10 +54,6 @@ if (NOT OBS_LIB_DIR)
     message(FATAL_ERROR "OBS_LIB_DIR not set")
 endif ()
 
-configure_file(CI/grpc/win-install-script.cmd CI/grpc/win-install-script.cmd)
-configure_file(CI/grpc/osx-install-script.sh CI/grpc/osx-install-script.sh)
-configure_file(CI/grpc/linux-install-script.sh CI/grpc/linux-install-script.sh)
-
 add_subdirectory(lib/caption_stream)
 
 if (DEVMODE)

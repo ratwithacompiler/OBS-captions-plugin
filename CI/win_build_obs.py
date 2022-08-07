@@ -37,14 +37,15 @@ def unzip(zipfile: Path, target_path: Path):
 	check_call(["7z", "x", str(zipfile), f"-o{str(target_path)}"])
 
 
-def setup_obs(obs_studio: Path):
+def setup_obs(obs_studio: Path, clean_afterwards: bool):
 	obs_deps_dir = obs_studio.joinpath("obs_deps_dir")
 	obs_deps_unpacked = obs_deps_dir.joinpath("obs_deps_unpacked")
 	obs_studio_src = obs_studio.joinpath("src")
 	build_dir = obs_studio_src.joinpath("build")
 	build_installed_dir = obs_studio_src.joinpath("build_installed")
+	done_file = obs_studio_src.joinpath("done.txt")
 
-	if obs_studio_src.exists() and build_installed_dir.exists() and obs_deps_dir.exists():
+	if obs_studio_src.exists() and build_installed_dir.exists() and obs_deps_dir.exists() and done_file.exists():
 		print("obs-studio src exists already, skipping", obs_studio_src)
 		patch_w32(build_installed_dir)
 		return obs_studio_src, obs_deps_unpacked, build_installed_dir
@@ -95,6 +96,13 @@ def setup_obs(obs_studio: Path):
 	check_call(spa("cmake --install . --config RelWithDebInfo --component obs_libraries"), cwd = build_dir)
 
 	patch_w32(build_installed_dir)
+
+	if clean_afterwards:
+		if build_dir.exists():
+			print("removing", build_dir)
+			shutil.rmtree(build_dir)
+
+	done_file.write_text("yep")
 	return obs_studio_src, obs_deps_unpacked, build_installed_dir
 
 
@@ -128,20 +136,7 @@ def patch_w32(installed_dir: Path):
 	print("patched libobsTargets.cmake", target_file)
 
 
-def main():
-	cwd = Path(os.getcwd())
-	print("cwd:", repr(str(cwd)))
-	cmake_text = cwd.parent.parent.joinpath("CMakeLists.txt").read_text()
-	cmake_text = re.sub(r"\s+", "", cmake_text)
-	version = re.search('set\(VERSION_STRING"(.*?)"\)', cmake_text).group(1)
-	if not version:
-		raise ValueError("no version found")
-	print(f"VERSION_STRING: {version!r}")
-
-	obs_studio = cwd.joinpath("obs-studio")
-	obs_studio_src, obs_deps_dir, obs_build_dir = setup_obs(obs_studio)
-	# check_call(spa("tree"), shell = True)
-
+def get_google_api_key_arg():
 	google_api_key = os.environ.get("GOOGLE_API_KEY")
 	if google_api_key == "$(GOOGLE_API_KEY)":
 		google_api_key = None
@@ -154,28 +149,13 @@ def main():
 		print("building with UI for user provided API key")
 		google_api_key_arg = "-DENABLE_CUSTOM_API_KEY=ON"
 
-	check_call(["cmd", "/C", "clone_plibsys.cmd"], cwd = "deps")
+	return google_api_key_arg
 
-	build_dir = cwd.joinpath("build")
-	build_dir.mkdir(exist_ok = True)
-	check_call([
-		"cmake", str(cwd.parent.parent),
-		*CMAKE_VS_ARGS,
-		r"-DSPEECH_API_GOOGLE_HTTP_OLD=ON",
-		"-DBUILD_SHARED_LIBS=ON",
-		f"-DOBS_SOURCE_DIR={str(obs_studio_src)}",
-		f"-DOBS_LIB_DIR={str(obs_build_dir)}",
-		f"-DOBS_DEPS_DIR={str(obs_deps_dir)}",
-		r"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-		r"-DCMAKE_GENERATOR_PLATFORM=x64",
-		google_api_key_arg,
-	], cwd = build_dir)
-	check_call(spa("cmake --build . --config RelWithDebInfo"), cwd = build_dir)
 
-	release = cwd.joinpath("release")
-	release.mkdir(exist_ok = True)
+def package_zip(release: Path, build_dir: Path, version: str):
+	release.mkdir(parents = True, exist_ok = True)
 
-	obs_plugin = release.joinpath(rf"release\Closed_Captions_Plugin__v{version}_Windows\obs-plugins")
+	obs_plugin = release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows\obs-plugins")
 	print(f"obs_plugin plugin path: {obs_plugin}")
 	obs_plugin.mkdir(parents = True, exist_ok = True)
 
@@ -188,7 +168,3 @@ def main():
 
 	check_call(["7z", "a", "-r", release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows.zip"), obs_plugin.parent])
 	check_call(["7z", "a", "-r", release.joinpath(rf"Closed_Captions_Plugin__v{version}_Windows_plugins.zip"), obs_plugin])
-
-
-if __name__ == '__main__':
-	main()

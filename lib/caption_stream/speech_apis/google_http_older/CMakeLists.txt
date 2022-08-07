@@ -8,7 +8,7 @@ if (PLIBSYS_ROOT_DIR)
     set(PLIBSYS_DIR ${PLIBSYS_ROOT_DIR})
 else ()
     message("using default CI plibsys repo dir")
-    set(PLIBSYS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../CI/http/deps/plibsys)
+    set(PLIBSYS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../CI/http/CI_build/plibsys)
 endif ()
 
 ##PLIBSYS
