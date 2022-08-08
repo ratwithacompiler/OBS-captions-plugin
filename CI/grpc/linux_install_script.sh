@@ -126,7 +126,7 @@ cd "$CI_ROOT_DIR" && pwd
 libfile="libobs_google_caption_plugin.so"
 cp -v installed/lib/libobs_google_caption_plugin.so "$libfile"
 
-RELEASE_NAME="Closed_Captions_Plugin__v""$VERSION_STRING""_MacOS"
+RELEASE_NAME="Closed_Captions_Plugin__v""$VERSION_STRING""_Linux"
 RELEASE_FOLDER="release/$RELEASE_NAME"
 RELEASE_PLUGIN_FOLDER="$RELEASE_FOLDER"/libobs_google_caption_plugin/bin/64bit/
 
