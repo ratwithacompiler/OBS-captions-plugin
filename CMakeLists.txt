@@ -2,22 +2,19 @@ cmake_minimum_required(VERSION 3.12)
 project(obs_google_caption_plugin)
 
 set(CMAKE_CXX_STANDARD 17)
-set(VERSION_STRING "0.28b")
+set(VERSION_STRING "0.28")
 
-set(OBS_SOURCE_DIR "" CACHE STRING "Path to root obs source dir containing libobs/ and UI/ folders")
-set(OBS_LIB_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
+set(OBS_BUILD_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
 set(OBS_DEPS_DIR "" CACHE STRING "Path to OBS deps and Qt deps")
 
-message("OBS_SOURCE_DIR: ${OBS_SOURCE_DIR}")
-message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
+message("OBS_BUILD_DIR: ${OBS_BUILD_DIR}")
 message("OBS_DEPS_DIR: ${OBS_DEPS_DIR}")
 
-
 IF (WIN32)
-    set(CMAKE_PREFIX_PATH "${OBS_LIB_DIR};${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
+    set(CMAKE_PREFIX_PATH "${OBS_BUILD_DIR};${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
 else ()
     # add UI to be able to build from non installed build dir directly during dev
-    set(CMAKE_PREFIX_PATH "${OBS_LIB_DIR};${OBS_LIB_DIR}/UI;${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
+    set(CMAKE_PREFIX_PATH "${OBS_BUILD_DIR};${OBS_BUILD_DIR}/UI;${OBS_DEPS_DIR};${CMAKE_PREFIX_PATH}")
 endif ()
 
 set(DEVMODE OFF)
@@ -45,13 +42,8 @@ endif ()
 
 add_compile_definitions(VERSION_STRING="${VERSION_STRING}")
 
-
-if (NOT OBS_SOURCE_DIR)
-    message(FATAL_ERROR "OBS_SOURCE_DIR not set")
-endif ()
-
-if (NOT OBS_LIB_DIR)
-    message(FATAL_ERROR "OBS_LIB_DIR not set")
+if (NOT OBS_BUILD_DIR)
+    message(FATAL_ERROR "OBS_BUILD_DIR not set")
 endif ()
 
 add_subdirectory(lib/caption_stream)
@@ -151,15 +143,18 @@ endif ()
 
 install(TARGETS obs_google_caption_plugin DESTINATION lib)
 
-#message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
-#message("OBS_LIB_DIR: ${OBS_LIB_DIR}")
+#message("CMAKE_FRAMEWORK_PATH: ${CMAKE_FRAMEWORK_PATH}")
+#set(CMAKE_FRAMEWORK_PATH "${OBS_BUILD_DIR}/Frameworks")
+set(CMAKE_FRAMEWORK_PATH "${CMAKE_FRAMEWORK_PATH};${OBS_BUILD_DIR}/Frameworks")
+message("CMAKE_FRAMEWORK_PATH: ${CMAKE_FRAMEWORK_PATH}")
+message("CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+message("OBS_BUILD_DIR: ${OBS_BUILD_DIR}")
 
 find_package(libobs REQUIRED
-        CONFIG
         PATHS
-        ${OBS_LIB_DIR}
-        ${OBS_LIB_DIR}/lib
-        ${OBS_LIB_DIR}/Frameworks
+        ${OBS_BUILD_DIR}/Frameworks
+        ${OBS_BUILD_DIR}/lib
+        ${OBS_BUILD_DIR}
         NO_DEFAULT_PATH
         )
 message("using libOBS: ${libobs_DIR}")
@@ -167,14 +162,24 @@ message("using libOBS: ${libobs_DIR}")
 find_package(obs-frontend-api REQUIRED
         CONFIG
         PATHS
-        ${OBS_LIB_DIR}
-        ${OBS_LIB_DIR}/lib
-        ${OBS_LIB_DIR}/UI
-        ${OBS_LIB_DIR}/Frameworks
+        ${OBS_BUILD_DIR}
+        ${OBS_BUILD_DIR}/lib
         NO_DEFAULT_PATH
         )
 message("using obs_frontend_library: ${obs-frontend-api_DIR}")
 
-target_link_libraries(obs_google_caption_plugin PRIVATE caption_stream ${_qt_widgets}
-        OBS::libobs OBS::obs-frontend-api)
+if (APPLE)
+    target_include_directories(obs_google_caption_plugin PRIVATE "${OBS_BUILD_DIR}/Frameworks/libobs.framework/Headers")
+endif ()
 
+target_link_libraries(obs_google_caption_plugin PRIVATE caption_stream ${_qt_widgets} OBS::libobs OBS::obs-frontend-api)
+
+
+#get_property(dirs TARGET obs_google_caption_plugin PROPERTY INCLUDE_DIRECTORIES)
+#foreach (dir ${dirs})
+#    message("dir='${dir}'")
+#endforeach ()
+#get_property(dirs2 TARGET obs_google_caption_plugin PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+#foreach (dir ${dirs2})
+#    message("dir2='${dir}'")
+#endforeach ()
