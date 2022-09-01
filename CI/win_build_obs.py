@@ -47,7 +47,7 @@ def setup_obs(obs_studio: Path, clean_afterwards: bool):
 
 	if not obs_studio_src.exists():
 		check_call([*spa("git clone --single-branch --branch master https://github.com/obsproject/obs-studio.git"), str(obs_studio_src)])
-		check_call([*spa("git checkout 28.0.0-rc1")], cwd = obs_studio_src)
+		check_call([*spa("git checkout 28.0.0")], cwd = obs_studio_src)
 		check_call([*spa("git submodule update --init --recursive")], cwd = obs_studio_src)
 
 	build_dir.mkdir(True, exist_ok = True)

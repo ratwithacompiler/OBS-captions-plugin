@@ -36,7 +36,7 @@ function build_obs() {
     echo getting src
     git clone --single-branch --branch master https://github.com/obsproject/obs-studio.git src
     cd src
-    git checkout 28.0.0-rc1
+    git checkout 28.0.0
     git submodule update --init --recursive
     cd ..
   fi
