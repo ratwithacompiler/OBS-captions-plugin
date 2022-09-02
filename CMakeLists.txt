@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(obs_google_caption_plugin)
 
 set(CMAKE_CXX_STANDARD 17)
-set(VERSION_STRING "0.28")
+set(VERSION_STRING "0.29")
 
 set(OBS_BUILD_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
 set(OBS_DEPS_DIR "" CACHE STRING "Path to OBS deps and Qt deps")
