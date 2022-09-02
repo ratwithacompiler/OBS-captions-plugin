@@ -24,7 +24,7 @@ It's fully optional to viewers and uses Twitch's built in caption support which 
 * The quality of Google's Speech Recognition heavily depends on the speaker and what is being said. The results are usually be pretty good in normal conversational settings like talking to chat but the recognition quality can go down noticeably when using ingame terms or other specialized vocabulary or during hectic speaking. 
 * SRT transcript files are generally recommended for saving captions for local recordings. They are supported by many video players, websites and tools and are easy to edit.
 
-![Example Image](https://i.imgur.com/UcPk8gz.png)
+![Example Image](./github/images/twitch_page.png)
 ##### [Example VOD here](https://www.twitch.tv/videos/441407980?t=20s)
 
 ##### Known Issues/Downsides:
@@ -36,7 +36,6 @@ Does NOT support native caption output for languages with foreign character sets
 Does NOT appear to work with the AMD Hardware encoder in OBS on Windows (other hardware encoders like NVEnc and even AMD on MacOS seem fine)
 
 This uses the built in captions support of Twitch's video player so viewers only get the limited amount of positioning options that the player provides. Viewers can choose between top/bottom and left/center/right for the captions box but can't freely move or resize it or put it into a corner. It's also not possible for streamers to pick a good custom default position for it, the default will be center bottom for all viewers that have captions enabled.
-Viewers can use the [FrankerFaceZ Browser extension](https://chrome.google.com/webstore/detail/frankerfacez/fadndhdgpmmaapbmfcknlfgcflmmmieb) which provides the ability to set fully custom caption box positions and more settings.
 
 Embedded Captions in local recordings currently aren't very useful. They only work with certain file formats (ts, mp4, mov) and only very few video players can correctly play them.
 MPV can play them normally with .ts files, almost no common video players play them in mp4 and mov files. Saving transcripts to separate .srt subtitle files is generally much more useful.
@@ -45,7 +44,7 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 
 * **On PC** viewers can turn captions on and off using the CC button on the bottom right of the player.
 
-    ![PC CC Setting](https://i.imgur.com/jBTzQT8.png)
+    ![PC CC Setting](./github/images/CC_button.png)
     
     
 * **On iOS** it's a system wide setting: `Settings -> General -> Accessibility -> Subtitles & Captioning -> Closed Captions + SHD` 
@@ -54,7 +53,6 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * **On Android** it's `Closed Captions` under the player settings options right beneath the quality selection. The option will only show up once the streamer has talked.
 
 ### Installation (Windows):
-#### Requires OBS 27.0 (released June 2021) or newer!
 
 * Close OBS if running
 * Download latest Closed_Captions_Plugin.zip version for Windows [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
@@ -71,38 +69,34 @@ Captions should be off by default for most viewers but Twitch does sometimes hav
 * Click on `Settings` in the new `Captions Preview` window and select your audio source for captioning under `Caption Source`
   * Select the OBS source that is only your microphone for best captioning results
   * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
-* Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
 
-![Installation Windows](https://i.imgur.com/8EknThL.png)
+![Installation Windows](./github/images/win_install.png)
 
 #### Plugin:
-![Example of Plugin in OBS](https://i.imgur.com/wGzcseX.png)
+![Example of Plugin in OBS](./github/images/obs_base_3.png)
 
 ### Installation (Mac OS):
-#### Requires OBS 27.0 (released June 2021) or newer!
 
-* Close OBS if running
-* Download latest Closed_Captions_Plugin.zip version for MacOS [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
-* Extract the zip
-  * it contains a folder named `cloud_captions_plugin`
-* Copy-Paste the `cloud_captions_plugin` folder into your OBS `plugins` folder
-  * Open Finder and in the `Go` menu press `Go to Folder` (or press Cmd+Shift+G)  
-  * Paste `~/Library/Application Support/obs-studio/` and hit enter to go to your `obs-studio` folder 
+* Download latest Closed_Captions_Plugin___MacOS.zip version for MacOS [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
+* Extract the zip 
+  * (should just auto extract when opened/clicked) 
+  * it contains a file/plugin-package named `cloud-closed-captions.plugin`
+* Copy-Paste that `cloud-closed-captions.plugin` file  into the `plugins` folder in the `obs-studio` settings folder
+  * To find the settings Folder, in the OBS menu click `File -> Show Settings Folder` and it should open automatically 
+  * Alternatively if that doesn't work:
+    * Open Finder and in the `Go` menu press `Go to Folder` (or press Cmd+Shift+G)  
+    * Paste `~/Library/Application Support/obs-studio/` and hit enter to go to your `obs-studio` folder 
   * Your `obs-studio` folder may contain a folder called `plugins` already, if not then create one
-  * Paste the `cloud_captions_plugin` folder into the `plugins` folder 
-* That's it. Start OBS.
+  * Paste the `cloud-closed-captions.plugin` file/plugin-package folder into the `plugins` folder 
+* That's it. Restart/Start OBS.
 * There should now be a `Cloud Closed Captions` option on the bottom of `Tools` menu
 * Click on `Settings` in the new `Captions Preview` window and select your audio source for captioning under `Caption Source`
   * Select the OBS source that is only your microphone for best captioning results
   * If you don't have a OBS source that is only your microphone but instead use a more complicated audio setup see below for more info
-* Recommended settings: 3 lines (4 lines can have flickering issues on Twitch currently!), no forced linebreaks
 
-![Installation Mac](https://i.imgur.com/nlF3TMr.png)
+![Installation Mac](./github/images/mac_install_28.png)
 
 ### Installation (Linux):
-#### Requires OBS 27.0 (released June 2021) or newer!
-
-Linux support is not well tested yet and requires OBS built with caption support (`-DBUILD_CAPTIONS=ON`).
 
 * Download latest Closed_Captions_Plugin.zip version for Linux [from the releases section](https://github.com/ratwithacompiler/OBS-captions-plugin/releases)
 * Put `libobs_google_caption_plugin.so` into your OBS plugins folder
@@ -122,6 +116,6 @@ If your OBS setup does not use a audio source that's only the microphone but ins
 * Set `Caption When` to `Mute Source is heard on stream`
 * Set `Mute Source` to your mixed audio OBS source that stream hears
 
-![Mixed Source Setup Instructions](https://i.imgur.com/wuE89ZT.png)
+![Mixed Source Setup Instructions](./github/images/mutesource3.png)
 
 This way it will use the `Microphone only` source to get clean mic audio for captioning but it will still only caption it when the other selected source is unmuted and active so it's still safe. When the mixed source for stream is muted in OBS the captions also get muted.
