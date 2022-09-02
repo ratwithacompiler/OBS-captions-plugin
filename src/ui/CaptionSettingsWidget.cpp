@@ -171,8 +171,12 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QString with_version = bottomTextBrowser->toPlainText().replace("${VERSION_STRING}", VERSION_STRING);
     bottomTextBrowser->setPlainText(with_version);
 
-    this->verticalLayout->setAlignment(Qt::AlignTop);
-    this->errorLabel->hide();
+    this->verticalLayoutMainOuter->setAlignment(Qt::AlignTop);
+    this->verticalLayoutMainScrollContainer->setAlignment(Qt::AlignTop);
+    this->verticalLayoutTabGeneral->setAlignment(Qt::AlignTop);
+    this->verticalLayoutTabTranscripts->setAlignment(Qt::AlignTop);
+    this->verticalLayoutTabOpenCaptions->setAlignment(Qt::AlignTop);
+    this->verticalLayoutTabTextFiltering->setAlignment(Qt::AlignTop);
     this->updateUi();
 
 #if ENABLE_CUSTOM_API_KEY
@@ -243,7 +247,6 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     this->wordReplacementTableWidget->setColumnWidth(0, 80);
     this->wordReplacementTableWidget->setColumnWidth(3, 25);
 }
-
 
 void CaptionSettingsWidget::set_show_key(bool set_to_show) {
     if (set_to_show) {
@@ -570,6 +573,18 @@ void CaptionSettingsWidget::updateUi() {
     virtualcam_name_index_change(0);
 
     set_show_key(false);
+}
+
+void CaptionSettingsWidget::showEvent(QShowEvent *event) {
+    info_log("CaptionSettingsWidget showEvent");
+    QWidget::showEvent(event);
+
+    if (this->tabWidget->currentIndex() == 0) {
+        // force full reflow so scrollbars don't show,
+        // update/updateGeometry isn't enough apparently
+        this->tabWidget->setCurrentIndex(1);
+        this->tabWidget->setCurrentIndex(0);
+    }
 }
 
 void CaptionSettingsWidget::set_settings(const CaptionPluginSettings &new_settings) {

@@ -89,6 +89,9 @@ public:
     void updateUi();
 
     void update_sources_visibilities();
+
+private:
+    void showEvent(QShowEvent *event) override;
 };
 
 
