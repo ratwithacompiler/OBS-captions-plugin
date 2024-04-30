@@ -136,6 +136,9 @@ static bool captioning_status_string(
     if (!enabled) {
         output = "CC Disabled";
     } else {
+        const string source_name = corrected_streaming_audio_output_capture_source_name(
+            status.settings.scene_collection_settings.caption_source_settings.caption_source_name);
+
         if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STOPPED
             || status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_NEW_SETTINGS_STOPPED) {
             if (streaming_output_enabled && recording_output_enabled)
@@ -148,12 +151,13 @@ static bool captioning_status_string(
                 output = "Offline";
 
         } else if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_ERROR) {
-            output = "Off";
+            if (source_name.empty())
+                output = "Source not selected!";
+            else
+                output = "Off";
         } else if (status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_STARTED_OK
                    || status.event_type == SOURCE_CAPTIONER_STATUS_EVENT_AUDIO_CAPTURE_STATUS_CHANGE) {
 
-            const string source_name = corrected_streaming_audio_output_capture_source_name(
-                    status.settings.scene_collection_settings.caption_source_settings.caption_source_name);
             const string mute_source_name = status.settings.scene_collection_settings.caption_source_settings.active_mute_source_name();
 
             const string source_name_use = "(" + source_name + ")";
