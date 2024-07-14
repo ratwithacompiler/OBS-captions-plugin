@@ -3,7 +3,7 @@
 jobs:
    -  job: 'Build_MacOS_HTTP'
       pool:
-         vmImage: 'macos-11'
+         vmImage: 'macos-12'
 
       steps:
          -  task: Cache@2
@@ -75,7 +75,7 @@ jobs:
 
    -  job: 'Build_MacOS_GRPC'
       pool:
-         vmImage: 'macos-11'
+         vmImage: 'macos-12'
 
       steps:
          -  task: Cache@2

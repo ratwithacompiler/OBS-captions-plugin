@@ -33,7 +33,7 @@ static vector<ObsSourceTup> get_obs_sources() {
             return false;
         }
 
-        const char *source_type = obs_source_get_id(source);
+        const char *source_type = obs_source_get_unversioned_id(source);
         const char *name = obs_source_get_name(source);
 
         if (!name || !source_type)
