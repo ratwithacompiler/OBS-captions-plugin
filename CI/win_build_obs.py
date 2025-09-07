@@ -8,8 +8,8 @@ from pathlib import Path
 
 from win_shared import check_call, download, unzip, spa
 
-DEPS = "https://github.com/obsproject/obs-deps/releases/download/2022-08-02/windows-deps-2022-08-02-x64.zip"
-DEPS_QT = "https://github.com/obsproject/obs-deps/releases/download/2022-08-02/windows-deps-qt6-2022-08-02-x64.zip"
+DEPS = "https://github.com/obsproject/obs-deps/releases/download/2023-11-03/windows-deps-2023-11-03-x64.zip"
+DEPS_QT = "https://github.com/obsproject/obs-deps/releases/download/2023-11-03/windows-deps-qt6-2023-11-03-x64.zip"
 
 CMAKE_VS_ARGS = ["-G", "Visual Studio 17 2022", "-A", "x64"]
 
@@ -46,8 +46,8 @@ def setup_obs(obs_studio: Path, clean_afterwards: bool):
 	print("setting up OBS build/source in", obs_studio_src)
 
 	if not obs_studio_src.exists():
-		check_call([*spa("git clone --single-branch --branch master https://github.com/obsproject/obs-studio.git"), str(obs_studio_src)])
-		check_call([*spa("git checkout 28.0.0")], cwd = obs_studio_src)
+		check_call([*spa("git clone https://github.com/obsproject/obs-studio.git"), str(obs_studio_src)])
+		check_call([*spa("git checkout 30.0.0")], cwd = obs_studio_src)
 		check_call([*spa("git submodule update --init --recursive")], cwd = obs_studio_src)
 
 	build_dir.mkdir(True, exist_ok = True)

@@ -3,7 +3,7 @@
 jobs:
    -  job: 'Build_MacOS_HTTP'
       pool:
-         vmImage: 'macos-12'
+         vmImage: 'macos-13'
 
       steps:
          -  task: Cache@2
@@ -23,7 +23,6 @@ jobs:
             inputs:
                path: "$(Build.SourcesDirectory)/CI/http/CI_build/release/"
                artifact: Closed_Captions_Plugin__Release_MacOS_HTTP
-
 
    -  job: 'Build_Windows_HTTP'
       pool:
@@ -73,79 +72,79 @@ jobs:
                artifact: Closed_Captions_Plugin__Release_Linux64_HTTP
 
 
-   -  job: 'Build_MacOS_GRPC'
-      pool:
-         vmImage: 'macos-12'
+#   -  job: 'Build_MacOS_GRPC'
+#      pool:
+#         vmImage: 'macos-12'
+#
+#      steps:
+#         -  task: Cache@2
+#            inputs:
+#               key: '"build_deps" | "$(Agent.OS)" | CI/osx_build_obs.sh | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
+#               #               key: '"build_deps" | "$(Agent.OS)" | CI/osx_build_obs.sh | CI/http/osx_install_script.sh'
+#               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
+#            displayName: Cache build_deps
+#
+#         -  script: $(Build.SourcesDirectory)/CI/grpc/osx_install_script.sh
+#            workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
+#            displayName: 'Setup & Build'
+#            env:
+#               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+#               CLEAN_VCPKG: 1
+#               CLEAN_OBS: 1
+#
+#         -  task: PublishPipelineArtifact@1
+#            inputs:
+#               path: "$(Build.SourcesDirectory)/CI/grpc/CI_build/release/"
+#               artifact: Closed_Captions_Plugin__Release_MacOS_GRPC
+#
+#
+#   -  job: 'Build_Windows_GRPC'
+#      pool:
+#         vmImage: 'windows-2022'
+#
+#      steps:
+#         -  task: Cache@2
+#            inputs:
+#               key: '"build_deps" | "$(Agent.OS)" | CI/win_build_obs.py | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
+#               #                  key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.py | CI/http/win_install_script.py'
+#               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
+#
+#         -  script: python $(Build.SourcesDirectory)\CI\grpc\win_install_script.py
+#            displayName: 'Setup & Build'
+#            workingDirectory: $(Build.SourcesDirectory)\CI\grpc
+#            env:
+#               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+#               CLEAN_VCPKG: 1
+#               CLEAN_OBS: 1
+#
+#         -  task: PublishPipelineArtifact@1
+#            inputs:
+#               path: '$(Build.SourcesDirectory)/CI/grpc/CI_build/release/'
+#               artifact: Closed_Captions_Plugin__Release_Windows_GRPC
 
-      steps:
-         -  task: Cache@2
-            inputs:
-               key: '"build_deps" | "$(Agent.OS)" | CI/osx_build_obs.sh | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
-               #               key: '"build_deps" | "$(Agent.OS)" | CI/osx_build_obs.sh | CI/http/osx_install_script.sh'
-               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
-            displayName: Cache build_deps
 
-         -  script: $(Build.SourcesDirectory)/CI/grpc/osx_install_script.sh
-            workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
-            displayName: 'Setup & Build'
-            env:
-               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
-               CLEAN_VCPKG: 1
-               CLEAN_OBS: 1
-
-         -  task: PublishPipelineArtifact@1
-            inputs:
-               path: "$(Build.SourcesDirectory)/CI/grpc/CI_build/release/"
-               artifact: Closed_Captions_Plugin__Release_MacOS_GRPC
-
-
-   -  job: 'Build_Windows_GRPC'
-      pool:
-         vmImage: 'windows-2022'
-
-      steps:
-         -  task: Cache@2
-            inputs:
-               key: '"build_deps" | "$(Agent.OS)" | CI/win_build_obs.py | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
-               #                  key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.py | CI/http/win_install_script.py'
-               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
-
-         -  script: python $(Build.SourcesDirectory)\CI\grpc\win_install_script.py
-            displayName: 'Setup & Build'
-            workingDirectory: $(Build.SourcesDirectory)\CI\grpc
-            env:
-               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
-               CLEAN_VCPKG: 1
-               CLEAN_OBS: 1
-
-         -  task: PublishPipelineArtifact@1
-            inputs:
-               path: '$(Build.SourcesDirectory)/CI/grpc/CI_build/release/'
-               artifact: Closed_Captions_Plugin__Release_Windows_GRPC
-
-
-   -  job: 'Build_Linux_GRPC'
-      pool:
-         vmImage: 'ubuntu-22.04'
-
-      steps:
-         -  task: Cache@2
-            inputs:
-               key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.sh | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
-               #               key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.sh | CI/http/linux_install_script.sh'
-               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
-            displayName: Cache build_deps
-
-         -  script: $(Build.SourcesDirectory)/CI/grpc/linux_install_script.sh
-            displayName: 'Setup & Build'
-            workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
-            env:
-               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
-               CLEAN_VCPKG: 1
-               CLEAN_OBS: 1
-
-         -  task: PublishPipelineArtifact@1
-            inputs:
-               path: "$(Build.SourcesDirectory)/CI/grpc/CI_build/release/"
-               artifact: Closed_Captions_Plugin__Release_Linux64_GRPC
+#   -  job: 'Build_Linux_GRPC'
+#      pool:
+#         vmImage: 'ubuntu-22.04'
+#
+#      steps:
+#         -  task: Cache@2
+#            inputs:
+#               key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.sh | "824c4324736156720645819abe4d48b4e740a1cd"' #grpc commit
+#               #               key: '"build_deps" | "$(Agent.OS)" | CI/linux_build_obs.sh | CI/http/linux_install_script.sh'
+#               path: $(Build.SourcesDirectory)/CI/grpc/CI_build/build_deps
+#            displayName: Cache build_deps
+#
+#         -  script: $(Build.SourcesDirectory)/CI/grpc/linux_install_script.sh
+#            displayName: 'Setup & Build'
+#            workingDirectory: $(Build.SourcesDirectory)/CI/grpc/
+#            env:
+#               GOOGLE_API_KEY: $(GOOGLE_API_KEY)
+#               CLEAN_VCPKG: 1
+#               CLEAN_OBS: 1
+#
+#         -  task: PublishPipelineArtifact@1
+#            inputs:
+#               path: "$(Build.SourcesDirectory)/CI/grpc/CI_build/release/"
+#               artifact: Closed_Captions_Plugin__Release_Linux64_GRPC
 

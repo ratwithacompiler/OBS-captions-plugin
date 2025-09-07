@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 project(obs_google_caption_plugin)
 
 set(CMAKE_CXX_STANDARD 17)
-set(VERSION_STRING "0.30")
+set(VERSION_STRING "0.31")
 
 set(OBS_BUILD_DIR "" CACHE STRING "Path containing obs and obs-fronted-api libs")
 set(OBS_DEPS_DIR "" CACHE STRING "Path to OBS deps and Qt deps")
@@ -164,6 +164,7 @@ find_package(obs-frontend-api REQUIRED
         PATHS
         ${OBS_BUILD_DIR}
         ${OBS_BUILD_DIR}/lib
+        ${OBS_BUILD_DIR}/UI/obs-frontend-api
         NO_DEFAULT_PATH
         )
 message("using obs_frontend_library: ${obs-frontend-api_DIR}")

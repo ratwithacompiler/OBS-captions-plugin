@@ -15,6 +15,18 @@ function osx_make_release_zip() {
   local libfile="libobs_google_caption_plugin.so"
   cp -v installed/lib/libobs_google_caption_plugin.so "$libfile"
 
+  #make rpaths relative, OBS 28+
+  otool -L "$libfile"
+  otool -l "$libfile" | egrep /
+
+  echo change rpaths
+  install_name_tool -change obs-frontend-api.dylib @executable_path/../Frameworks/obs-frontend-api.dylib \
+    -change libobs.framework/Versions/A/libobs @executable_path/../Frameworks/libobs.framework/Versions/A/libobs \
+    "$libfile"
+
+  otool -L "$libfile"
+  otool -l "$libfile"
+
   plugin_dir="cloud-closed-captions.plugin"
   if [ -d "$plugin_dir" ]; then
     echo "deleting $plugin_dir"
@@ -55,11 +67,6 @@ function osx_make_release_zip() {
 </plist>
 EOFMARK
   cd ..
-
-  #make rpaths relative, OBS 28+
-  otool -L "$libfile"
-  otool -l "$libfile" | egrep /
-  otool -l "$libfile"
 
   local RELEASE_NAME="Closed_Captions_Plugin__v""$VERSION_STRING""_MacOS"
   local RELEASE_FOLDER="release/$RELEASE_NAME/"
