@@ -16,7 +16,7 @@ def download(url: str, target_path: Path):
 
 
 def unzip(zipfile: Path, target_path: Path):
-	check_call(["7z", "x", str(zipfile), f"-o{str(target_path)}"])
+	check_call(["7z", "x", "-y", str(zipfile), f"-o{str(target_path)}"])
 
 
 def check_call(args: list, cwd = None, shell = False):

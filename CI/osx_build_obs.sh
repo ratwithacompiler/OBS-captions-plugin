@@ -7,13 +7,13 @@ function build_obs() {
   mkdir -p obs-studio && cd obs-studio/
 
   BUILD_OBS__UNPACKED_DEPS_DIR="$(pwd)/unpacked_deps"
-  BUILD_OBS__INSTALLED_DIR="$(pwd)/build_installed"
   BUILD_OBS__SRC_DIR="$(pwd)/src"
   BUILD_OBS__BUILD_DIR="$(pwd)/src/build"
+  BUILD_OBS__INSTALLED_DIR="$BUILD_OBS__BUILD_DIR"
   echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
   echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
-  echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
   echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
+  echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
   test -n OSX_ARCHITECTURES
 
   if [ -e "src/done" ]; then
@@ -23,19 +23,19 @@ function build_obs() {
 
   if [ ! -e "src" ]; then
     echo getting src
-    git clone --single-branch --branch master https://github.com/obsproject/obs-studio.git src
+    git clone  https://github.com/obsproject/obs-studio.git src
     cd src
-    git checkout 28.0.0
+    git checkout 30.0.0
     git submodule update --init --recursive
     cd ..
   fi
 
   if [ ! -e deps.tar.xz ]; then
-    wget -c https://github.com/obsproject/obs-deps/releases/download/2022-08-02/macos-deps-2022-08-02-universal.tar.xz -O deps.tar.xz
+    wget -c https://github.com/obsproject/obs-deps/releases/download/2023-11-03/macos-deps-2023-11-03-universal.tar.xz -O deps.tar.xz
   fi
 
   if [ ! -e deps.qt.tar.xz ]; then
-    wget -c https://github.com/obsproject/obs-deps/releases/download/2022-08-02/macos-deps-qt6-2022-08-02-universal.tar.xz -O deps.qt.tar.xz
+    wget -c https://github.com/obsproject/obs-deps/releases/download/2023-11-03/macos-deps-qt6-2023-11-03-universal.tar.xz -O deps.qt.tar.xz
   fi
 
   if [ ! -d unpacked_deps ]; then
@@ -50,7 +50,7 @@ function build_obs() {
   mkdir -p build && cd build && pwd
   $CMAKE \
     -DCMAKE_OSX_ARCHITECTURES="$OSX_ARCHITECTURES" \
-    -DCMAKE_OSX_DEPLOYMENT_TARGET="11.0" \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET="13.0" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_BROWSER=OFF \
     -DENABLE_PLUGINS=OFF \
@@ -70,14 +70,15 @@ function build_obs() {
 }
 
 function build_obs_cleanup() {
-  if [ "$CLEAN_OBS" = "1" ] || [ "$CLEAN_OBS" = "true" ]; then
-    if [[ -n "$BUILD_OBS__BUILD_DIR" && -d "$BUILD_OBS__BUILD_DIR" ]]; then
-      echo "cleaning up OBS BUILD dir: $BUILD_OBS__BUILD_DIR"
-      rm -rf "$BUILD_OBS__BUILD_DIR" || true
-    else
-      echo "OBS BUILD dir folder not found: $BUILD_OBS__BUILD_DIR"
-    fi
-  else
-    echo "not cleaning OBS build, CLEAN_OBS: $CLEAN_OBS"
-  fi
+  #  if [ "$CLEAN_OBS" = "1" ] || [ "$CLEAN_OBS" = "true" ]; then
+  #    if [[ -n "$BUILD_OBS__BUILD_DIR" && -d "$BUILD_OBS__BUILD_DIR" ]]; then
+  #      echo "cleaning up OBS BUILD dir: $BUILD_OBS__BUILD_DIR"
+  #      rm -rf "$BUILD_OBS__BUILD_DIR" || true
+  #    else
+  #      echo "OBS BUILD dir folder not found: $BUILD_OBS__BUILD_DIR"
+  #    fi
+  #  else
+  #    echo "not cleaning OBS build, CLEAN_OBS: $CLEAN_OBS"
+  #  fi
+  :
 }

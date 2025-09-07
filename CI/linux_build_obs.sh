@@ -19,9 +19,9 @@ function build_obs() {
     qt6-base-dev libqt6svg6-dev qt6-base-private-dev
 
   BUILD_OBS__UNPACKED_DEPS_DIR="$(pwd)/unpacked_deps"
-  BUILD_OBS__INSTALLED_DIR="$(pwd)/build_installed"
   BUILD_OBS__SRC_DIR="$(pwd)/src"
   BUILD_OBS__BUILD_DIR="$(pwd)/src/build"
+  BUILD_OBS__INSTALLED_DIR="$BUILD_OBS__BUILD_DIR"
   echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
   echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
   echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
@@ -34,15 +34,15 @@ function build_obs() {
 
   if [ ! -e "src" ]; then
     echo getting src
-    git clone --single-branch --branch master https://github.com/obsproject/obs-studio.git src
+    git clone  https://github.com/obsproject/obs-studio.git src
     cd src
-    git checkout 28.0.0
+    git checkout 30.0.0
     git submodule update --init --recursive
     cd ..
   fi
 
   if [ ! -e deps.tar.xz ]; then
-    wget -c https://github.com/obsproject/obs-deps/releases/download/2022-08-02/linux-deps-2022-08-02-x86_64.tar.xz -O deps.tar.xz
+    wget -c https://github.com/obsproject/obs-deps/releases/download/2023-11-03/linux-deps-2023-11-03-x86_64.tar.xz -O deps.tar.xz
   fi
 
   if [ ! -d unpacked_deps ]; then
