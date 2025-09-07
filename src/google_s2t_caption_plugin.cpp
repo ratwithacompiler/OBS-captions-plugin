@@ -121,9 +121,7 @@ void setup_dock() {
     caption_dock = new CaptionDock("Captions", *plugin_manager, *main_caption_widget);
     caption_dock->setObjectName("cloud_caption_caption_dock");
 
-    QMainWindow *main_wid = (QMainWindow *) obs_frontend_get_main_window();
-    main_wid->addDockWidget(Qt::BottomDockWidgetArea, caption_dock);
-    obs_frontend_add_dock(caption_dock);
+    obs_frontend_add_dock_by_id("cloud_closed_captions_dock_main", "Captions", caption_dock);
 }
 
 void setup_UI() {

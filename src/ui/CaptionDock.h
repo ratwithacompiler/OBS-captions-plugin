@@ -5,13 +5,12 @@
 #ifndef OBS_GOOGLE_CAPTION_PLUGIN_CAPTIONDOCK_H
 #define OBS_GOOGLE_CAPTION_PLUGIN_CAPTIONDOCK_H
 
-#include <QDockWidget>
 #include "../SourceCaptioner.h"
 #include "../CaptionPluginManager.h"
 #include "MainCaptionWidget.h"
 #include "ui_CaptionDock.h"
 
-class CaptionDock : public QDockWidget, Ui_CaptionDock {
+class CaptionDock : public QWidget, Ui_CaptionDock {
 Q_OBJECT
 private:
     CaptionPluginManager &plugin_manager;
