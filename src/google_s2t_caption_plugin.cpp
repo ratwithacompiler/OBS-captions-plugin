@@ -285,11 +285,11 @@ void obs_module_unload(void) {
 
 MODULE_EXPORT const char *obs_module_description(void)
 {
-    return obs_module_text("Provides closed captioning via Google Cloud Speech Recognition API");
+    return "Provides closed captioning via Google Cloud Speech Recognition API";
 }
 
 MODULE_EXPORT const char *obs_module_name(void)
 {
-    return obs_module_text("Cloud Closed Captions");
+    return "Cloud Closed Captions";
 }
 
