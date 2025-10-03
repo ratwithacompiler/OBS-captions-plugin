@@ -108,7 +108,25 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
         debug_log("sending caption %s line now, waited %f: '%s'",
                   to_what.c_str(), waited_left_secs, caption_output.output_result->output_line.c_str());
 
-        obs_output_output_caption_text2(output, caption_output.output_result->output_line.c_str(), 0.0);
+        const char* txt = caption_output.output_result->output_line.c_str();
+        if (to_stream) {
+            obs_enum_outputs(
+                [](void* param, obs_output_t* output)
+                {
+                    if (obs_output_active(output)) {
+                        auto txt = (const char*)param;
+                        uint32_t flags = obs_output_get_flags(output);
+                        if ((flags & OBS_OUTPUT_AV) && (flags & OBS_OUTPUT_ENCODED) && (flags & OBS_OUTPUT_SERVICE)) {
+                            obs_output_output_caption_text2(output, txt, 0.0);
+                        }
+                    }
+                    return true;
+                },
+                (void*)txt
+            );
+        } else {
+            obs_output_output_caption_text2(output, txt, 0.0);
+        }
     }
     if (output) {
         obs_output_release(output);
