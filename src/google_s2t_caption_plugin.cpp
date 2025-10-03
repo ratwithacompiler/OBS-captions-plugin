@@ -282,3 +282,14 @@ void obs_module_post_load(void) {
 void obs_module_unload(void) {
     info_log("google_s2t_caption_plugin %s obs_module_unload", VERSION_STRING);
 }
+
+MODULE_EXPORT const char *obs_module_description(void)
+{
+    return "Provides closed captioning via Google Cloud Speech Recognition API";
+}
+
+MODULE_EXPORT const char *obs_module_name(void)
+{
+    return "Cloud Closed Captions";
+}
+
