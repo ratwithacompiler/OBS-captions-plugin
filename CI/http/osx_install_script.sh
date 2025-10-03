@@ -1,5 +1,10 @@
 #!/bin/bash
 
+ls -ltrgh /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
+if [ -e /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk ]; then
+  export SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
+fi
+
 set -e
 ROOT_DIR="$(pwd)"
 source ../unix_shared.sh

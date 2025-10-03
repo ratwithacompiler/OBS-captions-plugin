@@ -4,5 +4,5 @@ set -e
 
 git clone https://github.com/saprykin/plibsys
 cd plibsys
-git reset --hard fd23c003663c7b46b9cc50403636c86bcbc86e80
+git reset --hard 15da22f4bc0b311df071ea766387e902d088ee0e
 

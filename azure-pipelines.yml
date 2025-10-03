@@ -8,7 +8,7 @@ jobs:
       steps:
          -  task: Cache@2
             inputs:
-               key: '"obs-studio" | "$(Agent.OS)" | CI/osx_build_obs.sh'
+               key: '"obs-studio-30.0.0" | "$(Agent.OS)" | CI/osx_build_obs.sh'
                path: $(Build.SourcesDirectory)/CI/http/CI_build/build_deps/obs-studio
             displayName: Cache obs-studio
 
@@ -31,7 +31,7 @@ jobs:
       steps:
          -  task: Cache@2
             inputs:
-               key: '"obs-studio-30" | "$(Agent.OS)" | CI/win_build_obs.py'
+               key: '"obs-studio-30.0.0" | "$(Agent.OS)" | CI/win_build_obs.py'
                path: $(Build.SourcesDirectory)\CI\http\CI_build\build_deps\obs-studio
             displayName: Cache obs-studio
 
@@ -55,7 +55,7 @@ jobs:
       steps:
          -  task: Cache@2
             inputs:
-               key: '"obs-studio" | "$(Agent.OS)" | CI/linux_build_obs.sh'
+               key: '"obs-studio-30.0.0" | "$(Agent.OS)" | CI/linux_build_obs.sh'
                path: $(Build.SourcesDirectory)/CI/http/CI_build/build_deps/obs-studio
             displayName: Cache obs-studio
 
