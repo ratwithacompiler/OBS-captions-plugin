@@ -24,6 +24,11 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
 
     double waited_left_secs = 0;
     while (!control->stop) {
+        if (output) {
+            obs_output_release(output);
+            output = nullptr;
+        }
+
         control->caption_queue.wait_dequeue(caption_output);
 
         if (control->stop)
@@ -34,9 +39,14 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             continue;
         }
 
-        if (output) {
-            obs_output_release(output);
-            output = nullptr;
+        if (!caption_output.is_clearance && caption_output.output_result->output_line.empty()) {
+            debug_log("ingoring empty non clearance, %s", to_what.c_str());
+            continue;
+        }
+
+        if (caption_output.output_result->output_line == previous_line) {
+            //            debug_log("ignoring duplicate %s line: %s", to_what.c_str(), previous_line.c_str());
+            continue;
         }
 
         if (to_stream)
@@ -50,15 +60,6 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             continue;
         }
 
-        if (!caption_output.is_clearance && caption_output.output_result->output_line.empty()) {
-            debug_log("ingoring empty non clearance, %s", to_what.c_str());
-            continue;
-        }
-
-        if (caption_output.output_result->output_line == previous_line) {
-//            debug_log("ignoring duplicate %s line: %s", to_what.c_str(), previous_line.c_str());
-            continue;
-        }
         previous_line = caption_output.output_result->output_line;
 
         waited_left_secs = 0;
@@ -128,6 +129,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             obs_output_output_caption_text2(output, txt, 0.0);
         }
     }
+
     if (output) {
         obs_output_release(output);
         output = nullptr;
