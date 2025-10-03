@@ -50,10 +50,10 @@ void CaptionDock::handle_source_capture_status_change(shared_ptr<SourceCaptioner
 
     this->statusTextLabel->setText(QString::fromStdString(status_text));
     if (status->settings.scene_collection_settings.caption_source_settings.caption_source_name.empty())	{
-        this->captionLinesPlainTextEdit->setStyleSheet("background-color: salmon; font-weight: bold;");
+        this->captionLinesPlainTextEdit->setStyleSheet("border: 1px solid salmon; font-weight: bold;");
         this->captionLinesPlainTextEdit->setPlainText("No source selected! Nothing to caption.");
     } else {
-        this->captionLinesPlainTextEdit->setStyleSheet("background-color: white; font-weight: normal;");
+        this->captionLinesPlainTextEdit->setStyleSheet("");
         this->captionLinesPlainTextEdit->clear();
 	}
 }
