@@ -105,8 +105,8 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             }
         }
 
-        debug_log("sending caption %s line now, waited %f: '%s'",
-                  to_what.c_str(), waited_left_secs, caption_output.output_result->output_line.c_str());
+        // debug_log("sending caption %s line now, waited %f: '%s'",
+        // to_what.c_str(), waited_left_secs, caption_output.output_result->output_line.c_str());
 
         const char* txt = caption_output.output_result->output_line.c_str();
         if (to_stream) {
