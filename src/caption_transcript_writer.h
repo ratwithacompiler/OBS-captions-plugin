@@ -298,15 +298,14 @@ string srt_entry_caption_text(const SrtState &settings, const ResultQueue &resul
             line[0] = toupper(line[0]);
         }
 
-        text_os << line;
-//        printf("using line %d, '%s'\n", i, results[i]->clean_caption_text.c_str());
+        //printf("SRT: using line %d, '%s'\n", i, line.c_str());
         if (i) {
-            if (settings.add_punctuation) {
-                text_os << ". ";
-
-            } else
-                text_os << " ";
+            if (settings.add_punctuation && std::get<3>(results[i])) {
+                text_os << ".";
+            }
+            text_os << " ";
         }
+        text_os << line;
     }
 
     string text = text_os.str();
