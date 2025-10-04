@@ -34,7 +34,7 @@ function build_obs() {
 
   if [ ! -e "src" ]; then
     echo getting src
-    git clone  https://github.com/obsproject/obs-studio.git src
+    git clone https://github.com/obsproject/obs-studio.git src
     cd src
     git checkout 30.0.0
     git submodule update --init --recursive
