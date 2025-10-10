@@ -629,7 +629,7 @@ static void setup_combobox_output_target(QComboBox &comboBox, bool add_off_optio
 
     comboBox.addItem("Streams Only", 0);
     comboBox.addItem("Local Recordings Only", 1);
-    comboBox.addItem("Streams & Local Recordings", 2);
+    comboBox.addItem("Streams and Local Recordings", 2);
 
     if (add_off_option)
         comboBox.addItem("Disable Native Output", 3);

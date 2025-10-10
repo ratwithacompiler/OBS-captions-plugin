@@ -110,6 +110,12 @@
       </item>
       <item row="2" column="1">
        <widget class="QSpinBox" name="lineLengthSpinBox">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="minimum">
          <number>1</number>
         </property>
@@ -127,6 +133,18 @@
       </item>
       <item row="3" column="1">
        <widget class="QSpinBox" name="lineCountSpinBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="minimum">
          <number>1</number>
         </property>
