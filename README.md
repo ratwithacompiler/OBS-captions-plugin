@@ -4,16 +4,17 @@ Provides closed captioning via Google Cloud Speech Recognition API as a standalo
 It's fully optional to viewers and uses Twitch's built in caption support which works on livestreams and in VODs on PC, Android and iOS, no Twitch extension required.  
 
 #### Features:
-  * Completely optional for viewers on all platforms
+  * Completely optional for viewers
   * Captions only when the microphone source is unmuted and active to ensure safety
   * Works live and in VODs, no Twitch extension required
   * Requires no extra tools or website open
   * Supports many common languages with western character sets
   * Supports OBS delay
   * Open Caption support via OBS Text Sources for sites that don't support closed captions
-  * Saving captions transcripts as SRT Subtitle files (.srt)
+  * Save full stream/recording transcripts as SRT Subtitle files (.srt) or txt
+  * Save current captions to a text file for use with other tools
   * Text filtering with custom word and phrase removal and replacement
-  * Supports captioning all stream audio instead of just a single source
+  * Can caption entire OBS audio tracks instead of just single sources
 
 ##### Notes:
 * The caption delay is usually less than half a second and should not be noticeable to viewers.
