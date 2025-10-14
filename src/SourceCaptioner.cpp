@@ -370,6 +370,7 @@ void SourceCaptioner::clear_output_timer_cb() {
 
     bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording;
     vector<string> text_source_names;
+    bool clear_fileoutput = false;
     {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         if (!this->settings.format_settings.caption_timeout_enabled || this->last_caption_cleared)
@@ -396,6 +397,10 @@ void SourceCaptioner::clear_output_timer_cb() {
                 continue;
             text_source_names.push_back(text_out.text_source_name);
         }
+
+        if (fileoutput_captions_output.control) {
+            clear_fileoutput = true;
+        }
     }
 
     auto now = std::chrono::steady_clock::now();
@@ -411,6 +416,11 @@ void SourceCaptioner::clear_output_timer_cb() {
     for (const auto &to_clear: text_source_names) {
         set_text_source_text(to_clear, " ");
     }
+
+    if (clear_fileoutput) {
+        fileoutput_captions_output.enqueue(clearance);
+    }
+
     emit caption_result_received(nullptr, true, "");
 }
 
