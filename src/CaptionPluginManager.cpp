@@ -60,10 +60,16 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
             }
         }
     }
+
+    bool is_file_output_relevant = false;
+    if (any_output_active && source_settings.file_output_settings.isValidEnabled()) {
+        is_file_output_relevant = true;
+    }
+
     const bool equal_settings = new_settings == plugin_settings;
     const bool do_captioning = (
             new_settings.enabled &&
-            (is_streaming_relevant || is_recording_relevant || is_preview_relevant || is_text_output_relevant || is_virtualcam_relevant));
+            (is_streaming_relevant || is_recording_relevant || is_preview_relevant || is_text_output_relevant || is_file_output_relevant || is_virtualcam_relevant));
 
     info_log("enabled: %d, "
 
@@ -83,6 +89,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
 
              "is_preview_open %d, "
              "is_text_output_relevant %d, "
+             "is_file_output_relevant %d, "
 
              "scene_collection_name: %s, "
              "source:  '%s', "
@@ -108,6 +115,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
 
              state.external_is_preview_open,
              is_text_output_relevant,
+             is_file_output_relevant,
 
              scene_collection_name_relevant.c_str(),
              scene_col_settings.caption_source_settings.caption_source_name.c_str(),
@@ -125,6 +133,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
         && is_virtualcam_relevant == state.is_captioning_virtualcam
         && is_preview_relevant == state.is_captioning_preview
         && is_text_output_relevant == state.is_captioning_text_output
+        && is_file_output_relevant == state.is_captioning_file_output
         && scene_collection_name_relevant == state.captioning_scene_collection_name
             ) {
         info_log("settings unchanged, ignoring");
@@ -139,6 +148,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     state.is_captioning_virtualcam = is_virtualcam_relevant;
     state.is_captioning_preview = is_preview_relevant;
     state.is_captioning_text_output = is_text_output_relevant;
+    state.is_captioning_file_output = is_file_output_relevant;
     state.captioning_scene_collection_name = scene_collection_name_relevant;
 
     source_captioner.set_enabled(new_settings.enabled);

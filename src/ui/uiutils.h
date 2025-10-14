@@ -180,6 +180,8 @@ static bool captioning_status_string(
                     target = "Preview";
                 else if (captioning_state.is_captioning_text_output)
                     target = "Text Source";
+                else if (captioning_state.is_captioning_file_output)
+                    target = "File Output";
 
                 if (!target.empty())
                     target = " for " + target;
