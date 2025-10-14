@@ -74,6 +74,8 @@ void obs_frontent_exiting();
 
 void obs_frontent_scene_collection_changed();
 
+void obs_frontent_scene_collection_changing();
+
 static void obs_event(enum obs_frontend_event event, void *) {
 //    debug_log("obs_event %d", (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
 //    int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
@@ -98,7 +100,11 @@ static void obs_event(enum obs_frontend_event event, void *) {
         obs_frontent_scene_collection_changed();
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
         printf("studio mode!!!!!!!!!!!!!!!!!!!!\n");
-
+    }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
+        printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING\n");
+        obs_frontent_scene_collection_changing();
+    }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
+        printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP\n");
     }
 }
 
@@ -173,6 +179,12 @@ void recording_started_event() {
         main_caption_widget->recording_started_event();
 }
 
+void recording_stopped_event() {
+    info_log("recording_stopped_event");
+    if (main_caption_widget)
+        main_caption_widget->recording_stopped_event();
+}
+
 void virtualcam_started_event() {
     if (main_caption_widget)
         main_caption_widget->virtualcam_started_event();
@@ -182,15 +194,15 @@ void virtualcam_stopped_event() {
         main_caption_widget->virtualcam_stopped_event();
 }
 
-void recording_stopped_event() {
-    info_log("recording_stopped_event");
-    if (main_caption_widget)
-        main_caption_widget->recording_stopped_event();
+void obs_frontent_scene_collection_changing() {
+    info_log("obs_frontent_scene_collection_changing");
+    if (main_caption_widget) {
+        main_caption_widget->stop_captioning();
+    }
 }
 
 void obs_frontent_scene_collection_changed() {
     info_log("obs_frontent_scene_collection_changed");
-
     if (main_caption_widget) {
         main_caption_widget->scene_collection_changed();
     }

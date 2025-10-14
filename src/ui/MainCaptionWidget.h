@@ -95,6 +95,8 @@ public:
     void virtualcam_started_event();
 
     void virtualcam_stopped_event();
+
+    void stop_captioning();
 };
 
 

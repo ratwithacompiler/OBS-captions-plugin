@@ -144,6 +144,7 @@ void MainCaptionWidget::external_state_changed() {
 void MainCaptionWidget::scene_collection_changed() {
 //    external_state_changed();
     caption_settings_widget.hide();
+    this->hide();
 }
 
 void MainCaptionWidget::stream_started_event() {
@@ -174,6 +175,10 @@ void MainCaptionWidget::virtualcam_started_event() {
 void MainCaptionWidget::virtualcam_stopped_event() {
     plugin_manager.source_captioner.virtualcam_stopped_event();
     external_state_changed();
+}
+
+void MainCaptionWidget::stop_captioning() {
+    plugin_manager.source_captioner.stop_caption_stream(false);
 }
 
 void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {
