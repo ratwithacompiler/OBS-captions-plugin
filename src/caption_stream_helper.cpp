@@ -91,7 +91,7 @@ static FileOutputSettings default_FileOutputSettings() {
         CAPITALIZATION_NORMAL,
         "",
         "datetime",
-        "",
+        "captions.txt",
         "append",
     };
 }
@@ -166,6 +166,10 @@ static bool isValidWordReplacementTypeString(const string &type) {
             || type == "regex_case_sensitive");
 }
 
+static void enforce_FileOutputSettings_values(FileOutputSettings &settings) {
+    if (settings.capitalization < 0 || settings.capitalization > 2)
+        settings.capitalization = (CapitalizationType) 0;
+}
 
 static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings) {
     SourceCaptionerSettings &source_settings = settings.source_cap_settings;
@@ -183,6 +187,8 @@ static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings
     // ensure old strict/2 falls back to on/1 not off/0 default.
     if (source_settings.stream_settings.stream_settings.profanity_filter == 2)
         source_settings.stream_settings.stream_settings.profanity_filter = 1;
+
+    enforce_FileOutputSettings_values(settings.source_cap_settings.file_output_settings);
 }
 
 static void enforce_TextOutputSettings_values(TextOutputSettings &settings) {

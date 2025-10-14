@@ -206,8 +206,9 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_transcript_file_exists(*virtualcamTranscriptCustomNameExistsCombobox);
 
     setup_combobox_capitalization(*fileOutputCapitalizationComboBox);
-    setup_combobox_transcript_file_exists(*fileOutputCustomNameExistsCombobox);
-    setup_combobox_fileoutput_filename(*fileOutputFilenameComboBox);
+    // setup_combobox_transcript_file_exists(*fileOutputCustomNameExistsCombobox);
+    // setup_combobox_fileoutput_filename(*fileOutputFilenameComboBox);
+    fileOutputFileNameWidget3->setVisible(false);
 
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
@@ -230,8 +231,8 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     QObject::connect(virtualcamTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::virtualcam_name_index_change);
 
-    QObject::connect(fileOutputFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
-                     this, &CaptionSettingsWidget::fileoutput_name_index_change);
+    // QObject::connect(fileOutputFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     // this, &CaptionSettingsWidget::fileoutput_name_index_change);
 
     QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::sources_combo_index_change);
@@ -422,10 +423,10 @@ void CaptionSettingsWidget::virtualcam_name_index_change(int new_index) {
     virtualcamTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
 }
 
-void CaptionSettingsWidget::fileoutput_name_index_change(int new_index) {
-    bool isCustom = this->fileOutputFilenameComboBox->currentData().toString() == "custom";
-    fileOutputCustomNameOverwriteLineEdit->setVisible(isCustom);
-}
+// void CaptionSettingsWidget::fileoutput_name_index_change(int new_index) {
+//     bool isCustom = this->fileOutputFilenameComboBox->currentData().toString() == "custom";
+//     fileOutputCustomNameOverwriteLineEdit->setVisible(isCustom);
+// }
 
 
 void CaptionSettingsWidget::accept_current_settings() {
@@ -609,7 +610,7 @@ void CaptionSettingsWidget::updateUi() {
     recording_name_index_change(0);
     streaming_name_index_change(0);
     virtualcam_name_index_change(0);
-    fileoutput_name_index_change(0);
+    // fileoutput_name_index_change(0);
 
     set_show_key(false);
 }

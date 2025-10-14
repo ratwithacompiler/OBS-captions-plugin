@@ -51,8 +51,6 @@ private slots:
 
     void virtualcam_name_index_change(int index);
 
-    void fileoutput_name_index_change(int index);
-
     void sources_combo_index_change(int index);
 
     void caption_when_index_change(int index);

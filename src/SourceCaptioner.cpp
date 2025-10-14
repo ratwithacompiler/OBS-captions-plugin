@@ -119,7 +119,7 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings, 
         settings = new_settings;
         selected_scene_collection_name = scene_collection_name;
 
-        // stop fileoutput if any
+        fileoutput_captions_output.clear();
     }
 
     emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
@@ -170,7 +170,15 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                 started_ok = false;
             }
             if (started_ok) {
-                // start fileoutput if any
+                if (new_settings.file_output_settings.isValidEnabled()) {
+                    fileoutput_captions_output.clear();
+
+                    FileOutputSettings fsets = new_settings.file_output_settings;
+                    auto control = std::make_shared<CaptionOutputControl<FileOutputSettings>>(fsets);
+                    fileoutput_captions_output.set_control(control);
+                    std::thread th(fileoutput_writer_loop, control, fsets);
+                    th.detach();
+                }
             }
         }
     }
@@ -467,6 +475,7 @@ void SourceCaptioner::on_caption_text_callback(const CaptionResult &caption_resu
 
 void SourceCaptioner::process_caption_result(const CaptionResult caption_result, bool interrupted) {
     shared_ptr<OutputCaptionResult> native_output_result;
+    shared_ptr<OutputCaptionResult> file_output_result(nullptr);
     string recent_caption_text;
     bool to_stream, to_recording, to_transcript_streaming, to_transcript_recording, to_transcript_virtualcam;
 
@@ -527,6 +536,19 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
         to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
         to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
         to_transcript_virtualcam = settings.transcript_settings.enabled && settings.transcript_settings.virtualcam_transcripts_enabled;
+
+        if (settings.file_output_settings.isValidEnabled() && fileoutput_captions_output.control) {
+            file_output_result = caption_result_handler->prepare_caption_output(
+                caption_result,
+                true,
+                true,
+                settings.file_output_settings.insert_punctuation,
+                settings.file_output_settings.line_length,
+                settings.file_output_settings.line_count,
+                settings.file_output_settings.capitalization,
+                interrupted,
+                results_history);
+        }
     }
 
     this->output_caption_writers(CaptionOutput(native_output_result, false),
@@ -537,13 +559,15 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                  to_transcript_virtualcam,
                                  false);
 
+    if (file_output_result)
+        fileoutput_captions_output.enqueue(CaptionOutput(file_output_result, false));
+
     for (const auto &text_out: text_source_sets) {
         set_text_source_text(std::get<0>(text_out), std::get<1>(text_out));
     }
 
     emit caption_result_received(native_output_result, false, recent_caption_text);
 }
-
 
 void SourceCaptioner::output_caption_writers(
         const CaptionOutput &output,

@@ -1419,6 +1419,16 @@ li.checked::marker { content: &quot;\2612&quot;; }
             </widget>
            </item>
            <item>
+            <widget class="QLabel" name="label_28">
+             <property name="text">
+              <string>Filename:</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="fileOutputCustomNameOverwriteLineEdit"/>
+           </item>
+           <item>
             <widget class="QFrame" name="fileOutputFileNameWidget3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1497,7 +1507,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="fileOutputCustomNameOverwriteLineEdit">
+               <widget class="QLineEdit" name="fileOutputCustomNameOverwriteLineEditOld">
                 <property name="placeholderText">
                  <string>custom file name (must include extension yourself)</string>
                 </property>

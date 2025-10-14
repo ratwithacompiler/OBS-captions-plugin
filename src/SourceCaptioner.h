@@ -161,7 +161,7 @@ struct FileOutputSettings {
     }
 
     bool isValid() const {
-        return !output_folder.empty() && line_count && line_length && !filename_type.empty();
+        return !output_folder.empty() && line_count && line_length;
     }
 
     bool isValidEnabled() const {
@@ -521,6 +521,7 @@ Q_OBJECT
     OutputWriter<TranscriptOutputSettings> transcript_streaming_output;
     OutputWriter<TranscriptOutputSettings> transcript_recording_output;
     OutputWriter<TranscriptOutputSettings> transcript_virtualcam_output;
+    OutputWriter<FileOutputSettings> fileoutput_captions_output;
 
     std::tuple<string, string> last_text_source_set;
 

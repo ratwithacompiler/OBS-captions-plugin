@@ -247,7 +247,7 @@ string time_duration_stream(int milliseconds) {
 
 void fs_write_string(std::fstream &fs, const string &str) {
     fs << str;
-    cerr << "writing:: " << str;
+    // cerr << "writing:: " << str;
 }
 
 struct SrtState {
@@ -752,7 +752,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 #endif
 
         if (fs.fail()) {
-            error_log("transcript_writer_loop %s error, couldn't open file", strerror(errno));
+            error_log("transcript_writer_loop %s error, couldn't open file: %s", to_what.c_str(), strerror(errno));
             return;
         }
 
@@ -788,5 +788,74 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     info_log("transcript_writer_loop %s done", to_what.c_str());
 }
 
+
+void fileoutput_writer_loop(shared_ptr<CaptionOutputControl<FileOutputSettings>> control, const FileOutputSettings output_settings) {
+    info_log("fileoutput_writer_loop starting");
+
+    QFileInfo output_directory(QString::fromStdString(control->arg.output_folder));
+    if (!output_directory.exists()) {
+        error_log("fileoutput_writer_loop error, output dir not found: %s", control->arg.output_folder.c_str());
+        return;
+    }
+    if (!output_directory.isDir()) {
+        error_log("fileoutput_writer_loop error, output dir not a directory: %s", control->arg.output_folder.c_str());
+        return;
+    }
+
+    auto started_at_sys = std::chrono::system_clock::now();
+
+    QString transcript_file;
+    try {
+        string filename = control->arg.filename_custom;
+        if (filename.empty())
+            filename = "captions.txt";
+        transcript_file = QDir(output_directory.absoluteFilePath()).absoluteFilePath(QString::fromStdString(filename));
+        info_log("using caption fileoutput file: '%s'", transcript_file.toStdString().c_str());
+    }
+    catch (string &err) {
+        error_log("fileoutput_writer_loop find_transcript_filename error: %s", err.c_str());
+        return;
+    }
+    catch (...) {
+        error_log("fileoutput_writer_loop, couldn't get an output filepath");
+        return;
+    }
+
+    CaptionOutput caption_output;
+    while (!control->stop) {
+        control->caption_queue.wait_dequeue(caption_output);
+
+        if (control->stop)
+            break;
+
+        if (!caption_output.output_result)
+            continue;
+
+        try {
+            std::fstream fs;
+#if _WIN32
+            fs.open(transcript_file.toStdWString(), std::fstream::out | std::ios::binary | std::fstream::trunc);
+#else
+            fs.open(transcript_file.toStdString(),
+                    std::fstream::out | std::ios::binary | std::fstream::trunc);
+#endif
+
+            if (fs.fail()) {
+                error_log("fileoutput_writer_loop open error, couldn't open file: %s", strerror(errno));
+            }
+            else {
+                fs_write_string(fs, caption_output.output_result->output_line);
+            }
+            fs.close();
+        } catch (std::exception &ex) {
+            error_log("fileoutput_writer_loop open error %s", ex.what());
+        } catch (...) {
+            error_log("fileoutput_writer_loop open error");
+        }
+    }
+
+    info_log("fileoutput_writer_loop done");
+
+}
 
 #endif //OBS_GOOGLE_CAPTION_PLUGIN_CAPTION_TRANSCRIPT_WRITER_H
