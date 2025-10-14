@@ -205,6 +205,10 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_transcript_file_exists(*streamingTranscriptCustomNameExistsCombobox);
     setup_combobox_transcript_file_exists(*virtualcamTranscriptCustomNameExistsCombobox);
 
+    setup_combobox_capitalization(*fileOutputCapitalizationComboBox);
+    setup_combobox_transcript_file_exists(*fileOutputCustomNameExistsCombobox);
+    setup_combobox_fileoutput_filename(*fileOutputFilenameComboBox);
+
     QObject::connect(this->cancelPushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::hide);
     QObject::connect(this->savePushButton, &QPushButton::clicked, this, &CaptionSettingsWidget::accept_current_settings);
 
@@ -225,6 +229,9 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 
     QObject::connect(virtualcamTranscriptFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::virtualcam_name_index_change);
+
+    QObject::connect(fileOutputFilenameComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                     this, &CaptionSettingsWidget::fileoutput_name_index_change);
 
     QObject::connect(sourcesComboBox, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
                      this, &CaptionSettingsWidget::sources_combo_index_change);
@@ -415,6 +422,11 @@ void CaptionSettingsWidget::virtualcam_name_index_change(int new_index) {
     virtualcamTranscriptCustomNameOverwriteLineEdit->setVisible(isCustom);
 }
 
+void CaptionSettingsWidget::fileoutput_name_index_change(int new_index) {
+    bool isCustom = this->fileOutputFilenameComboBox->currentData().toString() == "custom";
+    fileOutputCustomNameOverwriteLineEdit->setVisible(isCustom);
+}
+
 
 void CaptionSettingsWidget::accept_current_settings() {
     SourceCaptionerSettings &source_settings = current_settings.source_cap_settings;
@@ -483,6 +495,17 @@ void CaptionSettingsWidget::accept_current_settings() {
     transcript_settings.virtualcam_filename_type = virtualcamTranscriptFilenameComboBox->currentData().toString().toStdString();
     transcript_settings.virtualcam_filename_custom = virtualcamTranscriptCustomNameOverwriteLineEdit->text().toStdString();
     transcript_settings.virtualcam_filename_exists = virtualcamTranscriptCustomNameExistsCombobox->currentData().toString().toStdString();
+
+    auto &file_output_settings = source_settings.file_output_settings;
+    file_output_settings.enabled = fileOutputEnabledCheckBox->isChecked();
+    file_output_settings.line_length = fileOutputLineLengthSpinBox->value();
+    file_output_settings.line_count = fileOutputLineCountSpinBox->value();
+    file_output_settings.insert_punctuation = fileOutputPunctuationCheckBox->isChecked();
+    file_output_settings.capitalization = (CapitalizationType) fileOutputCapitalizationComboBox->currentData().toInt();
+    file_output_settings.output_folder = fileOutputFolderPathLineEdit->text().toStdString();
+    file_output_settings.filename_type = fileOutputFilenameComboBox->currentData().toString().toStdString();
+    file_output_settings.filename_custom = fileOutputCustomNameOverwriteLineEdit->text().toStdString();
+    file_output_settings.filename_exists = fileOutputCustomNameExistsCombobox->currentData().toString().toStdString();
 
     apply_ui_scene_collection_settings();
 
@@ -570,9 +593,23 @@ void CaptionSettingsWidget::updateUi() {
     virtualcamTranscriptCustomNameOverwriteLineEdit->setText(
             QString::fromStdString(source_settings.transcript_settings.virtualcam_filename_custom));
 
+    fileOutputEnabledCheckBox->setChecked(source_settings.file_output_settings.enabled);
+    fileOutputLineLengthSpinBox->setValue(source_settings.file_output_settings.line_length);
+    fileOutputLineCountSpinBox->setValue(source_settings.file_output_settings.line_count);
+    fileOutputPunctuationCheckBox->setChecked(source_settings.file_output_settings.insert_punctuation);
+    combobox_set_data_int(*fileOutputCapitalizationComboBox, source_settings.file_output_settings.capitalization, 0);
+
+    fileOutputFolderPathLineEdit->setText(QString::fromStdString(source_settings.file_output_settings.output_folder));
+    combobox_set_data_str(*fileOutputFilenameComboBox, source_settings.file_output_settings.filename_type.c_str(), 0);
+    combobox_set_data_str(*fileOutputCustomNameExistsCombobox,
+                          source_settings.file_output_settings.filename_exists.c_str(), 0);
+    fileOutputCustomNameOverwriteLineEdit->setText(
+            QString::fromStdString(source_settings.file_output_settings.filename_custom));
+
     recording_name_index_change(0);
     streaming_name_index_change(0);
     virtualcam_name_index_change(0);
+    fileoutput_name_index_change(0);
 
     set_show_key(false);
 }
@@ -614,6 +651,17 @@ void CaptionSettingsWidget::on_transcriptFolderPickerPushButton_clicked() {
 
     if (dir_path.length()) {
         transcriptFolderPathLineEdit->setText(dir_path);
+    }
+}
+
+void CaptionSettingsWidget::on_fileOutputFolderPickerPushButton_clicked() {
+    QString dir_path = QFileDialog::getExistingDirectory(this,
+                                                         tr("Open Directory"),
+                                                         fileOutputFolderPathLineEdit->text(),
+                                                         QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+
+    if (dir_path.length()) {
+        fileOutputFolderPathLineEdit->setText(dir_path);
     }
 }
 

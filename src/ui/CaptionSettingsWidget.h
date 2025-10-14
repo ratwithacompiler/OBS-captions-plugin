@@ -51,6 +51,8 @@ private slots:
 
     void virtualcam_name_index_change(int index);
 
+    void fileoutput_name_index_change(int index);
+
     void sources_combo_index_change(int index);
 
     void caption_when_index_change(int index);
@@ -64,6 +66,8 @@ private slots:
     void on_replacementWordsAddWordPushButton_clicked();
 
     void on_transcriptFolderPickerPushButton_clicked();
+
+    void on_fileOutputFolderPickerPushButton_clicked();
 
     void on_saveTranscriptsCheckBox_stateChanged(int new_state);
 

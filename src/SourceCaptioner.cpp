@@ -118,6 +118,8 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings, 
 
         settings = new_settings;
         selected_scene_collection_name = scene_collection_name;
+
+        // stop fileoutput if any
     }
 
     emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
@@ -166,6 +168,9 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
             else {
                 stop_caption_stream(false);
                 started_ok = false;
+            }
+            if (started_ok) {
+                // start fileoutput if any
             }
         }
     }

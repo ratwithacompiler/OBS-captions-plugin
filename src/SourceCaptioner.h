@@ -134,6 +134,57 @@ struct SceneCollectionSettings {
     }
 };
 
+struct FileOutputSettings {
+    bool enabled;
+
+    uint line_length;
+    uint line_count;
+    bool insert_punctuation;
+    CapitalizationType capitalization;
+
+    string output_folder;
+    string filename_type;
+    string filename_custom;
+    string filename_exists;
+
+    void print(const char *line_prefix = "") const{
+        printf("%sFileOutputSettings\n", line_prefix);
+        printf("%s  enabled: %d\n", line_prefix, enabled);
+        printf("%s  line_length: %d\n", line_prefix, line_length);
+        printf("%s  line_count: %d\n", line_prefix, line_count);
+        printf("%s  insert_punctuation: %d\n", line_prefix, insert_punctuation);
+        printf("%s  capitalization: %d\n", line_prefix, capitalization);
+        printf("%s  output_folder: %s\n", line_prefix, output_folder.c_str());
+        printf("%s  filename_type: %s\n", line_prefix, filename_type.c_str());
+        printf("%s  filename_custom: %s\n", line_prefix, filename_custom.c_str());
+        printf("%s  filename_exists: %s\n", line_prefix, filename_exists.c_str());
+    }
+
+    bool isValid() const {
+        return !output_folder.empty() && line_count && line_length && !filename_type.empty();
+    }
+
+    bool isValidEnabled() const {
+        return enabled && isValid();
+    }
+
+    friend bool operator==(const FileOutputSettings &lhs, const FileOutputSettings &rhs) {
+        return lhs.enabled == rhs.enabled
+               && lhs.line_length == rhs.line_length
+               && lhs.line_count == rhs.line_count
+               && lhs.insert_punctuation == rhs.insert_punctuation
+               && lhs.capitalization == rhs.capitalization
+               && lhs.output_folder == rhs.output_folder
+               && lhs.filename_type == rhs.filename_type
+               && lhs.filename_custom == rhs.filename_custom
+               && lhs.filename_exists == rhs.filename_exists;
+    }
+
+    friend bool operator!=(const FileOutputSettings &lhs, const FileOutputSettings &rhs) {
+        return !(lhs == rhs);
+    }
+};
+
 struct TranscriptOutputSettings {
     bool enabled;
     string output_path;
@@ -261,6 +312,7 @@ struct SourceCaptionerSettings {
     bool recording_output_enabled;
 
     TranscriptOutputSettings transcript_settings;
+    FileOutputSettings file_output_settings;
 
 //    std::map<string, SceneCollectionSettings> scene_collection_settings_map;
     SceneCollectionSettings scene_collection_settings;
@@ -275,6 +327,7 @@ struct SourceCaptionerSettings {
             bool recording_output_enabled,
 
             const TranscriptOutputSettings &transcript_settings,
+            const FileOutputSettings &file_output_settings,
             const SceneCollectionSettings &scene_collection_settings,
             const CaptionFormatSettings &format_settings,
             const ContinuousCaptionStreamSettings &stream_settings
@@ -283,6 +336,7 @@ struct SourceCaptionerSettings {
             recording_output_enabled(recording_output_enabled),
 
             transcript_settings(transcript_settings),
+            file_output_settings(file_output_settings),
             scene_collection_settings(scene_collection_settings),
             format_settings(format_settings),
             stream_settings(stream_settings) {}
@@ -292,6 +346,7 @@ struct SourceCaptionerSettings {
                recording_output_enabled == rhs.recording_output_enabled &&
 
                transcript_settings == rhs.transcript_settings &&
+               file_output_settings == rhs.file_output_settings &&
                scene_collection_settings == rhs.scene_collection_settings &&
                format_settings == rhs.format_settings &&
                stream_settings == rhs.stream_settings;
@@ -327,6 +382,7 @@ struct SourceCaptionerSettings {
         stream_settings.print((string(line_prefix) + "  ").c_str());
         format_settings.print((string(line_prefix) + "  ").c_str());
         transcript_settings.print((string(line_prefix) + "  ").c_str());
+        file_output_settings.print((string(line_prefix) + "  ").c_str());
     }
 
     const SceneCollectionSettings &get_scene_collection_settings(const string &scene_collection_name) const {
