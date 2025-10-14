@@ -91,8 +91,7 @@ UseTranscriptSettings build_use_settings(const TranscriptOutputSettings &transcr
     };
 }
 
-QFileInfo find_transcript_filename_custom(const TranscriptOutputSettings &transcript_settings,
-                                          const UseTranscriptSettings &rel,
+QFileInfo find_transcript_filename_custom(const UseTranscriptSettings &rel,
                                           const QFileInfo &output_directory,
                                           const std::chrono::system_clock::time_point &started_at,
                                           const int tries,
@@ -126,8 +125,7 @@ QFileInfo find_transcript_filename_custom(const TranscriptOutputSettings &transc
     throw string("custom transcript file exists already, invalid exists option: " + rel.filename_custom_exists);
 }
 
-QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &transcript_settings,
-                                            const UseTranscriptSettings &rel,
+QFileInfo find_transcript_filename_datetime(const UseTranscriptSettings &rel,
                                             const QFileInfo &output_directory,
                                             const std::chrono::system_clock::time_point &started_at,
                                             const int tries,
@@ -144,8 +142,7 @@ QFileInfo find_transcript_filename_datetime(const TranscriptOutputSettings &tran
     return find_unused_filename(output_directory, QString::fromStdString(basename), QString::fromStdString(extension), tries);
 }
 
-QFileInfo find_transcript_filename_recording(const TranscriptOutputSettings &transcript_settings,
-                                             const QFileInfo &output_directory,
+QFileInfo find_transcript_filename_recording(const QFileInfo &output_directory,
                                              const std::chrono::system_clock::time_point &started_at,
                                              const int tries,
                                              const string &extension,
@@ -178,7 +175,7 @@ QFileInfo find_transcript_filename_recording(const TranscriptOutputSettings &tra
     return find_unused_filename(output_directory, basename, QString::fromStdString(extension), tries);
 }
 
-QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_settings,
+QFileInfo find_transcript_filename(string format,
                                    const UseTranscriptSettings &rel,
                                    const QFileInfo &output_directory,
                                    const string &target_name,
@@ -187,12 +184,12 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
                                    bool &out_overwrite) {
     out_overwrite = false;
     if (rel.name_type == "custom") {
-        return find_transcript_filename_custom(transcript_settings, rel, output_directory, started_at, tries, out_overwrite);
+        return find_transcript_filename_custom(rel, output_directory, started_at, tries, out_overwrite);
     }
 
-    const string extension = transcript_format_extension(transcript_settings.format, "");
+    const string extension = transcript_format_extension(format, "");
     if (rel.name_type == "datetime") {
-        return find_transcript_filename_datetime(transcript_settings, rel, output_directory, started_at, tries, extension);
+        return find_transcript_filename_datetime(rel, output_directory, started_at, tries, extension);
     }
 
     if (rel.name_type == "recording" && target_name == "recording") {
@@ -206,7 +203,7 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
             }
             try {
-                return find_transcript_filename_recording(transcript_settings, output_directory, started_at, tries, extension, true);
+                return find_transcript_filename_recording(output_directory, started_at, tries, extension, true);
             }
             catch (string &err) {
                 error_log("transcript_writer_loop find_transcript_filename recording error, try %d: %s", i, err.c_str());
@@ -218,7 +215,7 @@ QFileInfo find_transcript_filename(const TranscriptOutputSettings &transcript_se
 
         if (fallback_datetime) {
             info_log("transcript_writer_loop find_transcript_filename recording failed, falling back to datetime name");
-            return find_transcript_filename_datetime(transcript_settings, rel, output_directory, started_at, tries, extension);
+            return find_transcript_filename_datetime(rel, output_directory, started_at, tries, extension);
         }
         throw string("couldn't get recording basename after multiple tries");
     }
@@ -730,7 +727,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     QString transcript_file;
     bool overwrite_file = false;
     try {
-        transcript_file = find_transcript_filename(transcript_settings, use_settings, output_directory, target_name, started_at_sys, 100,
+        transcript_file = find_transcript_filename(transcript_settings.format, use_settings, output_directory, target_name, started_at_sys, 100,
                                                    overwrite_file)
                 .absoluteFilePath();
         info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
