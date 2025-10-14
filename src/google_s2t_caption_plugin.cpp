@@ -101,10 +101,10 @@ static void obs_event(enum obs_frontend_event event, void *) {
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
         printf("studio mode!!!!!!!!!!!!!!!!!!!!\n");
     }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
-        printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING\n");
+        // printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING\n");
         obs_frontent_scene_collection_changing();
     }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
-        printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP\n");
+        // printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP\n");
     }
 }
 
