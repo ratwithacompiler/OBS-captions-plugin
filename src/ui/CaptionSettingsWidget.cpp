@@ -459,6 +459,7 @@ void CaptionSettingsWidget::accept_current_settings() {
 
     auto &transcript_settings = source_settings.transcript_settings;
     transcript_settings.enabled = saveTranscriptsCheckBox->isChecked();
+    transcript_settings.write_realtime =  realtimeWriteCheckBox->isChecked();
     transcript_settings.streaming_transcripts_enabled =  transcriptsEnabledStreamCheckBox->isChecked();
     transcript_settings.recording_transcripts_enabled =  transcriptsEnabledRecordingCheckBox->isChecked();
     transcript_settings.virtualcam_transcripts_enabled =  transcriptsEnabledVirtualcamCheckBox->isChecked();
@@ -537,6 +538,7 @@ void CaptionSettingsWidget::updateUi() {
     saveTranscriptsCheckBox->setChecked(source_settings.transcript_settings.enabled);
     on_saveTranscriptsCheckBox_stateChanged(0);
 
+    this->realtimeWriteCheckBox->setChecked(source_settings.transcript_settings.write_realtime);
     this->transcriptsEnabledStreamCheckBox->setChecked(source_settings.transcript_settings.streaming_transcripts_enabled);
     this->transcriptsEnabledRecordingCheckBox->setChecked(source_settings.transcript_settings.recording_transcripts_enabled);
     this->transcriptsEnabledVirtualcamCheckBox->setChecked(source_settings.transcript_settings.virtualcam_transcripts_enabled);

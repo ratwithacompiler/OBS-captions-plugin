@@ -157,6 +157,7 @@ struct TranscriptOutputSettings {
     bool srt_split_single_sentences;
     CapitalizationType srt_capitalization;
 
+    bool write_realtime;
     bool streaming_transcripts_enabled;
     bool recording_transcripts_enabled;
     bool virtualcam_transcripts_enabled;
@@ -171,6 +172,7 @@ struct TranscriptOutputSettings {
                              uint srtTargetDurationSecs, uint srtTargetLineLength,
                              bool srtAddPunctuation, bool srtSplitSingleSentences,
                              CapitalizationType srtCapitalization,
+                             bool write_realtime,
                              bool streamingTranscriptsEnabled, bool recordingTranscriptsEnabled,
                              bool virtualcamTranscriptsEnabled)
             : enabled(enabled), output_path(outputPath), format(format),
@@ -188,6 +190,7 @@ struct TranscriptOutputSettings {
               srt_add_punctuation(srtAddPunctuation),
               srt_split_single_sentences(srtSplitSingleSentences),
               srt_capitalization(srtCapitalization),
+              write_realtime(write_realtime),
               streaming_transcripts_enabled(streamingTranscriptsEnabled),
               recording_transcripts_enabled(recordingTranscriptsEnabled),
               virtualcam_transcripts_enabled(virtualcamTranscriptsEnabled) {}
@@ -211,6 +214,7 @@ struct TranscriptOutputSettings {
                srt_add_punctuation == rhs.srt_add_punctuation &&
                srt_split_single_sentences == rhs.srt_split_single_sentences &&
                srt_capitalization == rhs.srt_capitalization &&
+               write_realtime == rhs.write_realtime &&
                streaming_transcripts_enabled == rhs.streaming_transcripts_enabled &&
                recording_transcripts_enabled == rhs.recording_transcripts_enabled &&
                virtualcam_transcripts_enabled == rhs.virtualcam_transcripts_enabled;
@@ -245,6 +249,7 @@ struct TranscriptOutputSettings {
         printf("%s  srt_add_punctuation: %d\n", line_prefix, srt_add_punctuation);
         printf("%s  srt_split_single_sentences: %d\n", line_prefix, srt_split_single_sentences);
         printf("%s  srt_capitalization: %d\n", line_prefix, srt_capitalization);
+        printf("%s  write_realtime: %d\n", line_prefix, write_realtime);
         printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
         printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
         printf("%s  virtualcam_transcripts_enabled: %d\n", line_prefix, virtualcam_transcripts_enabled);

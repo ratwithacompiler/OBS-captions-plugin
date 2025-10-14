@@ -120,6 +120,7 @@ static TranscriptOutputSettings default_TranscriptOutputSettings() {
             true,
             false,
             CAPITALIZATION_NORMAL,
+            false,
             true,
             true,
             true,
@@ -297,6 +298,8 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
 
     obs_data_set_default_bool(load_data, "transcript_enabled", source_settings.transcript_settings.enabled);
+    obs_data_set_default_bool(load_data, "transcript_write_realtime",
+                              source_settings.transcript_settings.write_realtime);
     obs_data_set_default_bool(load_data, "transcript_for_stream_enabled",
                               source_settings.transcript_settings.streaming_transcripts_enabled);
     obs_data_set_default_bool(load_data, "transcript_for_recording_enabled",
@@ -379,6 +382,8 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.scene_collection_settings = get_SceneCollectionSettings_from_data(load_data);
 
     source_settings.transcript_settings.enabled = obs_data_get_bool(load_data, "transcript_enabled");
+    source_settings.transcript_settings.write_realtime =
+            obs_data_get_bool(load_data, "transcript_write_realtime");
     source_settings.transcript_settings.streaming_transcripts_enabled =
             obs_data_get_bool(load_data, "transcript_for_stream_enabled");
     source_settings.transcript_settings.recording_transcripts_enabled =
@@ -440,6 +445,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     set_SceneCollectionSettings_on_data(save_data, source_settings.scene_collection_settings);
 
     obs_data_set_bool(save_data, "transcript_enabled", settings.source_cap_settings.transcript_settings.enabled);
+    obs_data_set_bool(save_data, "transcript_write_realtime", settings.source_cap_settings.transcript_settings.write_realtime);
     obs_data_set_bool(save_data, "transcript_for_stream_enabled",
                       settings.source_cap_settings.transcript_settings.streaming_transcripts_enabled);
     obs_data_set_bool(save_data, "transcript_for_recording_enabled",

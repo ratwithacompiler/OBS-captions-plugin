@@ -260,6 +260,7 @@ struct SrtState {
     uint line_length = 0;
     bool add_punctuation = false;
     bool split_sentence = false;
+    bool write_realtime = false;
     CapitalizationType capitalization = CAPITALIZATION_NORMAL;
 
     // only use caption results that were created up to this many milliseconds before the transcript was created
@@ -368,6 +369,7 @@ bool write_transcript_caption_results_srt(SrtState &settings, std::fstream &fs, 
     // batch up multiple results into a single entry if the duration of all of them combined is less than settings.max_entry_duration
 
     const auto now = std::chrono::steady_clock::now();
+    int wrote_cnt = 0;
     while (!results.empty() && !fs.fail()) {
         if (!write_all) {
             auto since_first = now - std::get<0>(results[0]);
@@ -404,6 +406,10 @@ bool write_transcript_caption_results_srt(SrtState &settings, std::fstream &fs, 
             error_log("write_transcript_caption_results_srt: failed writing entry %d", settings.sequence_number);
             return false;
         }
+        wrote_cnt++;
+    }
+    if (settings.write_realtime && wrote_cnt) {
+        fs.flush();
     }
     return true;
 }
@@ -626,6 +632,9 @@ void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::ste
 
         if (caption_output.output_result->caption_result.final) {
             write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result, add_timestamps);
+            if (settings.write_realtime) {
+                fs.flush();
+            }
             if (fs.fail()) {
                 error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
                 return;
@@ -637,6 +646,9 @@ void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::ste
 
     if (held_nonfinal_caption_result) {
         write_transcript_caption_simple(fs, prefix, started_at_steady, *held_nonfinal_caption_result, add_timestamps);
+        if (settings.write_realtime) {
+            fs.flush();
+        }
         if (fs.fail()) {
             error_log("transcript_writer_loop_txt error, write failed: '%s'", strerror(errno));
             return;
@@ -645,7 +657,7 @@ void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::ste
     held_nonfinal_caption_result = nullptr;
 }
 
-void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady,
+void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady, bool write_realtime,
                     shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
     CaptionOutput caption_output;
     while (!control->stop) {
@@ -670,6 +682,9 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
             prefix = "    ";
 
         write_transcript_caption_simple(fs, prefix, started_at_steady, *caption_output.output_result, true);
+        if (write_realtime) {
+            fs.flush();
+        }
         if (fs.fail()) {
             error_log("transcript_writer_loop_raw error, write failed: '%s'", strerror(errno));
             return;
@@ -748,12 +763,12 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
         SrtState settings = SrtState{started_at_steady, std::chrono::seconds(max_duration_secs), 1,
                                      transcript_settings.srt_target_line_length,
                                      transcript_settings.srt_add_punctuation, transcript_settings.srt_split_single_sentences,
-
+                                     transcript_settings.write_realtime,
                                      transcript_settings.srt_capitalization, 1250};
 
         info_log("transcript_writer_loop starting write_loop: %s", format.c_str());
         if (format == "raw")
-            write_loop_raw(fs, started_at_steady, control);
+            write_loop_raw(fs, started_at_steady, transcript_settings.write_realtime, control);
         else if (format == "txt")
             write_loop_txt(settings, fs, started_at_steady, control, true, true);
         else if (format == "txt_plain")
