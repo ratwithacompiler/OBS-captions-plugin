@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <CaptionStream.h>
+#include "CaptionEngine.h"
 
 struct ContinuousCaptionStreamSettings {
     uint connect_second_after_secs;
@@ -64,8 +65,6 @@ struct ContinuousCaptionStreamSettings {
 
 };
 
-typedef std::function<void(const CaptionResult &caption_result, bool interrupted)> continuous_caption_text_callback;
-
 /*
  Provides a continuous stream of caption messages for audio data, abstracting issues like reconnects after network errors and
  API limitation workarounds (Google Speech API v1 currently has a 5 minute maximum limit for a single streaming session).
@@ -73,7 +72,7 @@ typedef std::function<void(const CaptionResult &caption_result, bool interrupted
  Minimizes impact of these regular disconnects by starting a second connection shortly before the first once
  is about to hit the limit and feeds both with the same audio for a bit before switching to the new one to avoid captioning gap.
  */
-class ContinuousCaptions {
+class ContinuousCaptions final : public CaptionEngine {
     std::shared_ptr<CaptionStream> current_stream;
     std::shared_ptr<CaptionStream> prepared_stream;
 
@@ -92,16 +91,14 @@ class ContinuousCaptions {
     void cycle_streams();
 
 public:
-    ThreadsaferCallback<continuous_caption_text_callback> on_caption_cb_handle;
-
     ContinuousCaptions(
             ContinuousCaptionStreamSettings settings
     );
 
-    bool queue_audio_data(const char *data, const uint data_size);
+    bool queue_audio_data(const char *data, unsigned int data_size) override;
 
 
-    ~ContinuousCaptions();
+    ~ContinuousCaptions() override;
 };
 
 

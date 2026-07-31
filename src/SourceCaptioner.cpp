@@ -17,8 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 
+#include <obs-module.h>
+#include <util/util.hpp>
+
 
 #include "SourceCaptioner.h"
+#include "CaptionEngineFactory.h"
 #include "log.c"
 #include "caption_output_writer.h"
 #include "caption_transcript_writer.h"
@@ -73,7 +77,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
         source_audio_capture_session = nullptr;
         output_audio_capture_session = nullptr;
         caption_result_handler = nullptr;
-        continuous_captions = nullptr;
+        caption_engine = nullptr;
         audio_capture_id++;
         return;
     }
@@ -86,7 +90,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
     source_audio_capture_session = nullptr;
     output_audio_capture_session = nullptr;
     caption_result_handler = nullptr;
-    continuous_captions = nullptr;
+    caption_engine = nullptr;
     audio_capture_id++;
 
     settings_change_mutex.unlock();
@@ -213,7 +217,6 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
 bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
 //    debug_log("start_caption_stream");
 
-    bool caption_settings_equal;
     {
         const SceneCollectionSettings &scene_col_settings = this->settings.get_scene_collection_settings(selected_scene_collection_name);
         const CaptionSourceSettings &selected_caption_source_settings = scene_col_settings.caption_source_settings;
@@ -251,34 +254,51 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             }
         }
 
-        debug_log("caption_settings_equal: %d, %d", caption_settings_equal, continuous_captions != nullptr);
-        if (!continuous_captions || restart_stream) {
+        debug_log("caption engine running: %d, restart requested: %d", caption_engine != nullptr, restart_stream);
+        if (!caption_engine || restart_stream) {
             try {
 
-#if ENABLE_CUSTOM_API_KEY
                 ContinuousCaptionStreamSettings settings_copy = settings.stream_settings;
+
+#if ENABLE_CUSTOM_API_KEY
                 debug_log("using ENABLE_CUSTOM_API_KEY %lu", settings_copy.stream_settings.api_key.length());
 #else
 #ifdef GOOGLE_API_KEY_STR
-                ContinuousCaptionStreamSettings settings_copy = settings.stream_settings;
                 settings_copy.stream_settings.api_key = GOOGLE_API_KEY_STR;
                 debug_log("using GOOGLE_API_KEY_STR %lu", settings_copy.stream_settings.api_key.length());
 #endif
 #endif
 
+                LocalCaptionEngineSettings local_settings;
+                BPtr<char> local_model_directory = obs_module_file(
+                        "models/sherpa-onnx-streaming-t-one-russian-2025-09-08");
+                if (local_model_directory)
+                    local_settings.model_directory = local_model_directory.Get();
+
+                CaptionEngineCreationResult engine_result = CaptionEngineFactory::create(
+                        settings.caption_engine_type,
+                        settings_copy,
+                        local_settings);
+                if (!engine_result.succeeded()) {
+                    warn_log("couldn't create caption engine (%d): %s",
+                             static_cast<int>(engine_result.status),
+                             engine_result.message.c_str());
+                    return false;
+                }
+
                 auto caption_cb = std::bind(&SourceCaptioner::on_caption_text_callback, this, std::placeholders::_1, std::placeholders::_2);
-                continuous_captions = std::make_unique<ContinuousCaptions>(settings_copy);
-                continuous_captions->on_caption_cb_handle.set(caption_cb, true);
+                caption_engine = std::move(engine_result.engine);
+                caption_engine->on_caption_cb_handle.set(caption_cb, true);
             }
             catch (...) {
-                warn_log("couldn't create ContinuousCaptions");
+                warn_log("couldn't initialize caption engine callback");
                 return false;
             }
         }
         caption_result_handler = std::make_unique<CaptionResultHandler>(settings.format_settings);
 
         try {
-            resample_info resample_to = {16000, AUDIO_FORMAT_16BIT, SPEAKERS_MONO};
+            resample_info resample_to = {caption_engine->preferred_sample_rate(), AUDIO_FORMAT_16BIT, SPEAKERS_MONO};
             audio_chunk_data_cb audio_cb = std::bind(&SourceCaptioner::on_audio_data_callback, this,
                                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
@@ -334,7 +354,7 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
     bool is_old_audio_session = cb_audio_capture_id != audio_capture_id;
     SourceCaptionerSettings cur_settings = settings;
     string cur_scene_collection_name = selected_scene_collection_name;
-    bool active = continuous_captions != nullptr;
+    bool active = caption_engine != nullptr;
 
     settings_change_mutex.unlock();
 
@@ -357,9 +377,9 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
 
 void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, const size_t size) {
 //    info_log("audio data");
-    if (continuous_captions) {
-        // safe without locking as continuous_captions only ever gets updated when there's no AudioCaptureSession running
-        continuous_captions->queue_audio_data((char *) data, size);
+    if (caption_engine) {
+        // Safe without locking: the engine only changes while no audio capture session is running.
+        caption_engine->queue_audio_data((char *) data, static_cast<unsigned int>(size));
     }
     audio_chunk_count++;
 

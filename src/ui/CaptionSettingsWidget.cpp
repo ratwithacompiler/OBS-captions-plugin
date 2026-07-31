@@ -182,9 +182,11 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
 #if ENABLE_CUSTOM_API_KEY
     this->apiKeyLabel->show();
     this->apiKeyWidget->show();
+    this->localModelStatusLabel->hide();
 #else
     this->apiKeyLabel->hide();
     this->apiKeyWidget->hide();
+    this->localModelStatusLabel->show();
 #endif
 
     captionWhenComboBox->addItem("Caption Source is heard on stream", "own_source");
@@ -196,6 +198,10 @@ CaptionSettingsWidget::CaptionSettingsWidget(const CaptionPluginSettings &latest
     setup_combobox_capitalization(*srtCapitalizationComboBox);
     setup_combobox_output_target(*outputTargetComboBox, true);
     setup_combobox_transcript_format(*transcriptFormatComboBox);
+
+    languageComboBox->setEnabled(false);
+    profanitFilterLabel->hide();
+    profanityFilterComboBox->hide();
 
     setup_combobox_recording_filename(*recordingTranscriptFilenameComboBox);
     setup_combobox_streaming_filename(*streamingTranscriptFilenameComboBox);

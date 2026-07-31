@@ -1,0 +1,39 @@
+{
+  "dependencies": {
+    "obs-studio": {
+      "version": "32.2.1",
+      "baseUrl": "https://github.com/obsproject/obs-studio/archive/refs/tags",
+      "label": "OBS sources",
+      "hashes": {
+        "windows-x64": "0cc1bd46a3d60c8f4317b38c27414fc0472e04609f4e67ad2142ed1598ef5462"
+      }
+    },
+    "prebuilt": {
+      "version": "2026-07-15",
+      "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+      "label": "Pre-built OBS dependencies",
+      "hashes": {
+        "windows-x64": "6f90e9598fa10cff5ad23cdcfae49b87868c07bf896b02cd464582b4ce2f2ba9"
+      }
+    },
+    "qt6": {
+      "version": "2026-07-15",
+      "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+      "label": "Pre-built Qt 6",
+      "hashes": {
+        "windows-x64": "7c7f985711d80467bdc1795b6592275a27d5b0e5a2c7a61db1f2c1d08d6a5579"
+      }
+    }
+  },
+  "platformConfig": {
+    "macos": {
+      "bundleId": "com.maseaaao.ai-caption-plugin"
+    }
+  },
+  "name": "ai-caption-plugin",
+  "displayName": "AI Caption Plugin",
+  "version": "0.35.0",
+  "author": "AI Caption Plugin contributors",
+  "website": "https://github.com/ratwithacompiler/OBS-captions-plugin",
+  "email": ""
+}

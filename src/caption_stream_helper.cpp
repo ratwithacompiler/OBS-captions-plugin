@@ -40,7 +40,7 @@ static CaptionStreamSettings default_CaptionStreamSettings() {
             180'000,
             50,
             download_start_delay_ms,
-            "en-US",
+            "ru-RU",
             0,
             ""
     };
@@ -148,6 +148,7 @@ static SourceCaptionerSettings default_SourceCaptionerSettings() {
             default_FileOutputSettings(),
             default_SceneCollectionSettings(),
             default_CaptionFormatSettings(),
+            CaptionEngineType::LocalSherpaTOne,
             default_ContinuousCaptionStreamSettings()
     );
 };
@@ -187,6 +188,13 @@ static void enforce_CaptionPluginSettings_values(CaptionPluginSettings &settings
     // ensure old strict/2 falls back to on/1 not off/0 default.
     if (source_settings.stream_settings.stream_settings.profanity_filter == 2)
         source_settings.stream_settings.stream_settings.profanity_filter = 1;
+
+    if (source_settings.caption_engine_type != CaptionEngineType::LocalSherpaTOne
+        && source_settings.caption_engine_type != CaptionEngineType::GoogleHttpLegacy)
+        source_settings.caption_engine_type = CaptionEngineType::LocalSherpaTOne;
+
+    if (source_settings.caption_engine_type == CaptionEngineType::LocalSherpaTOne)
+        source_settings.stream_settings.stream_settings.language = "ru-RU";
 
     enforce_FileOutputSettings_values(settings.source_cap_settings.file_output_settings);
 }
@@ -313,6 +321,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     obs_data_set_default_string(load_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
     obs_data_set_default_int(load_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
     obs_data_set_default_string(load_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
+    obs_data_set_default_int(load_data, "caption_engine", static_cast<int>(source_settings.caption_engine_type));
 
     obs_data_set_default_double(load_data, "caption_timeout_secs", source_settings.format_settings.caption_timeout_seconds);
     obs_data_set_default_bool(load_data, "caption_timeout_enabled", source_settings.format_settings.caption_timeout_enabled);
@@ -383,6 +392,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
 
     source_settings.stream_settings.stream_settings.language = obs_data_get_string(load_data, "source_language");
     source_settings.stream_settings.stream_settings.profanity_filter = (int) obs_data_get_int(load_data, "profanity_filter");
+    source_settings.caption_engine_type = static_cast<CaptionEngineType>(obs_data_get_int(load_data, "caption_engine"));
 #if ENABLE_CUSTOM_API_KEY
     source_settings.stream_settings.stream_settings.api_key = obs_data_get_string(load_data, "custom_api_key");
 #endif
@@ -474,6 +484,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
 
     obs_data_set_string(save_data, "source_language", source_settings.stream_settings.stream_settings.language.c_str());
     obs_data_set_int(save_data, "profanity_filter", source_settings.stream_settings.stream_settings.profanity_filter);
+    obs_data_set_int(save_data, "caption_engine", static_cast<int>(source_settings.caption_engine_type));
 #if ENABLE_CUSTOM_API_KEY
     obs_data_set_string(save_data, "custom_api_key", source_settings.stream_settings.stream_settings.api_key.c_str());
 #endif

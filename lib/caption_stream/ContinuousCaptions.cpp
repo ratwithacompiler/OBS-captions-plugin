@@ -30,7 +30,7 @@ ContinuousCaptions::ContinuousCaptions(
 }
 
 
-bool ContinuousCaptions::queue_audio_data(const char *data, const uint data_size) {
+bool ContinuousCaptions::queue_audio_data(const char *data, unsigned int data_size) {
     if (!data_size)
         return false;
 

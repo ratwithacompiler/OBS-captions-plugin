@@ -1,3 +1,17 @@
+## AI Caption Plugin (modernization branch)
+
+This local branch modernizes the original Closed Captioning OBS Plugin for OBS 32 and now ships a local Russian speech-recognition engine. It does not require a Google API key or use the GPU. See [DEVELOPMENT.md](DEVELOPMENT.md) for the verified Windows build and [MODERNIZATION_PLAN.md](MODERNIZATION_PLAN.md) for the roadmap.
+
+## Local Windows installation (v0.35.0)
+
+1. Close OBS completely.
+2. Extract `AI-Caption-Plugin-0.35.0-windows-x64.zip`.
+3. Run `ai-caption-plugin\Install-AICaptionPlugin.ps1` from the extracted folder.
+
+The installer requests permission only to update this plugin under `%ProgramData%\obs-studio\plugins\`, downloads the Russian model on first install (about 128 MB), validates its SHA-256, and retains the verified model when the plugin is updated. The model runs with one CPU inference thread at below-normal Windows thread priority; it does not consume GPU or VRAM.
+
+The legacy Google backend remains in the source tree for compatibility work, but the packaged build defaults to local recognition and does not display a Google API-key field.
+
 ## Closed Captioning OBS Plugin
 
 Provides closed captioning via Google Cloud Speech Recognition API as a standalone OBS plugin, no other tools required. 

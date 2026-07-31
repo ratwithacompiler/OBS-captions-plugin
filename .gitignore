@@ -1,0 +1,4 @@
+.deps/
+build_x64/
+release/
+CMakeUserPresets.json

@@ -1,0 +1,7 @@
+{
+  "name": "Russian T-One streaming CTC",
+  "modelDirectory": "sherpa-onnx-streaming-t-one-russian-2025-09-08",
+  "archiveFile": "sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2",
+  "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-t-one-russian-2025-09-08.tar.bz2",
+  "sha256": "b9c907450e99a6e5049e279bf18368a17db0bdc5e63b7fa978943138debbe3ae"
+}

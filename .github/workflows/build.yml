@@ -1,0 +1,61 @@
+name: Build OBS caption plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS HTTP
+            runner: macos-15-intel
+            build_command: bash osx_install_script.sh
+            cache_script: CI/osx_build_obs.sh
+            artifact_name: Closed_Captions_Plugin__Release_MacOS_HTTP
+          - name: Windows HTTP
+            runner: windows-2022
+            build_command: python win_install_script.py
+            cache_script: CI/win_build_obs.py
+            artifact_name: Closed_Captions_Plugin__Release_Windows_HTTP
+          - name: Linux HTTP
+            runner: ubuntu-22.04
+            build_command: bash linux_install_script.sh
+            cache_script: CI/linux_build_obs.sh
+            artifact_name: Closed_Captions_Plugin__Release_Linux64_HTTP
+
+    defaults:
+      run:
+        working-directory: CI/http
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Restore OBS build cache
+        uses: actions/cache@v4
+        with:
+          key: obs-studio-30.0.0-${{ runner.os }}-${{ hashFiles(matrix.cache_script) }}
+          path: CI/http/CI_build/build_deps/obs-studio
+
+      - name: Set up and build
+        run: ${{ matrix.build_command }}
+        env:
+          CLEAN_OBS: 1
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
+      - name: Upload release archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: CI/http/CI_build/release/
+          if-no-files-found: error
+          retention-days: 30

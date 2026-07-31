@@ -124,10 +124,10 @@ void setup_dock() {
     if (caption_dock || !plugin_manager || !main_caption_widget)
         return;
 
-    caption_dock = new CaptionDock("Captions", *plugin_manager, *main_caption_widget);
+    caption_dock = new CaptionDock("AI Captions", *plugin_manager, *main_caption_widget);
     caption_dock->setObjectName("cloud_caption_caption_dock");
 
-    obs_frontend_add_dock_by_id("cloud_closed_captions_dock_main", "Captions", caption_dock);
+    obs_frontend_add_dock_by_id("ai_caption_plugin_dock_main", "AI Captions", caption_dock);
 }
 
 void setup_UI() {
@@ -135,7 +135,7 @@ void setup_UI() {
         return;
 
     debug_log("setup_UI()");
-    QAction *action = (QAction *) obs_frontend_add_tools_menu_qaction("Cloud Closed Captions");
+    QAction *action = (QAction *) obs_frontend_add_tools_menu_qaction("AI Captions");
     action->connect(action, &QAction::triggered, &closed_caption_tool_menu_clicked);
 
     setup_dock();
@@ -297,11 +297,11 @@ void obs_module_unload(void) {
 
 MODULE_EXPORT const char *obs_module_description(void)
 {
-    return "Provides closed captioning via Google Cloud Speech Recognition API";
+    return "Provides OBS captions through pluggable speech recognition engines";
 }
 
 MODULE_EXPORT const char *obs_module_name(void)
 {
-    return "Cloud Closed Captions";
+    return "AI Caption Plugin";
 }
 

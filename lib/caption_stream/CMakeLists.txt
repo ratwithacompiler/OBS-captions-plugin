@@ -9,6 +9,8 @@ endif ()
 include_directories("thirdparty")
 include_directories(".")
 
+find_package(SherpaOnnx REQUIRED)
+
 if (SPEECH_API_GOOGLE_GRPC_V1)
     message("using SPEECH_API_GOOGLE_GRPC_V1!")
     add_subdirectory(speech_apis/grpc_speech_api)
@@ -23,6 +25,8 @@ endif ()
 
 set(caption_stream_SOURCES
         utils.h
+        CaptionEngineFactory.cpp
+        SherpaTOneCaptionEngine.cpp
         ContinuousCaptions.cpp
         )
 
@@ -31,6 +35,10 @@ set(caption_stream_HEADERS
         thirdparty/cameron314/blockingconcurrentqueue.h
         utils.h
         CaptionResult.h
+        CaptionEngine.h
+        CaptionEngineFactory.h
+        LocalCaptionEngineSettings.h
+        SherpaTOneCaptionEngine.h
         ContinuousCaptions.h
         )
 
@@ -42,7 +50,7 @@ add_library(caption_stream STATIC
 
 target_include_directories(caption_stream PUBLIC ./)
 target_include_directories(caption_stream PUBLIC thirdparty/)
-target_link_libraries(caption_stream speech_api_stream)
+target_link_libraries(caption_stream PUBLIC speech_api_stream SherpaOnnx::CAPI)
 
 if (WIN32 AND NOT BUILD_SHARED_LIBS)
     message(BUILD_SHARED_LIBS: setting win flags)

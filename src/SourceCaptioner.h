@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <ContinuousCaptions.h>
+#include <CaptionEngineFactory.h>
 #include "SourceAudioCaptureSession.h"
 #include "OutputAudioCaptureSession.h"
 #include "CaptionResultHandler.h"
@@ -318,6 +319,7 @@ struct SourceCaptionerSettings {
     SceneCollectionSettings scene_collection_settings;
 
     CaptionFormatSettings format_settings;
+    CaptionEngineType caption_engine_type;
     ContinuousCaptionStreamSettings stream_settings;
 
     SourceCaptionerSettings();
@@ -330,6 +332,7 @@ struct SourceCaptionerSettings {
             const FileOutputSettings &file_output_settings,
             const SceneCollectionSettings &scene_collection_settings,
             const CaptionFormatSettings &format_settings,
+            CaptionEngineType caption_engine_type,
             const ContinuousCaptionStreamSettings &stream_settings
     ) :
             streaming_output_enabled(streaming_output_enabled),
@@ -339,6 +342,7 @@ struct SourceCaptionerSettings {
             file_output_settings(file_output_settings),
             scene_collection_settings(scene_collection_settings),
             format_settings(format_settings),
+            caption_engine_type(caption_engine_type),
             stream_settings(stream_settings) {}
 
     bool operator==(const SourceCaptionerSettings &rhs) const {
@@ -349,6 +353,7 @@ struct SourceCaptionerSettings {
                file_output_settings == rhs.file_output_settings &&
                scene_collection_settings == rhs.scene_collection_settings &&
                format_settings == rhs.format_settings &&
+               caption_engine_type == rhs.caption_engine_type &&
                stream_settings == rhs.stream_settings;
 //               scene_collection_settings_map == rhs.scene_collection_settings_map &&
     }
@@ -379,6 +384,7 @@ struct SourceCaptionerSettings {
 //            it->second.text_output_settings.print((string(line_prefix) + "    ").c_str());
 //        }
 
+        printf("%s  caption_engine_type: %d\n", line_prefix, static_cast<int>(caption_engine_type));
         stream_settings.print((string(line_prefix) + "  ").c_str());
         format_settings.print((string(line_prefix) + "  ").c_str());
         transcript_settings.print((string(line_prefix) + "  ").c_str());
@@ -499,7 +505,7 @@ Q_OBJECT
     bool base_enabled;
     std::unique_ptr<SourceAudioCaptureSession> source_audio_capture_session;
     std::unique_ptr<OutputAudioCaptureSession> output_audio_capture_session;
-    std::unique_ptr<ContinuousCaptions> continuous_captions;
+    std::unique_ptr<CaptionEngine> caption_engine;
     uint audio_chunk_count = 0;
 
     SourceCaptionerSettings settings;

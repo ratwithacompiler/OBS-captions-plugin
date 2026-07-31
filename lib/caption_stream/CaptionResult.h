@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef OBS_GOOGLE_CAPTION_PLUGIN_CAPTIONRESULT_H
 #define OBS_GOOGLE_CAPTION_PLUGIN_CAPTIONRESULT_H
 
+#include <chrono>
+#include <string>
+#include <utility>
+
 
 using namespace std;
 
