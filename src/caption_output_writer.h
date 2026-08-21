@@ -122,8 +122,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
                 [](void *param, obs_output_t *output) {
                     auto p = (Ctx *) param;
                     if (output == p->ignore_output) {
-                    }
-                    if (obs_output_active(output)) {
+                    } else if (obs_output_active(output)) {
                         uint32_t flags = obs_output_get_flags(output);
                         if ((flags & OBS_OUTPUT_AV) && (flags & OBS_OUTPUT_ENCODED) && (flags & OBS_OUTPUT_SERVICE)) {
                             obs_output_output_caption_text2(output, p->txt, 0.0);
