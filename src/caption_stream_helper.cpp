@@ -605,6 +605,26 @@ static void save_CaptionPluginSettings(obs_data_t *save_data, const CaptionPlugi
     obs_data_release(obj);
 }
 
+static void set_additional_save_data(obs_data_t *save_data, const char *name, obs_data_t *additional) {
+    obs_data_t *obj = obs_data_get_obj(save_data, SAVE_ENTRY_NAME);
+    if (!obj) {
+        error_log("set_additional_save_data: no '%s' entry in save data, not saving '%s'", SAVE_ENTRY_NAME, name);
+        return;
+    }
+    obs_data_set_obj(obj, name, additional);
+    obs_data_release(obj);
+}
+
+static obs_data_t *get_additional_save_data(obs_data_t *load_data, const char *name) {
+    obs_data_t *obj = obs_data_get_obj(load_data, SAVE_ENTRY_NAME);
+    if (!obj)
+        return nullptr;
+
+    obs_data_t *additional = obs_data_get_obj(obj, name);
+    obs_data_release(obj);
+    return additional;
+}
+
 static bool save_plugin_data_to_config(obs_data_t *data) {
     BPtr<char> module_path = obs_module_get_config_path(obs_current_module(), "");
     if (!module_path) {

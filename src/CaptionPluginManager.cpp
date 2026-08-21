@@ -169,13 +169,20 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     emit settings_changed(new_settings);
 }
 
-bool CaptionPluginManager::toggle_enabled() {
+void CaptionPluginManager::set_enabled(bool enabled) {
+    if (plugin_settings.enabled == enabled)
+        return;
+
     CaptionPluginSettings new_settings = plugin_settings;
-    new_settings.enabled = !new_settings.enabled;
+    new_settings.enabled = enabled;
     update_settings(new_settings);
 
-    debug_log("toggled enabled,  %d -> %d", !new_settings.enabled, new_settings.enabled);
-    return new_settings.enabled;
+    debug_log("set enabled: %d", enabled);
+}
+
+bool CaptionPluginManager::toggle_enabled() {
+    set_enabled(!plugin_settings.enabled);
+    return plugin_settings.enabled;
 }
 
 CaptioningState CaptionPluginManager::captioning_state() {

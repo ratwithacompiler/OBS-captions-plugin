@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <media-io/audio-resampler.h>
 #include <fstream>
+#include <functional>
 #include <thread>
 
 #include "ui/MainCaptionWidget.h"
@@ -47,6 +48,10 @@ CaptionPluginManager *plugin_manager = nullptr;
 CaptionDock *caption_dock = nullptr;
 bool frontend_loading_finished = false;
 bool ui_setup_done = false;
+
+static obs_hotkey_id captions_enable_hotkey_id = OBS_INVALID_HOTKEY_ID;
+static obs_hotkey_id captions_disable_hotkey_id = OBS_INVALID_HOTKEY_ID;
+static obs_hotkey_id captions_toggle_hotkey_id = OBS_INVALID_HOTKEY_ID;
 
 OBS_DECLARE_MODULE()
 
@@ -75,6 +80,8 @@ void obs_frontent_exiting();
 void obs_frontent_scene_collection_changed();
 
 void obs_frontent_scene_collection_changing();
+
+static void unregister_hotkeys();
 
 static void obs_event(enum obs_frontend_event event, void *) {
 //    debug_log("obs_event %d", (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
@@ -212,6 +219,8 @@ void obs_frontent_scene_collection_changed() {
 void obs_frontent_exiting() {
     info_log("obs_frontent_exiting, stopping captioner");
 
+    unregister_hotkeys();
+
     if (main_caption_widget) {
 //        main_caption_widget->stop();
         delete main_caption_widget;
@@ -249,12 +258,101 @@ void obs_frontent_exiting() {
 //}
 
 
+// from hotkey thread
+static void enqueue_on_ui(const std::function<void(CaptionPluginManager &)> &fn) {
+    CaptionPluginManager *manager = plugin_manager;
+    if (!manager)
+        return;
+
+    QMetaObject::invokeMethod(manager, [fn]() {
+        if (plugin_manager)
+            fn(*plugin_manager);
+    }, Qt::QueuedConnection);
+}
+
+static void captions_enable_hotkey_cb(void *, obs_hotkey_id, obs_hotkey_t *, bool pressed) {
+    if (pressed)
+        enqueue_on_ui([](CaptionPluginManager &manager) { manager.set_enabled(true); });
+}
+
+static void captions_disable_hotkey_cb(void *, obs_hotkey_id, obs_hotkey_t *, bool pressed) {
+    if (pressed)
+        enqueue_on_ui([](CaptionPluginManager &manager) { manager.set_enabled(false); });
+}
+
+static void captions_toggle_hotkey_cb(void *, obs_hotkey_id, obs_hotkey_t *, bool pressed) {
+    if (pressed)
+        enqueue_on_ui([](CaptionPluginManager &manager) { manager.toggle_enabled(); });
+}
+
+static void register_hotkeys() {
+    if (captions_enable_hotkey_id != OBS_INVALID_HOTKEY_ID)
+        return;
+
+    captions_enable_hotkey_id = obs_hotkey_register_frontend(
+            "cloud_closed_captions.enable", "Enable Captions", captions_enable_hotkey_cb, nullptr);
+    captions_disable_hotkey_id = obs_hotkey_register_frontend(
+            "cloud_closed_captions.disable", "Disable Captions", captions_disable_hotkey_cb, nullptr);
+    captions_toggle_hotkey_id = obs_hotkey_register_frontend(
+            "cloud_closed_captions.toggle", "Toggle Captions", captions_toggle_hotkey_cb, nullptr);
+}
+
+static void unregister_hotkeys() {
+    obs_hotkey_unregister(captions_enable_hotkey_id);
+    obs_hotkey_unregister(captions_disable_hotkey_id);
+    obs_hotkey_unregister(captions_toggle_hotkey_id);
+    captions_enable_hotkey_id = OBS_INVALID_HOTKEY_ID;
+    captions_disable_hotkey_id = OBS_INVALID_HOTKEY_ID;
+    captions_toggle_hotkey_id = OBS_INVALID_HOTKEY_ID;
+}
+
+static obs_data_t *get_hotkey_save_data() {
+    obs_data_t *data = obs_data_create();
+
+    obs_data_array_t *enable_arr = obs_hotkey_save(captions_enable_hotkey_id);
+    obs_data_set_array(data, "enable", enable_arr);
+    obs_data_array_release(enable_arr);
+
+    obs_data_array_t *disable_arr = obs_hotkey_save(captions_disable_hotkey_id);
+    obs_data_set_array(data, "disable", disable_arr);
+    obs_data_array_release(disable_arr);
+
+    obs_data_array_t *toggle_arr = obs_hotkey_save(captions_toggle_hotkey_id);
+    obs_data_set_array(data, "toggle", toggle_arr);
+    obs_data_array_release(toggle_arr);
+
+    return data;
+}
+
+static void load_hotkeys(obs_data_t *data) {
+    if (!data)
+        return;
+
+    obs_data_array_t *enable_arr = obs_data_get_array(data, "enable");
+    obs_hotkey_load(captions_enable_hotkey_id, enable_arr);
+    obs_data_array_release(enable_arr);
+
+    obs_data_array_t *disable_arr = obs_data_get_array(data, "disable");
+    obs_hotkey_load(captions_disable_hotkey_id, disable_arr);
+    obs_data_array_release(disable_arr);
+
+    obs_data_array_t *toggle_arr = obs_data_get_array(data, "toggle");
+    obs_hotkey_load(captions_toggle_hotkey_id, toggle_arr);
+    obs_data_array_release(toggle_arr);
+}
+
 static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void *) {
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
     info_log("save_or_load_event_callback %d, %d", saving, tid);
 
     if (saving && plugin_manager) {
         save_CaptionPluginSettings(save_data, plugin_manager->plugin_settings);
+
+        if (captions_enable_hotkey_id != OBS_INVALID_HOTKEY_ID) {
+            obs_data_t *hotkey_data = get_hotkey_save_data();
+            set_additional_save_data(save_data, "hotkey", hotkey_data);
+            obs_data_release(hotkey_data);
+        }
     }
 
     if (!saving) {
@@ -268,7 +366,12 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
             plugin_manager = new CaptionPluginManager(loaded_settings);
             main_caption_widget = new MainCaptionWidget(*plugin_manager);
             setup_UI();
+            register_hotkeys();
         }
+
+        obs_data_t *hotkey_data = get_additional_save_data(save_data, "hotkey");
+        load_hotkeys(hotkey_data);
+        obs_data_release(hotkey_data);
     }
 
 }

@@ -48,6 +48,8 @@ public:
 
     void update_settings(const CaptionPluginSettings &new_settings);
 
+    void set_enabled(bool enabled);
+
     bool toggle_enabled();
 
     CaptioningState captioning_state();
