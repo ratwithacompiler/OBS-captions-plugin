@@ -235,6 +235,9 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         if (!use_output_audio) {
             caption_source = obs_get_source_by_name(selected_caption_source_settings.caption_source_name.c_str());
             obs_source_release(caption_source);
+            // can still be found if removed but refs left so extra check for that
+            if (caption_source && obs_source_removed(caption_source))
+                caption_source = nullptr;
             if (!caption_source) {
                 warn_log("SourceCaptioner start_caption_stream, no caption source with name: '%s'",
                          selected_caption_source_settings.caption_source_name.c_str());
@@ -244,7 +247,8 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
             if (selected_caption_source_settings.mute_when == CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE) {
                 mute_source = obs_get_source_by_name(selected_caption_source_settings.mute_source_name.c_str());
                 obs_source_release(mute_source);
-
+                if (mute_source && obs_source_removed(mute_source))
+                    mute_source = nullptr;
                 if (!mute_source) {
                     warn_log("SourceCaptioner start_caption_stream, no mute source with name: '%s'",
                              selected_caption_source_settings.mute_source_name.c_str());
@@ -337,11 +341,19 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
     SourceCaptionerSettings cur_settings = settings;
     string cur_scene_collection_name = selected_scene_collection_name;
     bool active = continuous_captions != nullptr;
+    bool source_removed = !is_old_audio_session && source_audio_capture_session
+                          && source_audio_capture_session->is_source_removed();
 
     settings_change_mutex.unlock();
 
     if (is_old_audio_session) {
         debug_log("ignoring old audio capture status!!");
+        return;
+    }
+
+    if (source_removed) {
+        info_log("caption/mute source was removed");
+        emit caption_source_removed();
         return;
     }
 

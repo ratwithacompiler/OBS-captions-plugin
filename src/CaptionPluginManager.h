@@ -38,6 +38,8 @@ private:
 
     int update_count = 0;
 
+    void mark_not_captioning();
+
 public:
     CaptionPluginManager(const CaptionPluginSettings &initial_settings);
 
@@ -47,6 +49,8 @@ public:
                                 const string &scene_collection_name);
 
     void update_settings(const CaptionPluginSettings &new_settings);
+
+    void stop_captioning();
 
     void set_enabled(bool enabled);
 

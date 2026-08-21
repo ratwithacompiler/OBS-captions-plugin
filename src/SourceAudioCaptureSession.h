@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <obs-frontend-api.h>
 #include <media-io/audio-resampler.h>
 #include <obs.hpp>
+#include <atomic>
 #include <functional>
 #include <mutex>
 #include <lib/caption_stream/ThreadsaferCallback.h>
@@ -35,6 +36,7 @@ class SourceAudioCaptureSession {
     audio_resampler_t *resampler = nullptr;
     audio_source_capture_status capture_status;
     bool use_muting_cb_signal = true;
+    std::atomic<bool> source_removed{false};
     const int id;
     const int bytes_per_channel;
 public:
@@ -57,6 +59,10 @@ public:
     ~SourceAudioCaptureSession();
 
     void state_changed_check(bool always_signal = false);
+
+    void source_removed_check();
+
+    bool is_source_removed() const;
 
     audio_source_capture_status get_current_capture_status();
 

@@ -578,6 +578,8 @@ signals:
 
     void audio_capture_status_changed(const int id, const int new_status);
 
+    void caption_source_removed();
+
     void source_capture_status_changed(shared_ptr<SourceCaptionerStatus> status);
 
 public:

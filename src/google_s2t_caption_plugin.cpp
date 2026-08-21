@@ -79,7 +79,7 @@ void obs_frontent_exiting();
 
 void obs_frontent_scene_collection_changed();
 
-void obs_frontent_scene_collection_changing();
+void obs_frontent_scene_collection_changing(const char *event_name);
 
 static void unregister_hotkeys();
 
@@ -107,11 +107,12 @@ static void obs_event(enum obs_frontend_event event, void *) {
         obs_frontent_scene_collection_changed();
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
         printf("studio mode!!!!!!!!!!!!!!!!!!!!\n");
-    }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
-        // printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING\n");
-        obs_frontent_scene_collection_changing();
-    }else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
-        // printf("OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP\n");
+    } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
+        obs_frontent_scene_collection_changing("SCENE_COLLECTION_CHANGING");
+    } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
+        // Duplicate/Rename of scene collection sends CLEANUP not CHANGING event.
+        // Need to release all sources or get obs shutdown error thing.
+        obs_frontent_scene_collection_changing("SCENE_COLLECTION_CLEANUP");
     }
 }
 
@@ -201,8 +202,8 @@ void virtualcam_stopped_event() {
         main_caption_widget->virtualcam_stopped_event();
 }
 
-void obs_frontent_scene_collection_changing() {
-    info_log("obs_frontent_scene_collection_changing");
+void obs_frontent_scene_collection_changing(const char *event_name) {
+    info_log("obs_frontent_scene_collection_changing (%s), stopping captioning", event_name);
     if (main_caption_widget) {
         main_caption_widget->stop_captioning();
     }

@@ -8,6 +8,11 @@
 CaptionPluginManager::CaptionPluginManager(const CaptionPluginSettings &initial_settings) :
         plugin_settings(initial_settings),
         source_captioner(initial_settings.enabled, initial_settings.source_cap_settings, current_scene_collection_name(), false) {
+    QObject::connect(&source_captioner, &SourceCaptioner::caption_source_removed, this, [this]() {
+        info_log("caption source removed, restarting captioning");
+        stop_captioning();
+        update_settings(plugin_settings);
+    });
 }
 
 void CaptionPluginManager::external_state_changed(
@@ -155,10 +160,12 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
     if (do_captioning) {
         info_log("caption settings changed, starting captioning");
         bool worked = source_captioner.start_caption_stream(source_settings, scene_collection_name_relevant);
-        if (worked)
+        if (worked) {
             info_log("captioning start ok");
-        else
+        } else {
             info_log("captioning start failed");
+            mark_not_captioning();
+        }
 
     } else {
         info_log("settings changed, disabling captioning");
@@ -167,6 +174,21 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
 
 //    debug_log("emit settings_changed");
     emit settings_changed(new_settings);
+}
+
+void CaptionPluginManager::mark_not_captioning() {
+    state.is_captioning = false;
+    state.is_captioning_streaming = false;
+    state.is_captioning_recording = false;
+    state.is_captioning_virtualcam = false;
+    state.is_captioning_preview = false;
+    state.is_captioning_text_output = false;
+    state.is_captioning_file_output = false;
+}
+
+void CaptionPluginManager::stop_captioning() {
+    source_captioner.stop_caption_stream(false);
+    mark_not_captioning();
 }
 
 void CaptionPluginManager::set_enabled(bool enabled) {
