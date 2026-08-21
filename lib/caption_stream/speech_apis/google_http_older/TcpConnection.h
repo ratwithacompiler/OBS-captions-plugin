@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <plibsys.h>
 #include <iostream>
+#include <mutex>
 
 typedef unsigned int uint;
 using namespace std;
@@ -46,9 +47,11 @@ class TcpConnection {
     string ip_address;
     PSocketAddress *p_address = nullptr;
     PSocket *p_socket = nullptr;
+    std::mutex socket_mutex;
     bool started = false;
     bool dead = false;
     bool connected = false;
+    bool shutdown_requested = false;
 
 public:
 
@@ -67,6 +70,9 @@ public:
     bool is_connected();
 
     bool is_dead();
+
+    // threadsafe, unlike everything else
+    void shutdown();
 
     void close();
 

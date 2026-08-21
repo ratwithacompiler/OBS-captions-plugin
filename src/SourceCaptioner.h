@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QObject>
 #include <QTimer>
+#include <atomic>
 
 typedef unsigned int uint;
 using namespace std;
@@ -421,7 +422,7 @@ struct CaptionOutput {
 template<typename T>
 struct CaptionOutputControl {
     moodycamel::BlockingConcurrentQueue<CaptionOutput> caption_queue;
-    volatile bool stop = false;
+    std::atomic<bool> stop{false};
     T arg;
 
     CaptionOutputControl(T arg) : arg(arg) {}

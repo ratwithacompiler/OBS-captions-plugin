@@ -55,7 +55,7 @@ SourceCaptioner::SourceCaptioner(const bool enabled, const SourceCaptionerSettin
                      this, &SourceCaptioner::process_caption_result, Qt::QueuedConnection);
 
     QObject::connect(this, &SourceCaptioner::audio_capture_status_changed,
-                     this, &SourceCaptioner::process_audio_capture_status_change);
+                     this, &SourceCaptioner::process_audio_capture_status_change, Qt::QueuedConnection);
 
     timer.start(1000);
 

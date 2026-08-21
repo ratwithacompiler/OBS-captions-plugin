@@ -1,0 +1,225 @@
+diff --git a/src/psocket.c b/src/psocket.c
+index 9479275..ea2509b 100644
+--- a/src/psocket.c
++++ b/src/psocket.c
+@@ -75,6 +75,7 @@ struct PSocket_ {
+ 	puint		listening	: 1;
+ #ifdef P_OS_WIN
+ 	WSAEVENT	events;
++	WSAEVENT	wake_event;
+ #endif
+ #ifdef P_OS_SCO
+ 	PTimeProfiler	*timer;
+@@ -85,6 +86,11 @@ struct PSocket_ {
+ #  define SHUT_RD			0
+ #endif
+ 
++#ifdef P_OS_WIN
++/* select() slice for the writability wait, see p_socket_io_condition_wait() */
++#  define P_SOCKET_WRITE_WAIT_SLICE_MS	10
++#endif
++
+ #ifndef SHUT_WR
+ #  define SHUT_WR			1
+ #endif
+@@ -411,6 +417,16 @@ p_socket_new_from_fd (pint	fd,
+ 		p_free (ret);
+ 		return NULL;
+ 	}
++
++	if (P_UNLIKELY ((ret->wake_event = WSACreateEvent ()) == WSA_INVALID_EVENT)) {
++		p_error_set_error_p (error,
++				     (pint) P_ERROR_IO_FAILED,
++				     (pint) p_error_get_last_net (),
++				     "Failed to call WSACreateEvent() on socket");
++		WSACloseEvent (ret->events);
++		p_free (ret);
++		return NULL;
++	}
+ #endif
+ 
+ 	return ret;
+@@ -542,6 +558,15 @@ p_socket_new (PSocketFamily	family,
+ 		p_socket_free (ret);
+ 		return NULL;
+ 	}
++
++	if (P_UNLIKELY ((ret->wake_event = WSACreateEvent ()) == WSA_INVALID_EVENT)) {
++		p_error_set_error_p (error,
++				     (pint) P_ERROR_IO_FAILED,
++				     (pint) p_error_get_last_net (),
++				     "Failed to call WSACreateEvent() on socket");
++		p_socket_free (ret);
++		return NULL;
++	}
+ #endif
+ 
+ 	return ret;
+@@ -556,6 +581,20 @@ p_socket_get_fd (const PSocket *socket)
+ 	return socket->fd;
+ }
+ 
++P_LIB_API void
++p_socket_wakeup (const PSocket *socket)
++{
++	if (P_UNLIKELY (socket == NULL))
++		return;
++
++#ifdef P_OS_WIN
++	if (P_LIKELY (socket->wake_event != WSA_INVALID_EVENT))
++		WSASetEvent (socket->wake_event);
++#else
++	P_UNUSED (socket);
++#endif
++}
++
+ P_LIB_API PSocketFamily
+ p_socket_get_family (const PSocket *socket)
+ {
+@@ -1425,6 +1464,9 @@ p_socket_free (PSocket *socket)
+ #ifdef P_OS_WIN
+ 	if (P_LIKELY (socket->events != WSA_INVALID_EVENT))
+ 		WSACloseEvent (socket->events);
++
++	if (P_LIKELY (socket->wake_event != WSA_INVALID_EVENT))
++		WSACloseEvent (socket->wake_event);
+ #endif
+ 
+ 	p_socket_close (socket, NULL);
+@@ -1481,9 +1523,16 @@ p_socket_io_condition_wait (const PSocket	*socket,
+ 			    PError		**error)
+ {
+ #if defined (P_OS_WIN)
+-	long	network_events;
+-	pint	evret;
+-	pint	timeout;
++	long		network_events;
++	WSAEVENT	wait_events[2];
++	fd_set		wfds;
++	fd_set		efds;
++	struct timeval	tv;
++	DWORD		started_ms;
++	pint		elapsed_ms;
++	pint		slice_ms;
++	pint		evret;
++	pint		timeout;
+ 
+ 	if (P_UNLIKELY (socket == NULL)) {
+ 		p_error_set_error_p (error,
+@@ -1498,19 +1547,84 @@ p_socket_io_condition_wait (const PSocket	*socket,
+ 
+ 	timeout = socket->timeout > 0 ? socket->timeout : WSA_INFINITE;
+ 
+-	if (condition == P_SOCKET_IO_CONDITION_POLLIN)
+-		network_events = FD_READ | FD_ACCEPT;
+-	else
+-		network_events = FD_WRITE | FD_CONNECT;
++	if (condition != P_SOCKET_IO_CONDITION_POLLIN) {
++		/* Writability (send, connect completion): FD_WRITE is edge-triggered
++		 * and is re-recorded by every WSAEventSelect() on an already connected
++		 * socket, so an event wait on it returns at once while the buffer is
++		 * still full and the caller spins (or misses the wake-up if the buffer
++		 * filled without a WSAEWOULDBLOCK send). Use the level-triggered
++		 * select() in short slices instead, checking the wake event between
++		 * slices; the slice bounds the interrupt latency on this path. */
++		started_ms = GetTickCount ();
++
++		for (;;) {
++			FD_ZERO (&wfds);
++			FD_ZERO (&efds);
++			FD_SET ((SOCKET) socket->fd, &wfds);
++			FD_SET ((SOCKET) socket->fd, &efds);
++
++			slice_ms = P_SOCKET_WRITE_WAIT_SLICE_MS;
++
++			if (timeout != WSA_INFINITE) {
++				elapsed_ms = (pint) (DWORD) (GetTickCount () - started_ms);
++
++				if (elapsed_ms >= timeout) {
++					p_error_set_error_p (error,
++							     (pint) P_ERROR_IO_TIMED_OUT,
++							     0,
++							     "Timed out while waiting socket condition");
++					return FALSE;
++				}
++
++				if (timeout - elapsed_ms < slice_ms)
++					slice_ms = timeout - elapsed_ms;
++			}
++
++			tv.tv_sec  = slice_ms / 1000;
++			tv.tv_usec = (slice_ms % 1000) * 1000;
++
++			evret = select (0, NULL, &wfds, &efds, &tv);
++
++			if (evret > 0)
++				return TRUE;
++
++			if (evret < 0) {
++				p_error_set_error_p (error,
++						     (pint) p_error_get_io_from_system (p_error_get_last_net ()),
++						     (pint) p_error_get_last_net (),
++						     "Failed to call select() on socket");
++				return FALSE;
++			}
++
++			if (WSAWaitForMultipleEvents (1, (const HANDLE *) &socket->wake_event, TRUE, 0, FALSE) == WSA_WAIT_EVENT_0) {
++				p_error_set_error_p (error,
++						     (pint) P_ERROR_IO_ABORTED,
++						     0,
++						     "Socket wait interrupted by p_socket_wakeup()");
++				return FALSE;
++			}
++		}
++	}
++
++	network_events = FD_READ | FD_ACCEPT | FD_CLOSE;
+ 
+ 	WSAResetEvent (socket->events);
+ 	WSAEventSelect (socket->fd, socket->events, network_events);
+ 
+-	evret = WSAWaitForMultipleEvents (1, (const HANDLE *) &socket->events, TRUE, timeout, FALSE);
++	wait_events[0] = socket->events;
++	wait_events[1] = socket->wake_event;
++
++	evret = WSAWaitForMultipleEvents (2, (const HANDLE *) wait_events, FALSE, timeout, FALSE);
+ 
+ 	if (evret == WSA_WAIT_EVENT_0)
+ 		return TRUE;
+-	else if (evret == WSA_WAIT_TIMEOUT) {
++	else if (evret == WSA_WAIT_EVENT_0 + 1) {
++		p_error_set_error_p (error,
++				     (pint) P_ERROR_IO_ABORTED,
++				     0,
++				     "Socket wait interrupted by p_socket_wakeup()");
++		return FALSE;
++	} else if (evret == WSA_WAIT_TIMEOUT) {
+ 		p_error_set_error_p (error,
+ 				     (pint) P_ERROR_IO_TIMED_OUT,
+ 				     (pint) p_error_get_last_net (),
+diff --git a/src/psocket.h b/src/psocket.h
+index 989e707..ac4c199 100644
+--- a/src/psocket.h
++++ b/src/psocket.h
+@@ -239,6 +239,21 @@ P_LIB_API PSocket *		p_socket_new 			(PSocketFamily		family,
+  */
+ P_LIB_API pint			p_socket_get_fd 		(const PSocket		*socket);
+ 
++/**
++ * @brief Interrupts any current and future blocking wait on the @a socket
++ * (see p_socket_io_condition_wait()) from another thread.
++ * @param socket #PSocket to wake up.
++ * @since 0.0.5-captions
++ * @note On Windows the socket waits on a WSA event which a local shutdown()
++ * does not signal; this sets a second, sticky per-socket event so the wait
++ * returns at once with #P_ERROR_IO_ABORTED. On other systems it is a no-op
++ * and a plain shutdown() on the descriptor wakes the poll()-based wait. It
++ * touches no socket state and can be called concurrently with any other
++ * #PSocket operation on a live socket; call it before, not after,
++ * p_socket_free().
++ */
++P_LIB_API void			p_socket_wakeup			(const PSocket		*socket);
++
+ /**
+  * @brief Gets a @a socket address family.
+  * @param socket #PSocket to get the address family for.

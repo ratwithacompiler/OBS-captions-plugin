@@ -110,8 +110,8 @@ int read_until_contains(TcpConnection *connection, string &buffer, const char *r
 
 CaptionStream::CaptionStream(
         CaptionStreamSettings settings
-) : upstream(TcpConnection(GOOGLE, PORTUP)),
-    downstream(TcpConnection(GOOGLE, PORTDOWN)),
+) : upstream(GOOGLE, PORTUP),
+    downstream(GOOGLE, PORTDOWN),
 
     settings(settings),
 
@@ -143,6 +143,7 @@ bool CaptionStream::start(std::shared_ptr<CaptionStream> self) {
 void CaptionStream::upstream_run(std::shared_ptr<CaptionStream> self) {
     debug_log("starting upstream_run() %s", session_pair.c_str());
     _upstream_run(self);
+    upstream.close();
     stop();
     debug_log("finished upstream_run() %s", session_pair.c_str());
 }
@@ -150,6 +151,7 @@ void CaptionStream::upstream_run(std::shared_ptr<CaptionStream> self) {
 void CaptionStream::downstream_run(std::shared_ptr<CaptionStream> self) {
     debug_log("starting downstream_run() %s", session_pair.c_str());
     _downstream_run();
+    downstream.close();
     stop();
     debug_log("finished downstream_run() %s", session_pair.c_str());
 }
@@ -233,7 +235,10 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
             std::string request(stream.str());
 
             if (!upstream.send_all(request.c_str(), request.size())) {
-                error_log("couldn't send audio chunk");
+                if (is_stopped())
+                    debug_log("upstream send interrupted by stop");
+                else
+                    error_log("couldn't send audio chunk");
                 delete audio_chunk;
                 return;
             }
@@ -243,7 +248,7 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
 //            debug_log("sent audio chunk %d, %lu bytes", chunk_count, audio_chunk->size());
 
         } else {
-            error_log("got 0 size audio chunk. ignoring");
+            debug_log("got 0 size audio chunk. ignoring");
         }
 
         delete audio_chunk;
@@ -257,7 +262,19 @@ void CaptionStream::_downstream_run() {
 
     if (settings.download_thread_start_delay_ms) {
         debug_log("waiting %d ms to start download connection", settings.download_thread_start_delay_ms);
-        std::this_thread::sleep_for(std::chrono::milliseconds(settings.download_thread_start_delay_ms));
+        const auto delay_until = std::chrono::steady_clock::now()
+                                 + std::chrono::milliseconds(settings.download_thread_start_delay_ms);
+        while (!is_stopped()) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now >= delay_until)
+                break;
+            auto slice = delay_until - now;
+            if (slice > std::chrono::milliseconds(50))
+                slice = std::chrono::milliseconds(50);
+            std::this_thread::sleep_for(slice);
+        }
+        if (is_stopped())
+            return;
     }
 
     try {
@@ -324,7 +341,10 @@ void CaptionStream::_downstream_run() {
 //        debug_log("rest: '%s'", rest.c_str());
         crlf_pos = read_until_contains(&downstream, rest, "\r\n");
         if (crlf_pos <= 0) {
-            error_log("downstream read chunksize error, rest: %lu %s", rest.size(), rest.c_str());
+            if (is_stopped())
+                debug_log("downstream read interrupted by stop");
+            else
+                error_log("downstream read chunksize error, rest: %lu %s", rest.size(), rest.c_str());
             return;
         }
 
@@ -354,7 +374,10 @@ void CaptionStream::_downstream_run() {
             int read = downstream.receive_at_least(rest, needed_bytes);
 //            debug_log("hmm read: %d", read);
             if (read <= 0 || read < needed_bytes) {
-                error_log("downstream read chunk data error");
+                if (is_stopped())
+                    debug_log("downstream read interrupted by stop");
+                else
+                    error_log("downstream read chunk data error");
                 return;
             }
         }
@@ -456,6 +479,8 @@ void CaptionStream::stop() {
 
     string *to_unblock_uploader = new string();
     audio_queue.enqueue(to_unblock_uploader);
+    downstream.shutdown();
+    upstream.shutdown();
     info_log("stop2! %s", this->session_pair.c_str());
 }
 

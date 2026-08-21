@@ -27,6 +27,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define SOCKET_RECV_BUFFER_SIZE 4096
 #define SOCKET_SEND_BUFFER_SIZE 1024
 
+#ifdef _WIN32
+#define SHUTDOWN_BOTH SD_BOTH
+#else
+#define SHUTDOWN_BOTH SHUT_RDWR
+#endif
+
 volatile bool is_setup = false;
 
 static void setup_check() {
@@ -51,29 +57,40 @@ void TcpConnection::connect(uint timeoutMs) {
 
     started = true;
 
-    const char *ip_str = host_to_ip(hostname.c_str());
+    {
+        std::lock_guard<std::mutex> lock(socket_mutex);
+        if (shutdown_requested)
+            throw ConnectError("connection shut down before connect");
+    }
 
-    if (ip_str == nullptr)
+    char ip_buf[IP_STR_BUFFER_SIZE];
+    if (!host_to_ip(hostname.c_str(), ip_buf, sizeof(ip_buf)))
         throw ConnectError("couldn't resolve hostname");
 
-    ip_address = ip_str;
-    debug_log("address %s %s", ip_address.c_str(), ip_str);
+    ip_address = ip_buf;
+    debug_log("address %s", ip_address.c_str());
 
     // Construct address for server.  Since the server is assumed to be on the same machine for the sake of this program, the address is loopback, but typically this would be an external address.
     if ((p_address = p_socket_address_new(ip_address.c_str(), port)) == nullptr)
         throw ConnectError("couldn't create address");
 
 
-    // Create p_socket
-    if ((p_socket = p_socket_new(P_SOCKET_FAMILY_INET, P_SOCKET_TYPE_STREAM, P_SOCKET_PROTOCOL_TCP, nullptr)) == nullptr) {
-        throw ConnectError("couldn't create p_socket");
-    }
+    {
+        std::lock_guard<std::mutex> lock(socket_mutex);
+        if (shutdown_requested)
+            throw ConnectError("connection shut down before connect");
+
+        // Create p_socket
+        if ((p_socket = p_socket_new(P_SOCKET_FAMILY_INET, P_SOCKET_TYPE_STREAM, P_SOCKET_PROTOCOL_TCP, nullptr)) == nullptr) {
+            throw ConnectError("couldn't create p_socket");
+        }
 
 //    info_log("blocking: %d\n", p_socket_get_blocking(p_socket));
-    if (timeoutMs) {
+        if (timeoutMs) {
 //        debug_log("timeout: %d", p_socket_get_timeout(p_socket));
-        p_socket_set_timeout(p_socket, timeoutMs);
+            p_socket_set_timeout(p_socket, timeoutMs);
 //        debug_log("timeout: %d", p_socket_get_timeout(p_socket));
+        }
     }
 
 
@@ -87,12 +104,17 @@ void TcpConnection::connect(uint timeoutMs) {
         throw ConnectError("couldn't connect to server");
     }
 
+    std::lock_guard<std::mutex> lock(socket_mutex);
+    if (shutdown_requested)
+        throw ConnectError("connection shut down during connect");
+
     debug_log("Connected!!!!!!!!!");
     connected = true;
 }
 
 
 bool TcpConnection::is_connected() {
+    std::lock_guard<std::mutex> lock(socket_mutex);
     return connected;
 }
 
@@ -100,7 +122,22 @@ bool TcpConnection::is_dead() {
     return dead;
 }
 
+void TcpConnection::shutdown() {
+    std::lock_guard<std::mutex> lock(socket_mutex);
+    shutdown_requested = true;
+    if (p_socket != nullptr) {
+#ifdef _WIN32
+        // plibsys' Windows waits are not woken by a local shutdown(); the
+        // Windows build's plibsys carries CI/http/plibsys-socket-wakeup.patch
+        // adding this call (posix: shutdown() wakes the poll() by itself)
+        p_socket_wakeup(p_socket);
+#endif
+        ::shutdown(p_socket_get_fd(p_socket), SHUTDOWN_BOTH);
+    }
+}
+
 void TcpConnection::close() {
+    std::lock_guard<std::mutex> lock(socket_mutex);
     if (p_socket != nullptr) {
         debug_log("freeing p_socket");
         p_socket_free(p_socket);

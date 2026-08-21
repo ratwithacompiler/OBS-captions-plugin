@@ -1,4 +1,10 @@
-git clone https://github.com/saprykin/plibsys
+set PLIBSYS_PIN=%~1
+set PATCH_FILE=%~dp0plibsys-socket-wakeup.patch
+
+if exist plibsys rmdir /S /Q plibsys
+git clone https://github.com/saprykin/plibsys || exit /b 1
 cd plibsys
-git reset --hard fd23c003663c7b46b9cc50403636c86bcbc86e80
+git reset --hard %PLIBSYS_PIN% || exit /b 1
+git apply "%PATCH_FILE%" || exit /b 1
+type nul > .patched-%PLIBSYS_PIN%
 cd ..
