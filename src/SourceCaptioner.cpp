@@ -536,19 +536,6 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
             text_source_sets.emplace_back(text_out.text_source_name, text_output_result->output_line);
         }
 
-        store_result(native_output_result);
-
-//        info_log("got caption '%s'", native_output_result->clean_caption_text.c_str());
-//        info_log("output line '%s'", output_caption_line.c_str());
-
-        prepare_recent(recent_caption_text);
-
-        to_stream = settings.streaming_output_enabled;
-        to_recording = settings.recording_output_enabled;
-        to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
-        to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
-        to_transcript_virtualcam = settings.transcript_settings.enabled && settings.transcript_settings.virtualcam_transcripts_enabled;
-
         if (settings.file_output_settings.isValidEnabled() && fileoutput_captions_output.control) {
             file_output_result = caption_result_handler->prepare_caption_output(
                 caption_result,
@@ -561,6 +548,19 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                 interrupted,
                 results_history);
         }
+
+        store_result(native_output_result);
+
+//        info_log("got caption '%s'", native_output_result->clean_caption_text.c_str());
+//        info_log("output line '%s'", output_caption_line.c_str());
+
+        prepare_recent(recent_caption_text);
+
+        to_stream = settings.streaming_output_enabled;
+        to_recording = settings.recording_output_enabled;
+        to_transcript_streaming = settings.transcript_settings.enabled && settings.transcript_settings.streaming_transcripts_enabled;
+        to_transcript_recording = settings.transcript_settings.enabled && settings.transcript_settings.recording_transcripts_enabled;
+        to_transcript_virtualcam = settings.transcript_settings.enabled && settings.transcript_settings.virtualcam_transcripts_enabled;
     }
 
     this->output_caption_writers(CaptionOutput(native_output_result, false),
