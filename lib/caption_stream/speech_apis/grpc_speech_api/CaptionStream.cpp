@@ -198,8 +198,8 @@ static void _audio_sender(CaptionStream &self) {
 
 #ifdef GRPC_USE_INCLUDED_CERTS
         debug_log("using embedded certs");
-        // grpc needs CA certs on Windows (and Unix depending on how it's been built)
-        // just include as string directly, more convenient than shipping the roots.pem file
+        // USE_EMBEDDED_CERTS opt-in: bake certs/roots.pem into the binary where you can't
+        // or don't want to use OS certs, though OS certs should now work on all 3 main platforms.
         std::string certs(ROOTS_PEM, ROOTS_PEM + sizeof(ROOTS_PEM) / sizeof(ROOTS_PEM[0]));
         options.pem_root_certs = certs;
 #endif
