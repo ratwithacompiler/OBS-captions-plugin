@@ -75,6 +75,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
         caption_result_handler = nullptr;
         continuous_captions = nullptr;
         audio_capture_id++;
+        fileoutput_captions_output.clear();
         return;
     }
 
@@ -88,6 +89,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
     caption_result_handler = nullptr;
     continuous_captions = nullptr;
     audio_capture_id++;
+    fileoutput_captions_output.clear();
 
     settings_change_mutex.unlock();
 
@@ -118,8 +120,6 @@ bool SourceCaptioner::set_settings(const SourceCaptionerSettings &new_settings, 
 
         settings = new_settings;
         selected_scene_collection_name = scene_collection_name;
-
-        fileoutput_captions_output.clear();
     }
 
     emit source_capture_status_changed(std::make_shared<SourceCaptionerStatus>(
@@ -178,6 +178,8 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
                     fileoutput_captions_output.set_control(control);
                     std::thread th(fileoutput_writer_loop, control, fsets);
                     th.detach();
+                } else {
+                    fileoutput_captions_output.clear();
                 }
             }
         }
@@ -706,6 +708,7 @@ void SourceCaptioner::set_text_source_text(const string &text_source_name, const
 SourceCaptioner::~SourceCaptioner() {
     stream_stopped_event();
     recording_stopped_event();
+    virtualcam_stopped_event();
     stop_caption_stream(false);
 }
 
