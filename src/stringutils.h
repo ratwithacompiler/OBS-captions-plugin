@@ -1,6 +1,8 @@
 #ifndef OBS_GOOGLE_CAPTION_PLUGIN_STRINGUTILS_H
 #define OBS_GOOGLE_CAPTION_PLUGIN_STRINGUTILS_H
 
+#include <sstream>
+
 #include <QVector>
 #include <QStringList>
 #include <QTextBoundaryFinder>

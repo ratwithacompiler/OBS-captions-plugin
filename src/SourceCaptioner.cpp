@@ -738,6 +738,10 @@ CaptionOutputControl<T>::~CaptionOutputControl() {
     debug_log("~CaptionOutputControl");
 }
 
+template struct CaptionOutputControl<int>;
+template struct CaptionOutputControl<TranscriptOutputSettings>;
+template struct CaptionOutputControl<FileOutputSettings>;
+
 bool TranscriptOutputSettings::hasBaseSettings() const {
     if (!enabled || output_path.empty() || format.empty())
         return false;
