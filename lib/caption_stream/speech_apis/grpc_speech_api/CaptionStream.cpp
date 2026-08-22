@@ -61,9 +61,15 @@ bool CaptionStream::start(std::shared_ptr<CaptionStream> self) {
     if (started)
         return false;
 
+    try {
+        thread upstream_thread(audio_sender_thread, self);
+        upstream_thread.detach();
+    } catch (const std::exception &ex) {
+        error_log("couldn't create upstream thread, %s", ex.what());
+        stop();
+        return false;
+    }
     started = true;
-    thread upstream_thread(audio_sender_thread, self);
-    upstream_thread.detach();
     return true;
 }
 

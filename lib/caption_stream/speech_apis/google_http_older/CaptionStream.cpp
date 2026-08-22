@@ -134,8 +134,15 @@ bool CaptionStream::start(std::shared_ptr<CaptionStream> self) {
     if (started)
         return false;
 
+    try {
+        upstream_thread = new thread(&CaptionStream::upstream_run, this, self);
+    } catch (const std::exception &ex) {
+        error_log("couldn't create upstream thread, %s", ex.what());
+        upstream_thread = nullptr;
+        stop();
+        return false;
+    }
     started = true;
-    upstream_thread = new thread(&CaptionStream::upstream_run, this, self);
     return true;
 }
 
@@ -210,7 +217,13 @@ void CaptionStream::_upstream_run(std::shared_ptr<CaptionStream> self) {
         return;
     }
 
-    downstream_thread = new thread(&CaptionStream::downstream_run, this, self);
+    try {
+        downstream_thread = new thread(&CaptionStream::downstream_run, this, self);
+    } catch (const std::exception &ex) {
+        error_log("couldn't create downstream thread, %s", ex.what());
+        downstream_thread = nullptr;
+        return;
+    }
 
     const string crlf("\r\n");
     uint chunk_count = 0;
