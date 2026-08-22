@@ -41,6 +41,23 @@ void set_text_source_text(const string &text_source_name, const string &caption_
     obs_source_release(text_source);
 }
 
+static void audio_feed_loop(std::shared_ptr<AudioFeedControl> control, ContinuousCaptions *continuous_captions) {
+    std::string chunk;
+    while (!control->stop) {
+        control->audio_queue.wait_dequeue(chunk);
+        if (control->stop)
+            break;
+        if (chunk.empty())
+            continue;
+        try {
+            continuous_captions->queue_audio_data(chunk.data(), (uint) chunk.size());
+        }
+        catch (...) {
+            error_log("audio feed thread, queue_audio_data error");
+        }
+    }
+}
+
 SourceCaptioner::SourceCaptioner(const bool enabled, const SourceCaptionerSettings &settings, const string &scene_collection_name, bool start) :
         QObject(),
         base_enabled(enabled),
@@ -72,6 +89,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
         std::lock_guard<recursive_mutex> lock(settings_change_mutex);
         source_audio_capture_session = nullptr;
         output_audio_capture_session = nullptr;
+        stop_feed_thread();
         caption_result_handler = nullptr;
         continuous_captions = nullptr;
         audio_capture_id++;
@@ -86,6 +104,7 @@ void SourceCaptioner::stop_caption_stream(bool send_signal) {
 
     source_audio_capture_session = nullptr;
     output_audio_capture_session = nullptr;
+    stop_feed_thread();
     caption_result_handler = nullptr;
     continuous_captions = nullptr;
     audio_capture_id++;
@@ -152,6 +171,7 @@ bool SourceCaptioner::start_caption_stream(const SourceCaptionerSettings &new_se
 
         source_audio_capture_session = nullptr;
         output_audio_capture_session = nullptr;
+        stop_feed_thread();
         caption_result_handler = nullptr;
         audio_capture_id++;
 
@@ -284,6 +304,16 @@ bool SourceCaptioner::_start_caption_stream(bool restart_stream) {
         caption_result_handler = std::make_unique<CaptionResultHandler>(settings.format_settings);
 
         try {
+            audio_feed_control = std::make_shared<AudioFeedControl>(settings.stream_settings.stream_settings.max_queue_depth);
+            audio_feed_thread = std::thread(audio_feed_loop, audio_feed_control, continuous_captions.get());
+        }
+        catch (...) {
+            audio_feed_control = nullptr;
+            warn_log("couldn't start audio feed thread");
+            return false;
+        }
+
+        try {
             resample_info resample_to = {16000, AUDIO_FORMAT_16BIT, SPEAKERS_MONO};
             audio_chunk_data_cb audio_cb = std::bind(&SourceCaptioner::on_audio_data_callback, this,
                                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -371,12 +401,27 @@ void SourceCaptioner::process_audio_capture_status_change(const int cb_audio_cap
 
 void SourceCaptioner::on_audio_data_callback(const int id, const uint8_t *data, const size_t size) {
 //    info_log("audio data");
-    if (continuous_captions) {
-        // safe without locking as continuous_captions only ever gets updated when there's no AudioCaptureSession running
-        continuous_captions->queue_audio_data((char *) data, size);
+    if (audio_feed_control && !audio_feed_control->stop) {
+        // safe without locking as audio_feed_control only ever gets updated when there's no AudioCaptureSession running
+        if (audio_feed_control->max_queue_depth) {
+            std::string dropped;
+            while (audio_feed_control->audio_queue.size_approx() > audio_feed_control->max_queue_depth) {
+                if (!audio_feed_control->audio_queue.try_dequeue(dropped))
+                    break;
+            }
+        }
+        audio_feed_control->audio_queue.enqueue(std::string((const char *) data, size));
     }
     audio_chunk_count++;
 
+}
+
+void SourceCaptioner::stop_feed_thread() {
+    if (audio_feed_control)
+        audio_feed_control->stop_soon();
+    if (audio_feed_thread.joinable())
+        audio_feed_thread.join();
+    audio_feed_control = nullptr;
 }
 
 void SourceCaptioner::clear_output_timer_cb() {

@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QObject>
 #include <QTimer>
 #include <atomic>
+#include <thread>
 
 typedef unsigned int uint;
 using namespace std;
@@ -419,6 +420,19 @@ struct CaptionOutput {
     CaptionOutput() : is_clearance(false) {}
 };
 
+struct AudioFeedControl {
+    moodycamel::BlockingConcurrentQueue<std::string> audio_queue;
+    std::atomic<bool> stop{false};
+    const uint max_queue_depth;
+
+    explicit AudioFeedControl(uint max_queue_depth) : max_queue_depth(max_queue_depth) {}
+
+    void stop_soon() {
+        stop = true;
+        audio_queue.enqueue(std::string());
+    }
+};
+
 template<typename T>
 struct CaptionOutputControl {
     moodycamel::BlockingConcurrentQueue<CaptionOutput> caption_queue;
@@ -501,6 +515,8 @@ Q_OBJECT
     std::unique_ptr<SourceAudioCaptureSession> source_audio_capture_session;
     std::unique_ptr<OutputAudioCaptureSession> output_audio_capture_session;
     std::unique_ptr<ContinuousCaptions> continuous_captions;
+    std::shared_ptr<AudioFeedControl> audio_feed_control;
+    std::thread audio_feed_thread;
     uint audio_chunk_count = 0;
 
     SourceCaptionerSettings settings;
@@ -554,6 +570,8 @@ Q_OBJECT
     void on_caption_text_callback(const CaptionResult &caption_result, bool interrupted);
 
     bool _start_caption_stream(bool restart_stream);
+
+    void stop_feed_thread();
 
     void process_caption_result(const CaptionResult, bool interrupted);
 
