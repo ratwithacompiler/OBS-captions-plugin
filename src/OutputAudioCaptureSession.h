@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class OutputAudioCaptureSession {
     const int id;
-    struct audio_convert_info converter;
+    struct audio_convert_info converter = {};
     audio_t *audio_output = nullptr;
     const int bytes_per_channel;
     const int track_index;
