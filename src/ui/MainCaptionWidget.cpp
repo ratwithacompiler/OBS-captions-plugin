@@ -178,7 +178,7 @@ void MainCaptionWidget::virtualcam_stopped_event() {
 }
 
 void MainCaptionWidget::stop_captioning() {
-    plugin_manager.source_captioner.stop_caption_stream(false);
+    plugin_manager.stop_captioning();
 }
 
 void MainCaptionWidget::handle_source_capture_status_change(shared_ptr<SourceCaptionerStatus> status) {

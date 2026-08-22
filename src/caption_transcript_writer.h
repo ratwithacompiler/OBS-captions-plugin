@@ -689,8 +689,8 @@ void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_poin
     }
 }
 
-void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
-                            const string target_name, const TranscriptOutputSettings transcript_settings) {
+void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
+                                  const string target_name, const TranscriptOutputSettings transcript_settings) {
     const string format = transcript_settings.format;
     auto started_at_sys = std::chrono::system_clock::now();
     auto started_at_steady = std::chrono::steady_clock::now();
@@ -788,8 +788,15 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
     info_log("transcript_writer_loop %s done", to_what.c_str());
 }
 
+void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
+                            const string target_name, const TranscriptOutputSettings transcript_settings) {
+    transcript_writer_loop_inner(control, target_name, transcript_settings);
+    // so nothing else gets queued after this
+    control->stop = true;
+}
 
-void fileoutput_writer_loop(shared_ptr<CaptionOutputControl<FileOutputSettings>> control, const FileOutputSettings output_settings) {
+
+void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSettings>> control, const FileOutputSettings output_settings) {
     info_log("fileoutput_writer_loop starting");
 
     QFileInfo output_directory(QString::fromStdString(control->arg.output_folder));
@@ -856,6 +863,11 @@ void fileoutput_writer_loop(shared_ptr<CaptionOutputControl<FileOutputSettings>>
 
     info_log("fileoutput_writer_loop done");
 
+}
+
+void fileoutput_writer_loop(shared_ptr<CaptionOutputControl<FileOutputSettings>> control, const FileOutputSettings output_settings) {
+    fileoutput_writer_loop_inner(control, output_settings);
+    control->stop = true;
 }
 
 #endif //OBS_GOOGLE_CAPTION_PLUGIN_CAPTION_TRANSCRIPT_WRITER_H
