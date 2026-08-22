@@ -61,7 +61,8 @@ OutputAudioCaptureSession::OutputAudioCaptureSession(
     }
 
 //    printf("setting up audio cb\n");
-    audio_output_connect(audio_output, track_index, &converter, audio_captured, this);
+    if (!audio_output_connect(audio_output, track_index, &converter, audio_captured, this))
+        throw std::string("audio_output_connect failed for track index " + std::to_string(track_index));
 }
 
 void OutputAudioCaptureSession::audio_capture_cb(size_t mix_idx, const struct audio_data *audio) {
