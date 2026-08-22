@@ -544,6 +544,8 @@ void SourceCaptioner::process_caption_result(const CaptionResult caption_result,
                                                                                      text_out.capitalization,
                                                                                      interrupted,
                                                                                      results_history);
+            if (!text_output_result)
+                continue;
 
             text_source_sets.emplace_back(text_out.text_source_name, text_output_result->output_line);
         }
