@@ -530,18 +530,22 @@ void add_result(SrtState &settings, ResultQueue &results, shared_ptr<OutputCapti
 //    }
 }
 
+// blocks & waits unless stopped then just drains what's left if any
+template<typename T>
+bool dequeue_caption_output(CaptionOutputControl<T> &control, CaptionOutput &out) {
+    if (control.stop)
+        return control.caption_queue.try_dequeue(out);
+    control.caption_queue.wait_dequeue(out);
+    return true;
+}
+
 void write_loop_srt(SrtState &settings, std::fstream &fs,
                     shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
     std::shared_ptr<OutputCaptionResult> held_nonfinal_result;
     CaptionOutput caption_output;
     ResultQueue results;
 
-    while (!control->stop) {
-        control->caption_queue.wait_dequeue(caption_output);
-
-        if (control->stop)
-            break;
-
+    while (dequeue_caption_output(*control, caption_output)) {
         if (!caption_output.output_result || caption_output.is_clearance) {
             continue;
         }
@@ -612,12 +616,7 @@ void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::ste
     CaptionOutput caption_output;
     const string prefix(add_spacer ? "    " : "");
 
-    while (!control->stop) {
-        control->caption_queue.wait_dequeue(caption_output);
-
-        if (control->stop)
-            break;
-
+    while (dequeue_caption_output(*control, caption_output)) {
         if (!caption_output.output_result || caption_output.is_clearance) {
 //            debug_log("got empty CaptionOutput.output_result???");
             continue;
@@ -657,12 +656,7 @@ void write_loop_txt(SrtState &settings, std::fstream &fs, const std::chrono::ste
 void write_loop_raw(std::fstream &fs, const std::chrono::steady_clock::time_point &started_at_steady, bool write_realtime,
                     shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control) {
     CaptionOutput caption_output;
-    while (!control->stop) {
-        control->caption_queue.wait_dequeue(caption_output);
-
-        if (control->stop)
-            break;
-
+    while (dequeue_caption_output(*control, caption_output)) {
         if (!caption_output.output_result || caption_output.is_clearance) {
 //            info_log("got empty CaptionOutput.output_result???");
             continue;
@@ -829,14 +823,24 @@ void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSett
     }
 
     CaptionOutput caption_output;
-    while (!control->stop) {
-        control->caption_queue.wait_dequeue(caption_output);
-
-        if (control->stop)
-            break;
-
-        if (!caption_output.output_result)
-            continue;
+    while (true) {
+        if (control->stop) {
+            // drain to the last real item so the file ends up with the newest line, written once
+            CaptionOutput next;
+            bool have_item = false;
+            while (control->caption_queue.try_dequeue(next)) {
+                if (next.output_result) {
+                    caption_output = next;
+                    have_item = true;
+                }
+            }
+            if (!have_item)
+                break;
+        } else {
+            control->caption_queue.wait_dequeue(caption_output);
+            if (!caption_output.output_result)
+                continue;
+        }
 
         try {
             std::fstream fs;
