@@ -159,6 +159,16 @@ static void split_into_lines(vector<string> &output_lines, const string &text, c
     split_into_lines_ascii(output_lines, text, max_line_length);
 }
 
+static string utf8_tail_within_bytes(const string &text, const size_t max_bytes) {
+    if (text.size() <= max_bytes)
+        return text;
+
+    size_t cut = text.size() - max_bytes;
+    while (cut < text.size() && (static_cast<unsigned char>(text[cut]) & 0xC0) == 0x80)
+        cut++;
+    return text.substr(cut);
+}
+
 static void join_strings(const vector<string> &lines, const string &joiner, string &output) {
     for (const string &a_line: lines) {
         if (!output.empty())

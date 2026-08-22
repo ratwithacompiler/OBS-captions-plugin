@@ -8,6 +8,9 @@
 #include "thirdparty/cameron314/blockingconcurrentqueue.h"
 #include "log.c"
 #include "SourceCaptioner.h"
+#include "stringutils.h"
+
+#define OBS_CAPTION_TEXT_MAX_BYTES 128 //4 lines x 32chars
 
 static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> control, bool to_stream) {
     // TODO: minimum_time_between_captions arg to optionally hold next caption if still too soon after previous one
@@ -109,7 +112,8 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
         // debug_log("sending caption %s line now, waited %f: '%s'",
         // to_what.c_str(), waited_left_secs, caption_output.output_result->output_line.c_str());
 
-        const char* txt = caption_output.output_result->output_line.c_str();
+        const string budgeted_line = utf8_tail_within_bytes(caption_output.output_result->output_line, OBS_CAPTION_TEXT_MAX_BYTES);
+        const char *txt = budgeted_line.c_str();
         if (to_stream) {
             obs_output_t *ignore_output = obs_frontend_get_recording_output();
             struct Ctx {
