@@ -121,15 +121,18 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
     signal_handler_connect(obs_source_get_signal_handler(audio_source), "remove", source_removed_fwder, this);
     signal_handler_connect(obs_source_get_signal_handler(muting_source), "remove", source_removed_fwder, this);
 
+    {
+        std::lock_guard<std::mutex> lock(status_mutex);
+        capture_status = check_source_status();
+    }
     obs_source_add_audio_capture_callback(audio_source, audio_captured, this);
 
-//    const bool do_capture = should_send_data();
-    capture_status = check_source_status();
     if (send_startup_change_signal)
         state_changed_check(true);
 }
 
 void SourceAudioCaptureSession::state_changed_check(bool always_signal) {
+    std::lock_guard<std::mutex> lock(status_mutex);
     audio_source_capture_status new_status = check_source_status();
     if (!always_signal && new_status == capture_status)
         return;

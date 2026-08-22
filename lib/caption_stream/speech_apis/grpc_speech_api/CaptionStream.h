@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <queue>
 #include <chrono>
 #include <mutex>
+
+#include <atomic>
 #include "thirdparty/cameron314/blockingconcurrentqueue.h"
 
 #include "ThreadsaferCallback.h"
@@ -104,8 +106,8 @@ class CaptionStream {
     string session_pair;
     moodycamel::BlockingConcurrentQueue<string *> audio_queue;
 
-    bool started = false;
-    bool stopped = false;
+    std::atomic<bool> started{false};
+    std::atomic<bool> stopped{false};
 
 
 public:

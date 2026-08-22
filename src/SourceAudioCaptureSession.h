@@ -34,7 +34,8 @@ class SourceAudioCaptureSession {
     source_capture_config muted_handling;
 
     audio_resampler_t *resampler = nullptr;
-    audio_source_capture_status capture_status;
+    std::atomic<audio_source_capture_status> capture_status{AUDIO_SOURCE_NOT_STREAMED};
+    std::mutex status_mutex;
     bool use_muting_cb_signal = true;
     std::atomic<bool> source_removed{false};
     const int id;
