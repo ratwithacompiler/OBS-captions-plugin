@@ -1368,6 +1368,26 @@ li.checked::marker { content: &quot;\2612&quot;; }
                <widget class="QComboBox" name="fileOutputCapitalizationComboBox"/>
               </item>
               <item row="6" column="0">
+               <widget class="QLabel" name="label_29">
+                <property name="toolTip">
+                 <string>In Place Update can cause external tools reading the file to see it only partially written, only use if you know you need it.</string>
+                </property>
+                <property name="text">
+                 <string>In Place Update</string>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="1">
+               <widget class="QCheckBox" name="fileOutputInplaceUpdateCheckBox">
+                <property name="toolTip">
+                 <string>In Place Update can cause external tools reading the file to see it only partially written, only use if you know you need it.</string>
+                </property>
+                <property name="text">
+                 <string>(Not Recommended)</string>
+                </property>
+               </widget>
+              </item>
+              <item row="7" column="0">
                <widget class="QLabel" name="label_27">
                 <property name="text">
                  <string>Output Folder:</string>

@@ -507,6 +507,7 @@ void CaptionSettingsWidget::accept_current_settings() {
     file_output_settings.filename_type = fileOutputFilenameComboBox->currentData().toString().toStdString();
     file_output_settings.filename_custom = fileOutputCustomNameOverwriteLineEdit->text().toStdString();
     file_output_settings.filename_exists = fileOutputCustomNameExistsCombobox->currentData().toString().toStdString();
+    file_output_settings.inplace_update = fileOutputInplaceUpdateCheckBox->isChecked();
 
     apply_ui_scene_collection_settings();
 
@@ -598,6 +599,7 @@ void CaptionSettingsWidget::updateUi() {
     fileOutputLineLengthSpinBox->setValue(source_settings.file_output_settings.line_length);
     fileOutputLineCountSpinBox->setValue(source_settings.file_output_settings.line_count);
     fileOutputPunctuationCheckBox->setChecked(source_settings.file_output_settings.insert_punctuation);
+    fileOutputInplaceUpdateCheckBox->setChecked(source_settings.file_output_settings.inplace_update);
     combobox_set_data_int(*fileOutputCapitalizationComboBox, source_settings.file_output_settings.capitalization, 0);
 
     fileOutputFolderPathLineEdit->setText(QString::fromStdString(source_settings.file_output_settings.output_folder));

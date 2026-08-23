@@ -8,6 +8,7 @@
 
 #include "log.c"
 #include <QDir>
+#include <QSaveFile>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -844,20 +845,36 @@ void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSett
 
         try {
             std::fstream fs;
+            if (control->arg.inplace_update) {
+                std::fstream fs;
 #if _WIN32
-            fs.open(transcript_file.toStdWString(), std::fstream::out | std::ios::binary | std::fstream::trunc);
+                fs.open(transcript_file.toStdWString(), std::fstream::out | std::ios::binary | std::fstream::trunc);
 #else
-            fs.open(transcript_file.toStdString(),
-                    std::fstream::out | std::ios::binary | std::fstream::trunc);
+                fs.open(transcript_file.toStdString(),
+                        std::fstream::out | std::ios::binary | std::fstream::trunc);
 #endif
 
-            if (fs.fail()) {
-                error_log("fileoutput_writer_loop open error, couldn't open file: %s", strerror(errno));
+                if (fs.fail()) {
+                    error_log("fileoutput_writer_loop open error, couldn't open file: %s", strerror(errno));
+                }
+                else {
+                    fs_write_string(fs, caption_output.output_result->output_line);
+                }
+                fs.close();
+            } else {
+                QSaveFile save_file(transcript_file);
+                if (!save_file.open(QIODevice::WriteOnly)) {
+                    error_log("fileoutput_writer_loop open error, couldn't open temp file: %s",
+                              save_file.errorString().toStdString().c_str());
+                } else {
+                    const string &line = caption_output.output_result->output_line;
+                    save_file.write(line.data(), (qint64) line.size());
+                    if (!save_file.commit()) {
+                        error_log("fileoutput_writer_loop commit error, couldn't replace file: %s",
+                                  save_file.errorString().toStdString().c_str());
+                    }
+                }
             }
-            else {
-                fs_write_string(fs, caption_output.output_result->output_line);
-            }
-            fs.close();
         } catch (std::exception &ex) {
             error_log("fileoutput_writer_loop open error %s", ex.what());
         } catch (...) {

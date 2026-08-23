@@ -149,6 +149,8 @@ struct FileOutputSettings {
     string filename_custom;
     string filename_exists;
 
+    bool inplace_update;
+
     void print(const char *line_prefix = "") const{
         printf("%sFileOutputSettings\n", line_prefix);
         printf("%s  enabled: %d\n", line_prefix, enabled);
@@ -160,6 +162,7 @@ struct FileOutputSettings {
         printf("%s  filename_type: %s\n", line_prefix, filename_type.c_str());
         printf("%s  filename_custom: %s\n", line_prefix, filename_custom.c_str());
         printf("%s  filename_exists: %s\n", line_prefix, filename_exists.c_str());
+        printf("%s  inplace_update: %d\n", line_prefix, inplace_update);
     }
 
     bool isValid() const {
@@ -179,7 +182,8 @@ struct FileOutputSettings {
                && lhs.output_folder == rhs.output_folder
                && lhs.filename_type == rhs.filename_type
                && lhs.filename_custom == rhs.filename_custom
-               && lhs.filename_exists == rhs.filename_exists;
+               && lhs.filename_exists == rhs.filename_exists
+               && lhs.inplace_update == rhs.inplace_update;
     }
 
     friend bool operator!=(const FileOutputSettings &lhs, const FileOutputSettings &rhs) {

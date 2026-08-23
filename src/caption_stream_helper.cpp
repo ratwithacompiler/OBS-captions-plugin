@@ -93,6 +93,7 @@ static FileOutputSettings default_FileOutputSettings() {
         "datetime",
         "captions.txt",
         "append",
+        false,
     };
 }
 
@@ -371,6 +372,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     obs_data_set_default_string(load_data, "file_output_filename_type", source_settings.file_output_settings.filename_type.c_str());
     obs_data_set_default_string(load_data, "file_output_filename_custom", source_settings.file_output_settings.filename_custom.c_str());
     obs_data_set_default_string(load_data, "file_output_filename_exists", source_settings.file_output_settings.filename_exists.c_str());
+    obs_data_set_default_bool(load_data, "file_output_inplace_update", source_settings.file_output_settings.inplace_update);
 
     settings.enabled = obs_data_get_bool(load_data, "enabled");
     source_settings.streaming_output_enabled = obs_data_get_bool(load_data, "streaming_output_enabled");
@@ -453,6 +455,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.file_output_settings.filename_type = obs_data_get_string(load_data, "file_output_filename_type");
     source_settings.file_output_settings.filename_custom = obs_data_get_string(load_data, "file_output_filename_custom");
     source_settings.file_output_settings.filename_exists = obs_data_get_string(load_data, "file_output_filename_exists");
+    source_settings.file_output_settings.inplace_update = obs_data_get_bool(load_data, "file_output_inplace_update");
 
     enforce_CaptionPluginSettings_values(settings);
 
@@ -539,6 +542,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     obs_data_set_string(save_data, "file_output_filename_type", settings.source_cap_settings.file_output_settings.filename_type.c_str());
     obs_data_set_string(save_data, "file_output_filename_custom", settings.source_cap_settings.file_output_settings.filename_custom.c_str());
     obs_data_set_string(save_data, "file_output_filename_exists", settings.source_cap_settings.file_output_settings.filename_exists.c_str());
+    obs_data_set_bool(save_data, "file_output_inplace_update", settings.source_cap_settings.file_output_settings.inplace_update);
 
     obs_data_set_string(save_data, "plugin_version", VERSION_STRING);
 }
