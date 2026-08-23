@@ -50,7 +50,7 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
                 string tmp = settings.replacer.get_replacer().replace(caption_result.caption_text);
 
                 if (caption_result.caption_text != tmp) {
-                    info_log("modified string '%s' -> '%s'", caption_result.caption_text.c_str(), tmp.c_str());
+                    // debug_log("modified string '%s' -> '%s'", caption_result.caption_text.c_str(), tmp.c_str());
                     cleaned_line = tmp;
                 }
             }

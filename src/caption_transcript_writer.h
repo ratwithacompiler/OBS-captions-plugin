@@ -844,7 +844,6 @@ void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSett
         }
 
         try {
-            std::fstream fs;
             if (control->arg.inplace_update) {
                 std::fstream fs;
 #if _WIN32
