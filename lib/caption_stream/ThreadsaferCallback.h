@@ -51,12 +51,9 @@ public:
 
 //    void set(std::function<T> new_callback_fn) {
     void set(T new_callback_fn, bool lock_to_clear = true) {
-        clear();
-        {
-            std::lock_guard<std::recursive_mutex> lock(mutex);
-            this->callback_fn = new_callback_fn;
-            this->lock_to_clear = lock_to_clear;
-        }
+        std::lock_guard<std::recursive_mutex> lock(mutex);
+        this->callback_fn = new_callback_fn;
+        this->lock_to_clear = lock_to_clear;
     }
 
     ~ThreadsaferCallback() {
