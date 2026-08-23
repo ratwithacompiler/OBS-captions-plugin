@@ -6,49 +6,30 @@ function build_obs() {
   echo "setting up src and building OBS in $(pwd)/obs-studio"
   mkdir -p obs-studio && cd obs-studio/
 
-  sudo sudo apt-get update && sudo apt-get install -y \
-    build-essential \
-    libcurl4-openssl-dev \
-    libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavutil-dev \
-    libswresample-dev libswscale-dev \
-    libjansson-dev \
-    libx11-xcb-dev \
-    libgles2-mesa-dev \
-    libwayland-dev \
-    libpulse-dev \
-    qt6-base-dev libqt6svg6-dev qt6-base-private-dev
-
-  BUILD_OBS__UNPACKED_DEPS_DIR="$(pwd)/unpacked_deps"
   BUILD_OBS__SRC_DIR="$(pwd)/src"
   BUILD_OBS__BUILD_DIR="$(pwd)/src/build"
-  BUILD_OBS__INSTALLED_DIR="$BUILD_OBS__BUILD_DIR"
+  BUILD_OBS__INSTALLED_DIR="$(pwd)/build_installed"
   echo "BUILD_OBS__SRC_DIR: $BUILD_OBS__SRC_DIR"
-  echo "BUILD_OBS__UNPACKED_DEPS_DIR: $BUILD_OBS__UNPACKED_DEPS_DIR"
-  echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
   echo "BUILD_OBS__BUILD_DIR: $BUILD_OBS__BUILD_DIR"
+  echo "BUILD_OBS__INSTALLED_DIR: $BUILD_OBS__INSTALLED_DIR"
 
-  if [ -e "src/done" ]; then
+  # sentinel lives at the obs-studio/ level (not inside src/) so src/ can be
+  # cleaned away entirely after install, see build_obs_cleanup
+  if [ -e "done" ]; then
     echo "obs build done,skipping"
     return
   fi
 
   if [ ! -e "src" ]; then
     echo getting src
-    git clone https://github.com/obsproject/obs-studio.git src
-    cd src
-    git checkout 30.0.0
-    git submodule update --init --recursive
-    cd ..
+    # shallow tag clone; submodules are plugin-only (browser/websocket/dshow)
+    # and never reached with ENABLE_PLUGINS=OFF
+    git clone --depth 1 --branch 32.0.0 https://github.com/obsproject/obs-studio.git src
   fi
 
-  if [ ! -e deps.tar.xz ]; then
-    wget -c https://github.com/obsproject/obs-deps/releases/download/2023-11-03/linux-deps-2023-11-03-x86_64.tar.xz -O deps.tar.xz
-  fi
-
-  if [ ! -d unpacked_deps ]; then
-    mkdir unpacked_deps
-    tar -k -xvf deps.tar.xz -C unpacked_deps
-  fi
+  # OBS 32: obs-deps publishes no linux tarballs anymore; all OBS build deps
+  # come from apt via CI/linux_install_syswide_tools.sh (build scripts
+  # themselves never install anything system-wide)
 
   echo building OBS && pwd
   mkdir -p build_installed
@@ -56,32 +37,33 @@ function build_obs() {
   mkdir -p build && cd build && pwd
   $CMAKE \
     -DCMAKE_BUILD_TYPE=Release \
-    -DENABLE_BROWSER=OFF \
-    -DENABLE_PLUGINS=OFF \
-    -DENABLE_UI=OFF \
-    -DENABLE_SCRIPTING=OFF \
-    -DQT_VERSION=6 \
-    -DCMAKE_PREFIX_PATH="$BUILD_OBS__UNPACKED_DEPS_DIR" \
+    -DENABLE_PLUGINS:BOOL=OFF \
+    -DENABLE_FRONTEND:BOOL=OFF \
+    -DENABLE_SCRIPTING:BOOL=OFF \
+    -DOBS_VERSION_OVERRIDE:STRING=32.0.0 \
     -DCMAKE_INSTALL_PREFIX:PATH="$BUILD_OBS__INSTALLED_DIR" \
     ..
 
   $CMAKE --build . --config Release -t obs-frontend-api
-  $CMAKE --install . --config Release --component obs_libraries
+  $CMAKE --install . --config Release --component Development
 
-  cd ../
+  cd ../..
   du -chd1 && pwd
   touch "done"
 }
 
 function build_obs_cleanup() {
   if [ "$CLEAN_OBS" = "1" ] || [ "$CLEAN_OBS" = "true" ]; then
-    if [[ -n "$BUILD_OBS__BUILD_DIR" && -d "$BUILD_OBS__BUILD_DIR" ]]; then
-      echo "cleaning up OBS BUILD dir: $BUILD_OBS__BUILD_DIR"
-      rm -rf "$BUILD_OBS__BUILD_DIR" || true
+    # src/ (source + build tree) is only needed to build OBS itself; the plugin
+    # builds against build_installed/ alone, which survives together with the
+    # done sentinel
+    if [[ -n "$BUILD_OBS__SRC_DIR" && -d "$BUILD_OBS__SRC_DIR" ]]; then
+      echo "cleaning up OBS src+build dir: $BUILD_OBS__SRC_DIR"
+      rm -rf "$BUILD_OBS__SRC_DIR" || true
     else
-      echo "OBS BUILD dir folder not found: $BUILD_OBS__BUILD_DIR"
+      echo "OBS src dir folder not found: $BUILD_OBS__SRC_DIR"
     fi
   else
-    echo "not cleaning OBS build, CLEAN_OBS: $CLEAN_OBS"
+    echo "not cleaning OBS src+build, CLEAN_OBS: $CLEAN_OBS"
   fi
 }

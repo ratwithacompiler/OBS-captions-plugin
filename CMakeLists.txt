@@ -63,8 +63,6 @@ else ()
 endif ()
 
 add_compile_definitions(BUILD_CAPTIONS=1)
-include_directories(${OBS_SOURCE_DIR}/libobs)
-include_directories(${OBS_SOURCE_DIR}/UI/obs-frontend-api/)
 
 set(obs_google_caption_plugin_SOURCES
         src/ui/MainCaptionWidget.cpp

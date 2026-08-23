@@ -1,5 +1,5 @@
-Linux support is not well tested yet, built on ubunut 22.04 image so may have issues on older systems.
-Requires OBS 28+.
+Linux support is not well tested yet, built on ubuntu 24.04 image so may have issues on older systems.
+Requires OBS 32+.
 
 Install:
 

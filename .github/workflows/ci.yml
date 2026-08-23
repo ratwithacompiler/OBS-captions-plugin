@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, devmain, testing]
+  pull_request:
+  workflow_dispatch: # manual full run — like a release build, but keyless
+    inputs:
+      test_level:
+        type: choice
+        options: [quick, full, none]
+        default: full
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      # push/PR runs use the quick tier; manual dispatch picks its own
+      test_level: ${{ github.event_name == 'workflow_dispatch' && inputs.test_level || 'quick' }}

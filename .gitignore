@@ -1,0 +1,13 @@
+__pycache__/
+CI_build/
+lib/caption_stream/speech_apis/grpc_speech_api/certs/roots.h
+.vscode/
+resources/
+.DS_Store
+.idea/
+cmake-build-*/
+.vs/
+*.user
+Thumbs.db
+
+/dev/

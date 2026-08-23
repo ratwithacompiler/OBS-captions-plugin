@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import sys
 import subprocess
@@ -30,6 +31,16 @@ def eprint(*args, **kwargs):
 	print(*args, **kwargs, file = sys.stderr)
 
 
+def get_version_string(cmakelists: Path):
+	cmake_text = cmakelists.read_text()
+	cmake_text = re.sub(r"\s+", "", cmake_text)
+	version = re.search('set\(VERSION_STRING"(.*?)"\)', cmake_text).group(1)
+	if not version:
+		raise ValueError("no version found")
+	print(f"VERSION_STRING: {version!r}")
+	return version
+
+
 def package_zip(release: Path, installed_dir: Path, version: str):
 	release.mkdir(parents = True, exist_ok = True)
 
@@ -50,10 +61,6 @@ def package_zip(release: Path, installed_dir: Path, version: str):
 
 def get_google_api_key_arg():
 	google_api_key = os.environ.get("GOOGLE_API_KEY")
-	if google_api_key == "$(GOOGLE_API_KEY)":
-		google_api_key = None
-		eprint("mkdir ignoring azure env arg", google_api_key)
-
 	if google_api_key:
 		print("building with hardcoded API key", len(google_api_key))
 		google_api_key_arg = f"-DGOOGLE_API_KEY={google_api_key}"
@@ -62,3 +69,18 @@ def get_google_api_key_arg():
 		google_api_key_arg = "-DENABLE_CUSTOM_API_KEY=ON"
 
 	return google_api_key_arg
+
+
+# plibsys (HTTP variant's socket lib): pinned checkout (same pin as
+# CI/http/clone_plibsys.sh) plus, Windows only, the repo's socket-wakeup patch
+# (CI/http/plibsys-socket-wakeup.patch); the .cmd marks a finished, patched
+# checkout with plibsys/.patched-<pin>, anything else is re-cloned.
+PLIBSYS_PIN = "15da22f4bc0b311df071ea766387e902d088ee0e"
+
+
+def ensure_plibsys(root_dir: Path, ci_root_dir: Path):
+	if ci_root_dir.joinpath("plibsys", f".patched-{PLIBSYS_PIN}").exists():
+		print(f"plibsys: patched checkout {PLIBSYS_PIN} present, leaving")
+		return
+	print("plibsys: no patched checkout, cloning")
+	check_call(["cmd", "/C", str(root_dir.joinpath("clone_plibsys.cmd")), PLIBSYS_PIN], cwd = ci_root_dir)

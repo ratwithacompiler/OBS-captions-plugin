@@ -1,0 +1,15 @@
+name: Release
+
+on:
+  workflow_dispatch: # "Run workflow" in the Actions tab, pick any branch/tag
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      test_level: full
+    secrets:
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}

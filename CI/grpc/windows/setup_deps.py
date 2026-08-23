@@ -1,35 +1,40 @@
-# import argparse
 import os
-import re
 import shutil
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent))
+sys.path.append(str(Path(__file__).parent.parent.parent))
+os.chdir(Path(__file__).parent.parent)  # everything runs from the variant dir (CI/grpc)
 
-from sys import exit
-from win_build_obs import check_call, CMAKE_VS_ARGS, spa, setup_obs
-from win_shared import package_zip, get_google_api_key_arg
+from win_build_obs import check_call, spa, setup_obs
+
+TRIPLET = "x64-windows-static-md-release"
 
 
 def setup_vcpkg_grpc(target: Path, clean_afterwards: bool):
-	triplet = "x64-windows-static-md-release"
+	triplet = TRIPLET
 	if not target.exists():
 		check_call([*spa("git clone --single-branch --branch master https://github.com/Microsoft/vcpkg.git"), str(target)])
-		check_call([*spa("git reset --hard 824c4324736156720645819abe4d48b4e740a1cd")], cwd = target)  # grpc 1.48.0
+		check_call([*spa("git reset --hard 9e593bb18ea69cc5095e012465dcd675a822ed0d")], cwd = target)  # grpc 1.81.1, vcpkg release 2026.07.29
 		check_call([*spa("cmd /C bootstrap-vcpkg.bat")], cwd = target)
 	else:
 		print("vcpkg dir exists", target)
 
 	triplet_path = target.joinpath(rf"triplets\community\{triplet}.cmake")
 	if not triplet_path.exists():
-		src_triplet = target.joinpath(r"triplets\community\x64-windows-static-md.cmake")
+		src_triplet = target.joinpath(r"triplets\x64-windows-static-md.cmake")
 		text = src_triplet.read_text()
 		text = text + "\nset(VCPKG_BUILD_TYPE release)\n"
 		triplet_path.write_text(text)
 		print("created static release triplet", triplet_path)
 
-	check_call([*spa(rf".\vcpkg.exe install  --host-triplet={triplet} --triplet={triplet} grpc:{triplet}")], cwd = target, shell = True)
+	# keep vcpkg's buildtrees at a short path when requested (set in CI):
+	# the github runner workspace prefix is long enough that grpc's deepest
+	# generated sources exceed windows MAX_PATH (260) otherwise
+	bt_root = os.environ.get("VCPKG_BUILDTREES_ROOT")
+	bt_arg = f" --x-buildtrees-root={bt_root}" if bt_root else ""
+
+	check_call([*spa(rf".\vcpkg.exe install{bt_arg} --host-triplet={triplet} --triplet={triplet} grpc:{triplet}")], cwd = target, shell = True)
 
 	if clean_afterwards:
 		for dirname in ["downloads", "packages", "buildtrees"]:
@@ -81,56 +86,24 @@ def main():
 	print("ci_root_dir:", repr(str(ci_root_dir)))
 	print("build_deps_dir:", repr(str(build_deps_dir)))
 
-	cmake_text = root_dir.parent.parent.joinpath("CMakeLists.txt").read_text()
-	cmake_text = re.sub(r"\s+", "", cmake_text)
-	version = re.search('set\(VERSION_STRING"(.*?)"\)', cmake_text).group(1)
-	if not version:
-		raise ValueError("no version found")
-	print(f"VERSION_STRING: {version!r}")
-
 	obs_studio = build_deps_dir.joinpath("obs-studio")
-	CLEAN_OBS = os.environ.get("CLEAN_OBS")
+	CLEAN_OBS = os.environ.get("CLEAN_OBS", "1")  # clean by default to keep size small
 	clean_afterwards = CLEAN_OBS in ("1", "true")
 	print("CLEAN_OBS clean_afterwards", (CLEAN_OBS, clean_afterwards))
-	obs_studio_src, obs_deps_dir, build_installed_dir = setup_obs(obs_studio, clean_afterwards = clean_afterwards)
+	setup_obs(obs_studio, clean_afterwards = clean_afterwards)
 
 	vcpkg_dir = build_deps_dir.joinpath("vcpkg")
 	print("vcpkg", vcpkg_dir)
 
-	CLEAN_VCPKG = os.environ.get("CLEAN_VCPKG")
+	CLEAN_VCPKG = os.environ.get("CLEAN_VCPKG", "1")  # clean by default to keep size small
 	clean_afterwards = CLEAN_VCPKG in ("1", "true")
 	print("CLEAN_VCPKG clean_afterwards", (CLEAN_VCPKG, clean_afterwards))
 	triplet = setup_vcpkg_grpc(vcpkg_dir, clean_afterwards = clean_afterwards)
-	vcpkg_prefix_path = vcpkg_dir.joinpath(rf"installed\{triplet}")
 
 	googleapis_dir = build_deps_dir.joinpath("googleapis")
 	googleapis_cmake_script = root_dir.joinpath("googleapis_CMakeLists.txt")
 	print("googleapis_dir", googleapis_dir)
 	setup_googleapis(googleapis_cmake_script, googleapis_dir, vcpkg_dir, triplet)
-
-	build_dir = ci_root_dir.joinpath("build")
-	installed_dir = ci_root_dir.joinpath("installed")
-	build_dir.mkdir(exist_ok = True)
-	check_call([
-		"cmake",
-		*CMAKE_VS_ARGS,
-		r"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-		r"-DCMAKE_GENERATOR_PLATFORM=x64",
-		r"-DSPEECH_API_GOOGLE_GRPC_V1=ON",
-		"-DBUILD_SHARED_LIBS=ON",
-		f"-DOBS_BUILD_DIR={str(build_installed_dir)}",
-		f"-DOBS_DEPS_DIR={str(obs_deps_dir)}",
-		f"-DGOOGLEAPIS_DIR={str(googleapis_dir)}",
-		f"-DCMAKE_PREFIX_PATH={str(vcpkg_prefix_path)}",
-		f"-DCMAKE_INSTALL_PREFIX:PATH={str(installed_dir)}",
-		get_google_api_key_arg(),
-		str(root_dir.parent.parent),
-	], cwd = build_dir)
-	check_call(spa("cmake --build . --config RelWithDebInfo"), cwd = build_dir)
-	check_call(spa("cmake --install . --config RelWithDebInfo"), cwd = build_dir)
-
-	release = ci_root_dir.joinpath("release")
-	package_zip(release, installed_dir, version)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,161 @@
+name: build
+
+on:
+  workflow_call:
+    inputs:
+      test_level:
+        type: string
+        required: false
+        default: quick
+    secrets:
+      GOOGLE_API_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build_${{ matrix.artifact_os }}_${{ matrix.variant }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ---------------------------------------------------------------
+          # HTTP builds
+          # ---------------------------------------------------------------
+          # macos-15 runner: OBS 32 needs Xcode >= 16 / macOS 15 SDK
+          - runner: macos-15
+            artifact_os: MacOS
+            variant: HTTP
+            workdir: CI/http
+            build_script: CI/macos_build_obs.sh
+            run_cmd: ./macos/setup_deps.sh && ./macos/build.sh --package
+            test_cmd: ./macos/test_ci.sh
+            cache_path: CI/http/CI_build/build_deps/obs-studio
+            cache_prefix: obs-studio-32.0.0
+            cache_suffix: ""
+            clean_obs: "1"
+            clean_vcpkg: "0"
+          - runner: windows-2022
+            artifact_os: Windows
+            variant: HTTP
+            workdir: CI/http
+            build_script: CI/win_build_obs.py
+            run_cmd: python windows/setup_deps.py && python windows/build.py --package
+            test_cmd: python windows/test.py --level
+            cache_path: CI/http/CI_build/build_deps/obs-studio
+            cache_prefix: obs-studio-32.0.0
+            cache_suffix: ""
+            clean_obs: "1"
+            clean_vcpkg: "0"
+          - runner: ubuntu-24.04
+            artifact_os: Linux64
+            variant: HTTP
+            workdir: CI/http
+            build_script: CI/linux_build_obs.sh
+            run_cmd: ../linux_install_syswide_tools.sh && ./linux/setup_deps.sh && ./linux/build.sh --package
+            test_cmd: ./linux/test_ci.sh
+            cache_path: CI/http/CI_build/build_deps/obs-studio
+            cache_prefix: obs-studio-32.0.0
+            cache_suffix: ""
+            clean_obs: "1"
+            clean_vcpkg: "0"
+          # ---------------------------------------------------------------
+          # GRPC builds (vcpkg + googleapis codegen).
+          # ---------------------------------------------------------------
+          - runner: macos-15
+            artifact_os: MacOS
+            variant: GRPC
+            workdir: CI/grpc
+            build_script: CI/macos_build_obs.sh
+            run_cmd: ./macos/setup_deps.sh && ./macos/build.sh --package
+            cache_path: CI/grpc/CI_build/build_deps
+            cache_prefix: build-deps-grpc-obs-32.0.0
+            cache_suffix: -vcpkg-9e593bb1
+            clean_obs: "1"
+            clean_vcpkg: "1"
+          - runner: windows-2022
+            artifact_os: Windows
+            variant: GRPC
+            workdir: CI/grpc
+            build_script: CI/win_build_obs.py
+            run_cmd: python windows/setup_deps.py && python windows/build.py --package
+            cache_path: CI/grpc/CI_build/build_deps
+            cache_prefix: build-deps-grpc-obs-32.0.0
+            cache_suffix: -vcpkg-9e593bb1
+            clean_obs: "1"
+            clean_vcpkg: "1"
+            # avoid max path len error
+            vcpkg_buildtrees_root: 'D:\bt'
+          - runner: ubuntu-24.04
+            artifact_os: Linux64
+            variant: GRPC
+            workdir: CI/grpc
+            build_script: CI/linux_build_obs.sh
+            run_cmd: ../linux_install_syswide_tools.sh && ./linux/setup_deps.sh && ./linux/build.sh --package
+            cache_path: CI/grpc/CI_build/build_deps
+            cache_prefix: build-deps-grpc-obs-32.0.0
+            cache_suffix: -vcpkg-9e593bb1
+            clean_obs: "1"
+            clean_vcpkg: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache build deps
+        id: deps_cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.cache_path }}
+          key: ${{ matrix.cache_prefix }}-${{ matrix.runner }}-${{ hashFiles(matrix.build_script) }}${{ matrix.cache_suffix }}
+
+      - name: Prepare vcpkg binary cache dir (GRPC)
+        if: matrix.variant == 'GRPC'
+        shell: bash
+        run: |
+          mkdir -p "${{ matrix.workdir }}/CI_build/vcpkg-bincache"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=$(pwd -W 2>/dev/null || pwd)/${{ matrix.workdir }}/CI_build/vcpkg-bincache" >> "$GITHUB_ENV"
+
+      - name: Restore vcpkg binary archives (GRPC, on deps-cache miss)
+        if: matrix.variant == 'GRPC' && steps.deps_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ matrix.workdir }}/CI_build/vcpkg-bincache
+          key: vcpkg-bincache-${{ matrix.runner }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            vcpkg-bincache-${{ matrix.runner }}-
+
+      - name: Setup & Build
+        working-directory: ${{ matrix.workdir }}
+        shell: bash
+        run: ${{ matrix.run_cmd }}
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          CLEAN_OBS: ${{ matrix.clean_obs }}
+          CLEAN_VCPKG: ${{ matrix.clean_vcpkg }}
+          VCPKG_BUILDTREES_ROOT: ${{ matrix.vcpkg_buildtrees_root }}
+
+      # runs even when the build fails so already-archived ports are kept
+      - name: Save vcpkg binary archives (GRPC, on deps-cache miss)
+        if: always() && matrix.variant == 'GRPC' && steps.deps_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ matrix.workdir }}/CI_build/vcpkg-bincache
+          key: vcpkg-bincache-${{ matrix.runner }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Closed_Captions_Plugin__Release_${{ matrix.artifact_os }}_${{ matrix.variant }}
+          path: ${{ matrix.workdir }}/CI_build/release/
+          if-no-files-found: error
+
+      - name: Tests
+        if: matrix.test_cmd != '' && inputs.test_level != 'none'
+        shell: bash
+        run: |
+          if [ -d tests/CI/http ]; then
+            cd tests/CI/http
+            ${{ matrix.test_cmd }} ${{ inputs.test_level }}
+          fi
