@@ -90,9 +90,7 @@ static FileOutputSettings default_FileOutputSettings() {
         true,
         CAPITALIZATION_NORMAL,
         "",
-        "datetime",
         "captions.txt",
-        "append",
         false,
     };
 }
@@ -369,9 +367,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     obs_data_set_default_bool(load_data, "file_output_insert_punctuation", source_settings.file_output_settings.insert_punctuation);
     obs_data_set_default_int(load_data, "file_output_capitalization", source_settings.file_output_settings.capitalization);
     obs_data_set_default_string(load_data, "file_output_folder", source_settings.file_output_settings.output_folder.c_str());
-    obs_data_set_default_string(load_data, "file_output_filename_type", source_settings.file_output_settings.filename_type.c_str());
     obs_data_set_default_string(load_data, "file_output_filename_custom", source_settings.file_output_settings.filename_custom.c_str());
-    obs_data_set_default_string(load_data, "file_output_filename_exists", source_settings.file_output_settings.filename_exists.c_str());
     obs_data_set_default_bool(load_data, "file_output_inplace_update", source_settings.file_output_settings.inplace_update);
 
     settings.enabled = obs_data_get_bool(load_data, "enabled");
@@ -452,9 +448,7 @@ static CaptionPluginSettings get_CaptionPluginSettings_from_data(obs_data_t *loa
     source_settings.file_output_settings.capitalization = (CapitalizationType) obs_data_get_int(load_data, "file_output_capitalization");
 
     source_settings.file_output_settings.output_folder = obs_data_get_string(load_data, "file_output_folder");
-    source_settings.file_output_settings.filename_type = obs_data_get_string(load_data, "file_output_filename_type");
     source_settings.file_output_settings.filename_custom = obs_data_get_string(load_data, "file_output_filename_custom");
-    source_settings.file_output_settings.filename_exists = obs_data_get_string(load_data, "file_output_filename_exists");
     source_settings.file_output_settings.inplace_update = obs_data_get_bool(load_data, "file_output_inplace_update");
 
     enforce_CaptionPluginSettings_values(settings);
@@ -539,9 +533,7 @@ static void set_CaptionPluginSettings_on_data(obs_data_t *save_data, const Capti
     obs_data_set_int(save_data, "file_output_capitalization", settings.source_cap_settings.file_output_settings.capitalization);
 
     obs_data_set_string(save_data, "file_output_folder", settings.source_cap_settings.file_output_settings.output_folder.c_str());
-    obs_data_set_string(save_data, "file_output_filename_type", settings.source_cap_settings.file_output_settings.filename_type.c_str());
     obs_data_set_string(save_data, "file_output_filename_custom", settings.source_cap_settings.file_output_settings.filename_custom.c_str());
-    obs_data_set_string(save_data, "file_output_filename_exists", settings.source_cap_settings.file_output_settings.filename_exists.c_str());
     obs_data_set_bool(save_data, "file_output_inplace_update", settings.source_cap_settings.file_output_settings.inplace_update);
 
     obs_data_set_string(save_data, "plugin_version", VERSION_STRING);
@@ -786,15 +778,6 @@ static void setup_combobox_transcript_file_exists(QComboBox &comboBox) {
     comboBox.addItem("Append to Existing", "append");
     comboBox.addItem("Do Nothing", "skip");
 }
-
-static void setup_combobox_fileoutput_filename(QComboBox &comboBox) {
-    while (comboBox.count())
-        comboBox.removeItem(0);
-
-    comboBox.addItem("captions_[datetime].txt", "datetime");
-    comboBox.addItem("Custom Name", "custom");
-}
-
 
 static bool set_streaming_recording_enabled(const int combo_box_data, bool &streaming_enabled, bool &recording_enabled) {
     if (combo_box_data == 0) {

@@ -145,9 +145,7 @@ struct FileOutputSettings {
     CapitalizationType capitalization;
 
     string output_folder;
-    string filename_type;
     string filename_custom;
-    string filename_exists;
 
     bool inplace_update;
 
@@ -159,9 +157,7 @@ struct FileOutputSettings {
         printf("%s  insert_punctuation: %d\n", line_prefix, insert_punctuation);
         printf("%s  capitalization: %d\n", line_prefix, capitalization);
         printf("%s  output_folder: %s\n", line_prefix, output_folder.c_str());
-        printf("%s  filename_type: %s\n", line_prefix, filename_type.c_str());
         printf("%s  filename_custom: %s\n", line_prefix, filename_custom.c_str());
-        printf("%s  filename_exists: %s\n", line_prefix, filename_exists.c_str());
         printf("%s  inplace_update: %d\n", line_prefix, inplace_update);
     }
 
@@ -180,9 +176,7 @@ struct FileOutputSettings {
                && lhs.insert_punctuation == rhs.insert_punctuation
                && lhs.capitalization == rhs.capitalization
                && lhs.output_folder == rhs.output_folder
-               && lhs.filename_type == rhs.filename_type
                && lhs.filename_custom == rhs.filename_custom
-               && lhs.filename_exists == rhs.filename_exists
                && lhs.inplace_update == rhs.inplace_update;
     }
 
