@@ -733,7 +733,7 @@ void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutp
         transcript_file = find_transcript_filename(transcript_settings.format, use_settings, output_directory, target_name, started_at_sys, 100,
                                                    overwrite_file)
                 .absoluteFilePath();
-        debug_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
+        info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
     }
     catch (string &err) {
         error_log("transcript_writer_loop find_transcript_filename error: %s", err.c_str());
