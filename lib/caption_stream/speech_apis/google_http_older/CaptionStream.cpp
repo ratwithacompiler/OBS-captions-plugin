@@ -366,13 +366,14 @@ void CaptionStream::_downstream_run() {
 
         try {
             chunk_length = std::stoul(rest.substr(0, crlf_pos), nullptr, 16);
-//            if (!chunk_length) {
-//                error_log("downstream parse chunksize = 0, wtf");
-//                return;
-//            }
         }
         catch (...) {
             error_log("downstream parse chunksize error, %s", rest.c_str());
+            return;
+        }
+
+        if (!chunk_length) {
+            debug_log("downstream body ended with 0 len");
             return;
         }
 
@@ -398,49 +399,45 @@ void CaptionStream::_downstream_run() {
         if (is_stopped())
             return;
 
-        if (chunk_length) {
-            string chunk_data = rest.substr(chunk_data_start, chunk_length);
-            if (chunk_data.size() != chunk_length) {
-                error_log("downstream read chunk data error, too few bytes, wtf, %lu %lu", chunk_data.size(), chunk_length);
-                return;
-            }
-
-
-            try {
-                auto now = std::chrono::steady_clock::now();
-                if (update_first_received_at)
-                    first_received_at = now;
-
-//                debug_log("Caption stream read: %d, %d,  %s", chunk_data_start, chunk_length, chunk_data.c_str());
-                CaptionResult *result = parse_caption_obj(chunk_data, first_received_at, now);
-//                debug_log("Caption stream raw_message: %s", result->raw_message.c_str());
-//                debug_log("Caption stream caption_text: %s", result->caption_text.c_str());
-                update_first_received_at = result->final;
-
-                {
-                    std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
-                    if (on_caption_cb_handle.callback_fn) {
-//                    debug_log("calling caption cb");
-                        on_caption_cb_handle.callback_fn(*result);
-                    }
-                }
-
-                delete result;
-
-            } catch (string &ex) {
-                info_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
-            }
-            catch (...) {
-                info_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
-            }
-
-            if (is_stopped())
-                return;
-//            info_log("downstream chunk: %lu bytes, %s", chunk_data.size(), chunk_data.c_str());
-
-        } else {
-            info_log("ignoring zero data chunk");
+        string chunk_data = rest.substr(chunk_data_start, chunk_length);
+        if (chunk_data.size() != chunk_length) {
+            error_log("downstream read chunk data error, too few bytes, wtf, %lu %lu", chunk_data.size(), chunk_length);
+            return;
         }
+
+
+        try {
+            auto now = std::chrono::steady_clock::now();
+            if (update_first_received_at)
+                first_received_at = now;
+
+            //                debug_log("Caption stream read: %d, %d,  %s", chunk_data_start, chunk_length, chunk_data.c_str());
+            CaptionResult *result = parse_caption_obj(chunk_data, first_received_at, now);
+            //                debug_log("Caption stream raw_message: %s", result->raw_message.c_str());
+            //                debug_log("Caption stream caption_text: %s", result->caption_text.c_str());
+            update_first_received_at = result->final;
+
+            {
+                std::lock_guard<recursive_mutex> lock(on_caption_cb_handle.mutex);
+                if (on_caption_cb_handle.callback_fn) {
+                    //                    debug_log("calling caption cb");
+                    on_caption_cb_handle.callback_fn(*result);
+                }
+            }
+
+            delete result;
+
+        } catch (string &ex) {
+            info_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
+        }
+        catch (...) {
+            info_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
+        }
+
+        if (is_stopped())
+            return;
+//        info_log("downstream chunk: %lu bytes, %s", chunk_data.size(), chunk_data.c_str());
+
         rest.erase(0, chunk_data_start + chunk_length + 2); // also erase ending CRLF after data
     }
 };
