@@ -428,10 +428,13 @@ void CaptionStream::_downstream_run() {
             delete result;
 
         } catch (string &ex) {
-            error_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
+            if (ex == "empty")
+                debug_log("ignoring empty caption message");
+            else
+                error_log("couldn't parse caption message. Error: '%s'. Message: '%s'", ex.c_str(), chunk_data.c_str());
         }
         catch (...) {
-            error_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
+            error_log("couldn't parse caption message. Message: '%s'", chunk_data.c_str());
         }
 
         if (is_stopped())
