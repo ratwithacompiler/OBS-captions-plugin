@@ -465,8 +465,8 @@ void split_res(const MonoTP &start, const MonoTP &end, const string &full_text,
                    (double) (std::chrono::duration_cast<std::chrono::milliseconds>(max_duration).count());
     int parts_cnt = ceil(parts);
     debug_log("sentence longer than max duration, %lld >= %lld, splitting into %d parts (src %f)",
-              std::chrono::duration_cast<std::chrono::milliseconds>(length).count(),
-              std::chrono::duration_cast<std::chrono::milliseconds>(max_duration).count(),
+              (long long) std::chrono::duration_cast<std::chrono::milliseconds>(length).count(),
+              (long long) std::chrono::duration_cast<std::chrono::milliseconds>(max_duration).count(),
                       parts_cnt, parts);
 
     if (parts_cnt <= 1) {
