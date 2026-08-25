@@ -9,6 +9,7 @@
 #include "log.h"
 #include <QDir>
 #include <QSaveFile>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -126,6 +127,19 @@ QFileInfo find_transcript_filename_custom(const UseTranscriptSettings &rel,
     throw string("custom transcript file exists already, invalid exists option: " + rel.filename_custom_exists);
 }
 
+string local_datetime_string(const std::chrono::system_clock::time_point &tp) {
+    time_t tp_t = std::chrono::system_clock::to_time_t(tp);
+    std::tm tm_buf{};
+#ifdef _WIN32
+    localtime_s(&tm_buf, &tp_t);
+#else
+    localtime_r(&tp_t, &tm_buf);
+#endif
+    std::ostringstream oss;
+    oss << std::put_time(&tm_buf, "%Y-%m-%d_%H-%M-%S");
+    return oss.str();
+}
+
 QFileInfo find_transcript_filename_datetime(const UseTranscriptSettings &rel,
                                             const QFileInfo &output_directory,
                                             const std::chrono::system_clock::time_point &started_at,
@@ -133,13 +147,7 @@ QFileInfo find_transcript_filename_datetime(const UseTranscriptSettings &rel,
                                             const string &extension) {
     // "[streaming|recording]_transcript_2020-08-01_00-00-00[_cnt].[ext]"
 
-    std::ostringstream oss;
-    time_t started_at_t = std::chrono::system_clock::to_time_t(started_at);
-    oss << std::put_time(std::localtime(&started_at_t), "%Y-%m-%d_%H-%M-%S");
-    auto started_at_str = oss.str();
-
-
-    string basename = rel.file_basename + started_at_str;
+    string basename = rel.file_basename + local_datetime_string(started_at);
     return find_unused_filename(output_directory, QString::fromStdString(basename), QString::fromStdString(extension), tries);
 }
 
