@@ -606,7 +606,7 @@ void write_transcript_caption_simple(std::fstream &fs,
     if (!prefix.empty())
         comb << prefix;
 
-    comb << result.clean_caption_text << std::endl;
+    comb << result.clean_caption_text << NEWLINE_STR;
     fs_write_string(fs, comb.str());
 }
 
