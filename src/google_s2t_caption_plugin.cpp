@@ -37,7 +37,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "CaptionPluginManager.h"
 #include "ui/CaptionDock.h"
 
-#include "log.c"
+#include "log.h"
+#include <algorithm>
+#include <cstring>
 
 using namespace std;
 
@@ -106,7 +108,6 @@ static void obs_event(enum obs_frontend_event event, void *) {
     } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGED) {
         obs_frontent_scene_collection_changed();
     } else if (event == OBS_FRONTEND_EVENT_STUDIO_MODE_ENABLED) {
-        printf("studio mode!!!!!!!!!!!!!!!!!!!!\n");
     } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CHANGING) {
         obs_frontent_scene_collection_changing("SCENE_COLLECTION_CHANGING");
     } else if (event == OBS_FRONTEND_EVENT_SCENE_COLLECTION_CLEANUP) {
@@ -234,7 +235,7 @@ void obs_frontent_exiting() {
         delete plugin_manager;
         plugin_manager = nullptr;
     }
-    info_log("obs_frontent_exiting done");
+    debug_log("obs_frontent_exiting done");
 }
 
 //static void save_or_load_event_callback_config(obs_data_t *_, bool saving, void *) {
@@ -344,7 +345,7 @@ static void load_hotkeys(obs_data_t *data) {
 
 static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void *) {
     int tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
-    info_log("save_or_load_event_callback %d, %d", saving, tid);
+    debug_log("save_or_load_event_callback %d, %d", saving, tid);
 
     if (saving && plugin_manager) {
         save_CaptionPluginSettings(save_data, plugin_manager->plugin_settings);
@@ -378,8 +379,33 @@ static void save_or_load_event_callback(obs_data_t *save_data, bool saving, void
 }
 
 
+static void blog_log_sink(int level, const char *line) {
+    int obs_level = LOG_INFO;
+    if (level == CAPTIONS_LOG_ERROR)
+        obs_level = LOG_ERROR;
+    else if (level == CAPTIONS_LOG_WARNING)
+        obs_level = LOG_WARNING;
+    else if (level == CAPTIONS_LOG_DEBUG)
+        obs_level = LOG_DEBUG;
+
+    const size_t max_chunk = 7900;
+    size_t total = strlen(line);
+    if (total <= max_chunk) {
+        blog(obs_level, "%s", line);
+        return;
+    }
+
+    size_t chunk_count = (total + max_chunk - 1) / max_chunk;
+    for (size_t i = 0; i < chunk_count; i++) {
+        std::string chunk(line + i * max_chunk, std::min(max_chunk, total - i * max_chunk));
+        blog(obs_level, "(%d/%d) %s", (int) (i + 1), (int) chunk_count, chunk.c_str());
+    }
+}
+
+
 bool obs_module_load(void) {
-    info_log("google_s2t_caption_plugin %s obs_module_load %d", VERSION_STRING,
+    captions_log_sink.store(blog_log_sink, std::memory_order_relaxed);
+    info_log("%s obs_module_load %d", VERSION_STRING,
              (int) std::hash<std::thread::id>{}(std::this_thread::get_id()));
     qRegisterMetaType<std::string>();
     qRegisterMetaType<shared_ptr<OutputCaptionResult>>();
@@ -392,11 +418,12 @@ bool obs_module_load(void) {
 }
 
 void obs_module_post_load(void) {
-    info_log("google_s2t_caption_plugin %s obs_module_post_load", VERSION_STRING);
+    info_log("%s obs_module_post_load", VERSION_STRING);
 }
 
 void obs_module_unload(void) {
-    info_log("google_s2t_caption_plugin %s obs_module_unload", VERSION_STRING);
+    info_log("%s obs_module_unload", VERSION_STRING);
+    captions_log_sink.store(captions_log_stderr_sink, std::memory_order_relaxed);
 }
 
 MODULE_EXPORT const char *obs_module_description(void)

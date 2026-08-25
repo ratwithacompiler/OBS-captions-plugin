@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cameron314/blockingconcurrentqueue.h>
 #include <ThreadsaferCallback.h>
 #include <CaptionResult.h>
+#include <sstream>
 
 typedef unsigned int uint;
 using namespace std;
@@ -87,16 +88,19 @@ struct CaptionStreamSettings {
 //    CaptionStreamSettings() {};
 
 
-    void print(const char *line_prefix = "") {
-        printf("%sCaptionStreamSettings\n", line_prefix);
-        printf("%s  connect_timeout_ms: %d\n", line_prefix, connect_timeout_ms);
-        printf("%s  send_timeout_ms: %d\n", line_prefix, send_timeout_ms);
-        printf("%s  recv_timeout_ms: %d\n", line_prefix, recv_timeout_ms);
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "CaptionStreamSettings";
+        os << sep << line_prefix << "  connect_timeout_ms: " << connect_timeout_ms;
+        os << sep << line_prefix << "  send_timeout_ms: " << send_timeout_ms;
+        os << sep << line_prefix << "  recv_timeout_ms: " << recv_timeout_ms;
+        os << sep << line_prefix << "  max_queue_depth: " << max_queue_depth;
+        os << sep << line_prefix << "  download_thread_start_delay_ms: " << download_thread_start_delay_ms;
+        return os.str();
+    }
 
-        printf("%s  max_queue_depth: %d\n", line_prefix, max_queue_depth);
-        printf("%s  download_thread_start_delay_ms: %d\n", line_prefix, download_thread_start_delay_ms);
-
-//        printf("%s-----------\n", line_prefix);
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 };
 

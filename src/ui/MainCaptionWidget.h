@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <src/SourceCaptioner.h>
 #include "ui_MainCaptionWidget.h"
 #include "CaptionSettingsWidget.h"
-#include "../log.c"
+#include "log.h"
 
 #include <cameron314/blockingconcurrentqueue.h>
 #include "../CaptionPluginSettings.h"

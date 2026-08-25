@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <obs.hpp>
 #include "CaptionSettingsWidget.h"
-#include "../log.c"
+#include "log.h"
 #include <utils.h>
 #include <QLineEdit>
 #include <QFileDialog>
@@ -600,7 +600,7 @@ void CaptionSettingsWidget::updateUi() {
 }
 
 void CaptionSettingsWidget::showEvent(QShowEvent *event) {
-    info_log("CaptionSettingsWidget showEvent");
+    // debug_log("CaptionSettingsWidget showEvent");
     QWidget::showEvent(event);
 
     if (this->tabWidget->currentIndex() == 0) {

@@ -5,7 +5,7 @@
 #include "CaptionDock.h"
 #include <QLabel>
 #include <QLineEdit>
-#include "../log.c"
+#include "log.h"
 #include "uiutils.h"
 
 CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_manager, MainCaptionWidget &main_caption_widget)
@@ -21,11 +21,11 @@ CaptionDock::CaptionDock(const QString &title, CaptionPluginManager &plugin_mana
                      this, &CaptionDock::handle_caption_data_cb, Qt::QueuedConnection);
 
     QFontMetrics fm = this->captionLinesPlainTextEdit->fontMetrics();
-    info_log("dock: %d %d fs: %d", this->minimumWidth(), this->maximumWidth(), this->captionLinesPlainTextEdit->font().pointSize());
+    debug_log("dock: %d %d fs: %d", this->minimumWidth(), this->maximumWidth(), this->captionLinesPlainTextEdit->font().pointSize());
 
 //    const int target_width = fm.width("This is a baseline example test okay") + 0;
     const int target_width = fm.horizontalAdvance("THIS IS A BASELINE EXAMPLE TEST OKAY") + 30;
-    info_log("target: %d %d", target_width, 0);
+    debug_log("target: %d %d", target_width, 0);
     if (target_width >= 150 && target_width <= 350) {
         this->setMaximumWidth(target_width);
         this->setMinimumWidth(target_width);

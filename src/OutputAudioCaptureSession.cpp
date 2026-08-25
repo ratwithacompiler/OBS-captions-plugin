@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <util/platform.h>
 
 #include "OutputAudioCaptureSession.h"
-#include "log.c"
+#include "log.h"
 
 static void audio_captured(void *param, size_t mix_idx, struct audio_data *audio) {
     auto session = reinterpret_cast<OutputAudioCaptureSession *>(param);

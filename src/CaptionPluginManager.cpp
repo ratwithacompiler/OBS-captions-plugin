@@ -141,7 +141,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
         && is_file_output_relevant == state.is_captioning_file_output
         && scene_collection_name_relevant == state.captioning_scene_collection_name
             ) {
-        info_log("settings unchanged, ignoring");
+        debug_log("settings unchanged, ignoring");
         return;
     }
     update_count++;
@@ -158,7 +158,7 @@ void CaptionPluginManager::update_settings(const CaptionPluginSettings &new_sett
 
     source_captioner.set_enabled(new_settings.enabled);
     if (do_captioning) {
-        info_log("caption settings changed, starting captioning");
+        debug_log("caption settings changed, starting captioning");
         bool worked = source_captioner.start_caption_stream(source_settings, scene_collection_name_relevant);
         if (worked) {
             info_log("captioning start ok");

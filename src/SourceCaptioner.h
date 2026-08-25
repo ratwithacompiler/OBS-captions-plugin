@@ -30,6 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <atomic>
 #include <thread>
+#include <sstream>
 
 typedef unsigned int uint;
 using namespace std;
@@ -72,11 +73,17 @@ struct CaptionSourceSettings {
         return caption_source_name;
     }
 
-    void print(const char *line_prefix = "") {
-        printf("%sCaptionSourceSettings\n", line_prefix);
-        printf("%s  caption_source_name: %s\n", line_prefix, caption_source_name.c_str());
-        printf("%s  mute_when: %d\n", line_prefix, mute_when);
-        printf("%s  mute_source_name: %s\n", line_prefix, mute_source_name.c_str());
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "CaptionSourceSettings";
+        os << sep << line_prefix << "  caption_source_name: " << caption_source_name;
+        os << sep << line_prefix << "  mute_when: " << mute_when;
+        os << sep << line_prefix << "  mute_source_name: " << mute_source_name;
+        return os.str();
+    }
+
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 };
 
@@ -88,15 +95,20 @@ struct TextOutputSettings {
     bool insert_punctuation;
     CapitalizationType capitalization;
 
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "TextOutputSettings";
+        os << sep << line_prefix << "  enabled: " << enabled;
+        os << sep << line_prefix << "  text_source_name: " << text_source_name;
+        os << sep << line_prefix << "  line_length: " << line_length;
+        os << sep << line_prefix << "  line_count: " << line_count;
+        os << sep << line_prefix << "  insert_punctuation: " << insert_punctuation;
+        os << sep << line_prefix << "  capitalization: " << capitalization;
+        return os.str();
+    }
+
     void print(const char *line_prefix = "") const {
-        printf("%sTextOutputSettings\n", line_prefix);
-        printf("%s  enabled: %d\n", line_prefix, enabled);
-        printf("%s  text_source_name: %s\n", line_prefix, text_source_name.c_str());
-        printf("%s  line_length: %d\n", line_prefix, line_length);
-        printf("%s  line_count: %d\n", line_prefix, line_count);
-        printf("%s  insert_punctuation: %d\n", line_prefix, insert_punctuation);
-        printf("%s  capitalization: %d\n", line_prefix, capitalization);
-//        printf("%s  insert_newlines: %d\n", line_prefix, insert_newlines);
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 
     bool isValid() const {
@@ -149,16 +161,22 @@ struct FileOutputSettings {
 
     bool inplace_update;
 
-    void print(const char *line_prefix = "") const{
-        printf("%sFileOutputSettings\n", line_prefix);
-        printf("%s  enabled: %d\n", line_prefix, enabled);
-        printf("%s  line_length: %d\n", line_prefix, line_length);
-        printf("%s  line_count: %d\n", line_prefix, line_count);
-        printf("%s  insert_punctuation: %d\n", line_prefix, insert_punctuation);
-        printf("%s  capitalization: %d\n", line_prefix, capitalization);
-        printf("%s  output_folder: %s\n", line_prefix, output_folder.c_str());
-        printf("%s  filename_custom: %s\n", line_prefix, filename_custom.c_str());
-        printf("%s  inplace_update: %d\n", line_prefix, inplace_update);
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "FileOutputSettings";
+        os << sep << line_prefix << "  enabled: " << enabled;
+        os << sep << line_prefix << "  line_length: " << line_length;
+        os << sep << line_prefix << "  line_count: " << line_count;
+        os << sep << line_prefix << "  insert_punctuation: " << insert_punctuation;
+        os << sep << line_prefix << "  capitalization: " << capitalization;
+        os << sep << line_prefix << "  output_folder: " << output_folder;
+        os << sep << line_prefix << "  filename_custom: " << filename_custom;
+        os << sep << line_prefix << "  inplace_update: " << inplace_update;
+        return os.str();
+    }
+
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 
     bool isValid() const {
@@ -277,33 +295,39 @@ struct TranscriptOutputSettings {
 
     bool hasBaseSettings() const;
 
-    void print(const char *line_prefix = "") {
-        printf("%sTranscriptSettings\n", line_prefix);
-        printf("%s  enabled: %d\n", line_prefix, enabled);
-        printf("%s  output_path: %s\n", line_prefix, output_path.c_str());
-        printf("%s  format: %s\n", line_prefix, format.c_str());
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "TranscriptSettings";
+        os << sep << line_prefix << "  enabled: " << enabled;
+        os << sep << line_prefix << "  output_path: " << output_path;
+        os << sep << line_prefix << "  format: " << format;
 
-        printf("%s  recording_filename_type: %s\n", line_prefix, recording_filename_type.c_str());
-        printf("%s  recording_filename_custom: %s\n", line_prefix, recording_filename_custom.c_str());
-        printf("%s  recording_filename_exists: %s\n", line_prefix, recording_filename_exists.c_str());
+        os << sep << line_prefix << "  recording_filename_type: " << recording_filename_type;
+        os << sep << line_prefix << "  recording_filename_custom: " << recording_filename_custom;
+        os << sep << line_prefix << "  recording_filename_exists: " << recording_filename_exists;
 
-        printf("%s  streaming_filename_type: %s\n", line_prefix, streaming_filename_type.c_str());
-        printf("%s  streaming_filename_custom: %s\n", line_prefix, streaming_filename_custom.c_str());
-        printf("%s  streaming_filename_exists: %s\n", line_prefix, streaming_filename_exists.c_str());
+        os << sep << line_prefix << "  streaming_filename_type: " << streaming_filename_type;
+        os << sep << line_prefix << "  streaming_filename_custom: " << streaming_filename_custom;
+        os << sep << line_prefix << "  streaming_filename_exists: " << streaming_filename_exists;
 
-        printf("%s  virtualcam_filename_type: %s\n", line_prefix, virtualcam_filename_type.c_str());
-        printf("%s  virtualcam_filename_custom: %s\n", line_prefix, virtualcam_filename_custom.c_str());
-        printf("%s  virtualcam_filename_exists: %s\n", line_prefix, virtualcam_filename_exists.c_str());
+        os << sep << line_prefix << "  virtualcam_filename_type: " << virtualcam_filename_type;
+        os << sep << line_prefix << "  virtualcam_filename_custom: " << virtualcam_filename_custom;
+        os << sep << line_prefix << "  virtualcam_filename_exists: " << virtualcam_filename_exists;
 
-        printf("%s  srt_target_duration_secs: %d\n", line_prefix, srt_target_duration_secs);
-        printf("%s  srt_target_line_length: %d\n", line_prefix, srt_target_line_length);
-        printf("%s  srt_add_punctuation: %d\n", line_prefix, srt_add_punctuation);
-        printf("%s  srt_split_single_sentences: %d\n", line_prefix, srt_split_single_sentences);
-        printf("%s  srt_capitalization: %d\n", line_prefix, srt_capitalization);
-        printf("%s  write_realtime: %d\n", line_prefix, write_realtime);
-        printf("%s  streaming_transcripts_enabled: %d\n", line_prefix, streaming_transcripts_enabled);
-        printf("%s  recording_transcripts_enabled: %d\n", line_prefix, recording_transcripts_enabled);
-        printf("%s  virtualcam_transcripts_enabled: %d\n", line_prefix, virtualcam_transcripts_enabled);
+        os << sep << line_prefix << "  srt_target_duration_secs: " << srt_target_duration_secs;
+        os << sep << line_prefix << "  srt_target_line_length: " << srt_target_line_length;
+        os << sep << line_prefix << "  srt_add_punctuation: " << srt_add_punctuation;
+        os << sep << line_prefix << "  srt_split_single_sentences: " << srt_split_single_sentences;
+        os << sep << line_prefix << "  srt_capitalization: " << srt_capitalization;
+        os << sep << line_prefix << "  write_realtime: " << write_realtime;
+        os << sep << line_prefix << "  streaming_transcripts_enabled: " << streaming_transcripts_enabled;
+        os << sep << line_prefix << "  recording_transcripts_enabled: " << recording_transcripts_enabled;
+        os << sep << line_prefix << "  virtualcam_transcripts_enabled: " << virtualcam_transcripts_enabled;
+        return os.str();
+    }
+
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 };
 
@@ -358,31 +382,30 @@ struct SourceCaptionerSettings {
         return !(rhs == *this);
     }
 
-    void print(const char *line_prefix = "") {
-        printf("%sSourceCaptionerSettings\n", line_prefix);
-        printf("%s  streaming_output_enabled: %d\n", line_prefix, streaming_output_enabled);
-        printf("%s  recording_output_enabled: %d\n", line_prefix, recording_output_enabled);
-        printf("%s  Scene Collection Settings:\n", line_prefix);
-        scene_collection_settings.caption_source_settings.print((string(line_prefix) + "    ").c_str());
-        printf("%s  Text Output Settings (%lu):\n", line_prefix, scene_collection_settings.text_outputs.size());
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "SourceCaptionerSettings";
+        os << sep << line_prefix << "  streaming_output_enabled: " << streaming_output_enabled;
+        os << sep << line_prefix << "  recording_output_enabled: " << recording_output_enabled;
+        os << sep << line_prefix << "  Scene Collection Settings:";
+        os << sep << scene_collection_settings.caption_source_settings.describe(sep, line_prefix + "    ");
+        os << sep << line_prefix << "  Text Output Settings (" << scene_collection_settings.text_outputs.size() << "):";
 
         int cnt = 0;
         for (const auto &i: scene_collection_settings.text_outputs) {
-            printf("%s     #%d:\n", line_prefix, cnt++);
-            i.print((string(line_prefix) + "      ").c_str());
+            os << sep << line_prefix << "     #" << cnt++ << ":";
+            os << sep << i.describe(sep, line_prefix + "      ");
         }
 
-//        printf("%s  Scene Collection Settings: %lu\n", line_prefix, scene_collection_settings_map.size());
-//        for (auto it = scene_collection_settings_map.begin(); it != scene_collection_settings_map.end(); ++it) {
-//            printf("%s   Collection: %s, \n", line_prefix, it->first.c_str());
-//            it->second.caption_source_settings.print((string(line_prefix) + "    ").c_str());
-//            it->second.text_output_settings.print((string(line_prefix) + "    ").c_str());
-//        }
+        os << sep << stream_settings.describe(sep, line_prefix + "  ");
+        os << sep << format_settings.describe(sep, line_prefix + "  ");
+        os << sep << transcript_settings.describe(sep, line_prefix + "  ");
+        os << sep << file_output_settings.describe(sep, line_prefix + "  ");
+        return os.str();
+    }
 
-        stream_settings.print((string(line_prefix) + "  ").c_str());
-        format_settings.print((string(line_prefix) + "  ").c_str());
-        transcript_settings.print((string(line_prefix) + "  ").c_str());
-        file_output_settings.print((string(line_prefix) + "  ").c_str());
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 
     const SceneCollectionSettings &get_scene_collection_settings(const string &scene_collection_name) const {

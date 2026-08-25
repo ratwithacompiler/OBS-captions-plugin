@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "SourceCaptioner.h"
-#include "log.c"
+#include "log.h"
 #include "caption_output_writer.h"
 #include "caption_transcript_writer.h"
 
@@ -441,7 +441,7 @@ void SourceCaptioner::clear_output_timer_cb() {
         if (secs_since_last_caption <= this->settings.format_settings.caption_timeout_seconds)
             return;
 
-        info_log("last caption line was sent %f secs ago, > %f, clearing",
+        debug_log("last caption line was sent %f secs ago, > %f, clearing",
                  secs_since_last_caption, this->settings.format_settings.caption_timeout_seconds);
 
         this->last_caption_cleared = true;

@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ui_CaptionSettingsWidget.h"
 
 #include "../SourceAudioCaptureSession.h"
-#include "../log.c"
+#include "log.h"
 #include "../SourceCaptioner.h"
 #include "../CaptionPluginSettings.h"
 #include "OpenCaptionSettingsWidget.h"

@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QComboBox>
 #include <CaptionStream.h>
-#include "log.c"
+#include "log.h"
 #include <utils.h>
 #include "storage_utils.h"
 #include "CaptionPluginSettings.h"
@@ -587,12 +587,12 @@ static CaptionPluginSettings load_CaptionPluginSettings(obs_data_t *load_data) {
     auto source_settings = get_CaptionPluginSettings_from_data(obj);
     obs_data_release(obj);
 
-    source_settings.print();
+    info_log("settings loaded: %s", source_settings.describe("; ").c_str());
     return source_settings;
 }
 
 static void save_CaptionPluginSettings(obs_data_t *save_data, const CaptionPluginSettings &settings) {
-    info_log("obs save event");
+    debug_log("obs save event");
 
     obs_data_t *obj = obs_data_create();
     set_CaptionPluginSettings_on_data(obj, settings);

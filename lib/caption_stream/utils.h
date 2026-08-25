@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <random>
 
+#include "log.h"
+
 static std::mutex wp_rnd_mut;
 static std::unique_ptr<std::mt19937> wp_rnd_ins;
 
@@ -40,7 +42,7 @@ static void wp_rnd_init() {
         std::random_device dev;
         wp_rnd_ins = std::make_unique<std::mt19937>(dev());
     } catch (...) {
-        printf("wp_rnd_init fail\n");
+        error_log("wp_rnd_init fail");
     }
 }
 

@@ -428,10 +428,10 @@ void CaptionStream::_downstream_run() {
             delete result;
 
         } catch (string &ex) {
-            info_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
+            error_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), chunk_data.c_str());
         }
         catch (...) {
-            info_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
+            error_log("couldn't parse caption message. Messsage: '%s'", chunk_data.c_str());
         }
 
         if (is_stopped())
@@ -483,7 +483,7 @@ string *CaptionStream::dequeue_audio_data(const std::int64_t timeout_us) {
 
 
 void CaptionStream::stop() {
-    info_log("stop1! %s", this->session_pair.c_str());
+    // debug_log("stop1! %s", this->session_pair.c_str());
     on_caption_cb_handle.clear();
     stopped = true;
 
@@ -491,7 +491,7 @@ void CaptionStream::stop() {
     audio_queue.enqueue(to_unblock_uploader);
     downstream.shutdown();
     upstream.shutdown();
-    info_log("stop2! %s", this->session_pair.c_str());
+    // debug_log("stop2! %s", this->session_pair.c_str());
 }
 
 

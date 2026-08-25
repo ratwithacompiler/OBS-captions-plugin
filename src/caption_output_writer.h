@@ -6,7 +6,7 @@
 #define OBS_GOOGLE_CAPTION_PLUGIN_CAPTION_OUTPUT_WRITER_H
 
 #include "thirdparty/cameron314/blockingconcurrentqueue.h"
-#include "log.c"
+#include "log.h"
 #include "SourceCaptioner.h"
 #include "stringutils.h"
 
@@ -38,7 +38,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             break;
 
         if (!caption_output.output_result) {
-            info_log("got empty CaptionOutput.output_result???");
+            debug_log("got empty CaptionOutput.output_result???");
             continue;
         }
 
@@ -58,7 +58,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
             output = obs_frontend_get_recording_output();
 
         if (!output) {
-            info_log("built caption lines, no output 1, not sending, not %s?: '%s'", to_what.c_str(),
+            debug_log("built caption lines, no output 1, not sending, not %s?: '%s'", to_what.c_str(),
                      caption_output.output_result->output_line.c_str());
             continue;
         }
@@ -96,7 +96,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
                 output = obs_frontend_get_recording_output();
 
             if (!output) {
-                info_log("built caption lines, no output 2, not sending, not %s?: '%s'", to_what.c_str(),
+                debug_log("built caption lines, no output 2, not sending, not %s?: '%s'", to_what.c_str(),
                          caption_output.output_result->output_line.c_str());
                 continue;
             }
@@ -143,7 +143,7 @@ static void caption_output_writer_loop(shared_ptr<CaptionOutputControl<int>> con
         output = nullptr;
     }
 
-    info_log("caption_output_writer_loop %s done", to_what.c_str());
+    debug_log("caption_output_writer_loop %s done", to_what.c_str());
 }
 
 

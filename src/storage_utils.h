@@ -65,7 +65,7 @@ static CaptionSourceMuteType string_to_mute_setting(const string &setting_string
     else if (setting_string == "other_mute_source")
         mute_setting = CAPTION_SOURCE_MUTE_TYPE_USE_OTHER_MUTE_SOURCE;
     else
-        info_log("unknown mute when setting: '%s'", setting_string.c_str());
+        warn_log("unknown mute when setting: '%s'", setting_string.c_str());
 
     return mute_setting;
 }

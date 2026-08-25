@@ -7,6 +7,7 @@
 
 
 #include "SourceCaptioner.h"
+#include <sstream>
 
 struct CaptionPluginSettings {
     bool enabled;
@@ -25,10 +26,16 @@ struct CaptionPluginSettings {
         return !(rhs == *this);
     }
 
-    void print(const char *line_prefix = "") {
-        printf("%sCaptionPluginSettings\n", line_prefix);
-        printf("%senabled: %d\n", line_prefix, enabled);
-        source_cap_settings.print((string(line_prefix) + "").c_str());
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "CaptionPluginSettings";
+        os << sep << line_prefix << "enabled: " << enabled;
+        os << sep << source_cap_settings.describe(sep, line_prefix);
+        return os.str();
+    }
+
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 };
 

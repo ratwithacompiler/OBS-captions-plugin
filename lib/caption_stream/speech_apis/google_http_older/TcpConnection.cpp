@@ -39,7 +39,7 @@ static void setup_check() {
     if (is_setup)
         return;
 
-    info_log("p_libsys_init");
+    debug_log("p_libsys_init");
     p_libsys_init();
     is_setup = true;
 }
@@ -48,7 +48,6 @@ static void setup_check() {
 TcpConnection::TcpConnection(string hostname, uint port)
         : hostname(hostname), port(port) {
     setup_check();
-    debug_log("TcpConnection!!!!!!!!!!");
 }
 
 void TcpConnection::connect(uint timeoutMs) {
@@ -68,7 +67,7 @@ void TcpConnection::connect(uint timeoutMs) {
         throw ConnectError("couldn't resolve hostname");
 
     ip_address = ip_buf;
-    debug_log("address %s", ip_address.c_str());
+    // debug_log("address %s", ip_address.c_str());
 
     // Construct address for server.  Since the server is assumed to be on the same machine for the sake of this program, the address is loopback, but typically this would be an external address.
     if ((p_address = p_socket_address_new(ip_address.c_str(), port)) == nullptr)
@@ -108,7 +107,7 @@ void TcpConnection::connect(uint timeoutMs) {
     if (shutdown_requested)
         throw ConnectError("connection shut down during connect");
 
-    debug_log("Connected!!!!!!!!!");
+    // debug_log("Connected!!!!!!!!!");
     connected = true;
 }
 
@@ -139,20 +138,20 @@ void TcpConnection::shutdown() {
 void TcpConnection::close() {
     std::lock_guard<std::mutex> lock(socket_mutex);
     if (p_socket != nullptr) {
-        debug_log("freeing p_socket");
+        // debug_log("freeing p_socket");
         p_socket_free(p_socket);
         p_socket = nullptr;
     }
 
     if (p_address != nullptr) {
-        debug_log("freeing addrress");
+        // debug_log("freeing addrress");
         p_socket_address_free(p_address);
         p_address = nullptr;
     }
 }
 
 TcpConnection::~TcpConnection() {
-    debug_log("~TcpConnection decons()");
+    // debug_log("~TcpConnection decons()");
     close();
 }
 

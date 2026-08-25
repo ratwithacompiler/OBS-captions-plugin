@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <CaptionStream.h>
 #include "WordReplacer.h"
+#include <sstream>
 
 enum CapitalizationType {
     CAPITALIZATION_NORMAL = 0,
@@ -99,19 +100,24 @@ struct CaptionFormatSettings {
             caption_timeout_seconds(caption_timeout_seconds) {
     }
 
-    void print(const char *line_prefix = "") {
-        printf("%sCaptionFormatSettings\n", line_prefix);
-        printf("%s  caption_line_length: %d\n", line_prefix, caption_line_length);
-        printf("%s  caption_line_count: %d\n", line_prefix, caption_line_count);
-        printf("%s  capitalization: %d\n", line_prefix, capitalization);
-        printf("%s  caption_insert_newlines: %d\n", line_prefix, caption_insert_newlines);
-        printf("%s  caption_insert_punctuation: %d\n", line_prefix, caption_insert_punctuation);
-        printf("%s  user_replacements: %lu\n", line_prefix, replacer.user_replacements().size());
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "CaptionFormatSettings";
+        os << sep << line_prefix << "  caption_line_length: " << caption_line_length;
+        os << sep << line_prefix << "  caption_line_count: " << caption_line_count;
+        os << sep << line_prefix << "  capitalization: " << capitalization;
+        os << sep << line_prefix << "  caption_insert_newlines: " << caption_insert_newlines;
+        os << sep << line_prefix << "  caption_insert_punctuation: " << caption_insert_punctuation;
+        os << sep << line_prefix << "  user_replacements: " << replacer.user_replacements().size();
         for (auto &word : replacer.user_replacements())
-            printf("%s        %s '%s' -> '%s'\n",
-                   line_prefix, word.get_type().c_str(), word.get_from().c_str(), word.get_to().c_str());
+            os << sep << line_prefix << "        " << word.get_type()
+               << " '" << word.get_from() << "' -> '" << word.get_to() << "'";
 
-//        printf("%s-----------\n", line_prefix);
+        return os.str();
+    }
+
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 
     bool operator==(const CaptionFormatSettings &rhs) const {

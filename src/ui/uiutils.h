@@ -7,7 +7,7 @@
 
 #include "../CaptionPluginManager.h"
 #include <QComboBox>
-#include "../log.c"
+#include "log.h"
 
 typedef std::tuple<string, string, uint32_t> ObsSourceTup;
 

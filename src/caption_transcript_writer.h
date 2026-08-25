@@ -6,7 +6,7 @@
 #define OBS_GOOGLE_CAPTION_PLUGIN_CAPTION_TRANSCRIPT_WRITER_H
 
 
-#include "log.c"
+#include "log.h"
 #include <QDir>
 #include <QSaveFile>
 #include <iomanip>
@@ -164,7 +164,7 @@ QFileInfo find_transcript_filename_recording(const QFileInfo &output_directory,
         if (recording_path.empty())
             throw string("couldn't get recording url");
 
-        info_log("find_transcript_filename_recording no recording path, using url");
+        error_log("find_transcript_filename_recording no recording path, using url");
     }
 
     const auto recording_file = QFileInfo(QString::fromStdString(recording_path));
@@ -200,22 +200,22 @@ QFileInfo find_transcript_filename(string format,
 
         for (int i = 0; i < attempts; i++) {
             if (i) {
-                info_log("transcript_writer_loop find_transcript_filename recording retry, attempt %d, sleeping %dms", i, sleep_ms);
+                debug_log("transcript_writer_loop find_transcript_filename recording retry, attempt %d, sleeping %dms", i, sleep_ms);
                 std::this_thread::sleep_for(std::chrono::milliseconds(sleep_ms));
             }
             try {
                 return find_transcript_filename_recording(output_directory, started_at, tries, extension, true);
             }
             catch (string &err) {
-                error_log("transcript_writer_loop find_transcript_filename recording error, try %d: %s", i, err.c_str());
+                warn_log("transcript_writer_loop find_transcript_filename recording error, try %d: %s", i, err.c_str());
             }
             catch (...) {
-                error_log("transcript_writer_loop find_transcript_filename recording error, try %d", i);
+                warn_log("transcript_writer_loop find_transcript_filename recording error, try %d", i);
             }
         }
 
         if (fallback_datetime) {
-            info_log("transcript_writer_loop find_transcript_filename recording failed, falling back to datetime name");
+            error_log("transcript_writer_loop find_transcript_filename recording failed, falling back to datetime name");
             return find_transcript_filename_datetime(rel, output_directory, started_at, tries, extension);
         }
         throw string("couldn't get recording basename after multiple tries");
@@ -707,7 +707,7 @@ void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutp
         return;
     }
 
-    info_log("transcript_writer_loop %s starting, format: %s", to_what.c_str(), format.c_str());
+    debug_log("transcript_writer_loop %s starting, format: %s", to_what.c_str(), format.c_str());
 
     QFileInfo output_directory(QString::fromStdString(control->arg.output_path));
     if (!output_directory.exists()) {
@@ -725,7 +725,7 @@ void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutp
         transcript_file = find_transcript_filename(transcript_settings.format, use_settings, output_directory, target_name, started_at_sys, 100,
                                                    overwrite_file)
                 .absoluteFilePath();
-        info_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
+        debug_log("using transcript output file: '%s', overwrite existing: %d", transcript_file.toStdString().c_str(), overwrite_file);
     }
     catch (string &err) {
         error_log("transcript_writer_loop find_transcript_filename error: %s", err.c_str());
@@ -758,7 +758,7 @@ void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutp
                                      transcript_settings.write_realtime,
                                      transcript_settings.srt_capitalization, 1250};
 
-        info_log("transcript_writer_loop starting write_loop: %s", format.c_str());
+        debug_log("transcript_writer_loop starting write_loop: %s", format.c_str());
         if (format == "raw")
             write_loop_raw(fs, started_at_steady, transcript_settings.write_realtime, control);
         else if (format == "txt")
@@ -780,7 +780,7 @@ void transcript_writer_loop_inner(shared_ptr<CaptionOutputControl<TranscriptOutp
         return;
     }
 
-    info_log("transcript_writer_loop %s done", to_what.c_str());
+    debug_log("transcript_writer_loop %s done", to_what.c_str());
 }
 
 void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSettings>> control,
@@ -792,7 +792,7 @@ void transcript_writer_loop(shared_ptr<CaptionOutputControl<TranscriptOutputSett
 
 
 void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSettings>> control, const FileOutputSettings output_settings) {
-    info_log("fileoutput_writer_loop starting");
+    debug_log("fileoutput_writer_loop starting");
 
     QFileInfo output_directory(QString::fromStdString(control->arg.output_folder));
     if (!output_directory.exists()) {
@@ -881,7 +881,7 @@ void fileoutput_writer_loop_inner(shared_ptr<CaptionOutputControl<FileOutputSett
         }
     }
 
-    info_log("fileoutput_writer_loop done");
+    debug_log("fileoutput_writer_loop done");
 
 }
 

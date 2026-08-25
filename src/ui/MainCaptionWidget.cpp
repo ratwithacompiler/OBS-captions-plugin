@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <QThread>
 #include "../caption_stream_helper.cpp"
-#include "../log.c"
+#include "log.h"
 #include "uiutils.h"
 
 MainCaptionWidget::MainCaptionWidget(CaptionPluginManager &plugin_manager) :
@@ -132,7 +132,7 @@ void MainCaptionWidget::show_settings_dialog() {
 
 void MainCaptionWidget::accept_widget_settings(CaptionPluginSettings new_settings) {
     debug_log("MainCaptionWidget accept_widget_settings %p", &caption_settings_widget);
-    new_settings.print();
+    info_log("settings accepted: %s", new_settings.describe("; ").c_str());
     caption_settings_widget.hide();
     plugin_manager.update_settings(new_settings);
 }

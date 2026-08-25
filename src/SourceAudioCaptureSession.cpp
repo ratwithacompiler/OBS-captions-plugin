@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <utility>
 
 #include "SourceAudioCaptureSession.h"
-#include "log.c"
+#include "log.h"
 
 static void audio_captured(void *param, obs_source_t *source, const struct audio_data *audio, bool muted) {
     auto session = reinterpret_cast<SourceAudioCaptureSession *>(param);
@@ -79,7 +79,7 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
                 obs_audio->speakers
         };
 
-        info_log("creating new resampler (%d, %d, %d) -> (%d, %d, %d)",
+        debug_log("creating new resampler (%d, %d, %d) -> (%d, %d, %d)",
                  src.samples_per_sec, src.format, src.speakers,
                  resample_to.samples_per_sec, resample_to.format, resample_to.speakers);
 
@@ -92,16 +92,16 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
     }
 
     const char *name = obs_source_get_name(audio_source);
-    info_log("source %s active: %d", name, obs_source_active(audio_source));
+    debug_log("source %s active: %d", name, obs_source_active(audio_source));
 
     if (muting_source) {
         use_muting_cb_signal = false;
 
         const char *muting_name = obs_source_get_name(muting_source);
-        info_log("using separarte muting source %s active: %d", muting_name, obs_source_active(muting_source));
+        debug_log("using separarte muting source %s active: %d", muting_name, obs_source_active(muting_source));
     } else {
         muting_source = audio_source;
-        info_log("using direct source %s active: %d", name, obs_source_active(audio_source));
+        debug_log("using direct source %s active: %d", name, obs_source_active(audio_source));
     }
 
     if (!muting_source)

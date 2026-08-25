@@ -131,11 +131,11 @@ shared_ptr<OutputCaptionResult> CaptionResultHandler::prepare_caption_output(
         return output_result;
 
     } catch (string &ex) {
-        info_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), caption_result.caption_text.c_str());
+        error_log("couldn't parse caption message. Error: '%s'. Messsage: '%s'", ex.c_str(), caption_result.caption_text.c_str());
         return nullptr;
     }
     catch (...) {
-        info_log("couldn't parse caption message. Messsage: '%s'", caption_result.caption_text.c_str());
+        error_log("couldn't parse caption message. Messsage: '%s'", caption_result.caption_text.c_str());
         return nullptr;
     }
 }

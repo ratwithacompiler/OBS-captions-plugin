@@ -159,14 +159,14 @@ static void read_results_loop_thread(
         if (self.is_stopped())
             break;
 
-        std::cout << "Result size: " << response.results_size() << std::endl;
+        debug_log("downstream result size: %d", response.results_size());
         for (int r = 0; r < response.results_size(); ++r) {
             auto result = response.results(r);
-            std::cout << "ind: " << r << " Result stability: " << result.stability() << " final: " << result.is_final() << std::endl;
+            debug_log("downstream result ind: %d, stability: %f, final: %d", r, result.stability(), (int) result.is_final());
 
             for (int a = 0; a < result.alternatives_size(); ++a) {
                 auto alternative = result.alternatives(a);
-                std::cout << "conf: " << alternative.confidence() << "; " << alternative.transcript() << std::endl;
+                debug_log("downstream alternative conf: %f, transcript: '%s'", alternative.confidence(), alternative.transcript().c_str());
 
                 auto now = std::chrono::steady_clock::now();
                 if (update_first_received_at)

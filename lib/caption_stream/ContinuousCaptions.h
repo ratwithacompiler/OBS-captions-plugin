@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <functional>
 #include <CaptionStream.h>
+#include <sstream>
 
 struct ContinuousCaptionStreamSettings {
     uint connect_second_after_secs;
@@ -52,14 +53,18 @@ struct ContinuousCaptionStreamSettings {
         return !(rhs == *this);
     }
 
-    void print(const char *line_prefix = "") {
-        printf("%sContinuousCaptionStreamSettings\n", line_prefix);
-        printf("%s  connect_second_after_secs: %d\n", line_prefix, connect_second_after_secs);
-        printf("%s  switchover_second_after_secs: %d\n", line_prefix, switchover_second_after_secs);
-        printf("%s  minimum_reconnect_interval_secs: %d\n", line_prefix, minimum_reconnect_interval_secs);
+    string describe(const string &sep = "\n", const string &line_prefix = "") const {
+        std::ostringstream os;
+        os << line_prefix << "ContinuousCaptionStreamSettings";
+        os << sep << line_prefix << "  connect_second_after_secs: " << connect_second_after_secs;
+        os << sep << line_prefix << "  switchover_second_after_secs: " << switchover_second_after_secs;
+        os << sep << line_prefix << "  minimum_reconnect_interval_secs: " << minimum_reconnect_interval_secs;
+        os << sep << stream_settings.describe(sep, line_prefix + "  ");
+        return os.str();
+    }
 
-        stream_settings.print((string(line_prefix) + "  ").c_str());
-//        printf("%s-----------\n", line_prefix);
+    void print(const char *line_prefix = "") const {
+        printf("%s\n", describe("\n", line_prefix).c_str());
     }
 
 };
