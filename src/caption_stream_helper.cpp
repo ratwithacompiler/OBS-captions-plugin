@@ -61,7 +61,7 @@ static ContinuousCaptionStreamSettings default_ContinuousCaptionStreamSettings()
 };
 
 static DefaultReplacer makeDefaultReplacer(const vector<WordReplacement> &userReplacements) {
-    return DefaultReplacer({"niger", "nigger", "nigga", "niggas", "\\bfag\\b", "faggot", "chink"},
+    return DefaultReplacer({"nigger", "nigga", "niggas", "\\bfag\\b", "faggot", "chink"},
                            userReplacements);
 }
 
