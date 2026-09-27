@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <atomic>
 #include <functional>
 #include <mutex>
+#include <vector>
 #include <lib/caption_stream/ThreadsaferCallback.h>
 #include "data.h"
 
@@ -40,6 +41,9 @@ class SourceAudioCaptureSession {
     std::atomic<bool> source_removed{false};
     const int id;
     const int bytes_per_channel;
+    uint32_t in_samples_per_sec = 0;
+    uint32_t out_samples_per_sec = 0;
+    std::vector<uint8_t> zero_buffer;
 public:
     ThreadsaferCallback<audio_chunk_data_cb> on_caption_cb_handle;
     ThreadsaferCallback<audio_capture_status_change_cb> on_status_cb_handle;

@@ -64,6 +64,9 @@ SourceAudioCaptureSession::SourceAudioCaptureSession(
     if (!obs_audio)
         throw std::string("Failed to get OBS audio info");
 
+    in_samples_per_sec = obs_audio->samples_per_sec;
+    out_samples_per_sec = resample_to.samples_per_sec;
+
     if (!audio_source)
         throw std::string("No audio capture source");
 
@@ -200,17 +203,15 @@ void SourceAudioCaptureSession::audio_capture_cb(obs_source_t *source, const str
             return;
 
         if (muted_handling == MUTED_SOURCE_REPLACE_WITH_ZERO) {
-            const unsigned int size = audio->frames * bytes_per_channel;
-            uint8_t *buffer = new uint8_t[size];
-            memset(buffer, 0, size);
+            const uint32_t out_frames = (uint32_t) ((uint64_t) audio->frames * out_samples_per_sec / in_samples_per_sec);
+            const unsigned int size = out_frames * bytes_per_channel;
+            zero_buffer.assign(size, 0);
 
             {
                 std::lock_guard<std::recursive_mutex> lock(on_caption_cb_handle.mutex);
                 if (on_caption_cb_handle.callback_fn)
-                    on_caption_cb_handle.callback_fn(id, buffer, size);
+                    on_caption_cb_handle.callback_fn(id, zero_buffer.data(), size);
             }
-
-            delete[] buffer;
             return;
 
         }
